@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Sự Kiện - Trường ĐH Sư phạm Kỹ thuật Đà Nẵng</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="images/logo.png" alt="Logo ĐHSPKT" class="logo-image">
+                </div>
+                <nav class="header-nav">
+                    <a href="#" class="nav-link active">TRANG CHỦ</a>
+                    <a href="#" class="nav-link">SỰ KIỆN</a>
+                    <a href="#" class="nav-link">GIỚI THIỆU</a>
+                    <a href="#" class="nav-link">LIÊN HỆ</a>
+                </nav>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <input type="text" placeholder="Tìm kiếm sự kiện...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <button class="btn-login">Đăng nhập</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="hero-banner">
+        <div class="hero-overlay"></div>
+        <img src="images/banner.png" alt="Lễ trao bằng" class="hero-image">
+        <div class="container">
+            <div class="hero-content">
+                <span class="hero-badge">LỄ TRAO BẰNG</span>
+                <h2>Lễ trao bằng Tốt nghiệp<br>Đợt 2 / 2026</h2>
+                <p>Sự kiện trang trọng đánh dấu cột mốc quan trọng trong hành trình học tập của sinh viên Trường ĐHSPKT Đà Nẵng.</p>
+                <button class="hero-btn">Hãy đăng nhập</button>
+            </div>
+        </div>
+        <div class="hero-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <div class="container">
+            <div class="content-layout">
+                <!-- Left Content -->
+                <div class="left-content">
+                    <!-- Featured Event -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-star"></i> SỰ KIỆN NỔI BẬT</h3>
+                            <a href="#" class="link-more">Xem tất cả →</a>
+                        </div>
+                        <div class="featured-event">
+                            <span class="event-tag">HỘI THẢO</span>
+                            <h4>Hội thảo Khởi nghiệp & Đổi mới sáng tạo 2024</h4>
+                            <div class="event-info">
+                                <span><i class="far fa-calendar"></i> 20/04/2024</span>
+                                <span><i class="fas fa-map-marker-alt"></i> Hội trường A</span>
+                                <span><i class="far fa-eye"></i> 250 lượt</span>
+                            </div>
+                            <p>Sự kiện kết nối sinh viên với các doanh nghiệp, chia sẻ về hội thảo sáng tạo trong lĩnh vực công nghệ</p>
+                        </div>
+                    </section>
+
+                    <!-- Upcoming Events -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="far fa-calendar-alt"></i> SỰ KIỆN SẮP DIỄN RA</h3>
+                            <a href="#" class="link-more">Xem tất cả →</a>
+                        </div>
+                        <div class="events-list">
+                            <div class="event-row">
+                                <div class="event-date blue">
+                                    <span class="date-num">22</span>
+                                    <span class="date-text">Tháng 4</span>
+                                </div>
+                                <div class="event-info-box">
+                                    <h4>Tuần lễ Văn hóa sinh viên năm 2024</h4>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-map-marker-alt"></i> Sân trường chính</span>
+                                        <span><i class="far fa-user"></i> 500 SV</span>
+                                        <span><i class="far fa-building"></i> Phòng CTSV</span>
+                                    </div>
+                                </div>
+                                <button class="btn-action">Đăng ký</button>
+                            </div>
+
+                            <div class="event-row">
+                                <div class="event-date green">
+                                    <span class="date-num">25</span>
+                                    <span class="date-text">Tháng 4</span>
+                                </div>
+                                <div class="event-info-box">
+                                    <h4>Lễ trao bằng tốt nghiệp - Đợt 2/2024</h4>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-map-marker-alt"></i> Nhà thi đấu</span>
+                                        <span><i class="far fa-user"></i> 1000 SV</span>
+                                        <span><i class="far fa-building"></i> BGH</span>
+                                    </div>
+                                </div>
+                                <button class="btn-action active">Nộp đơn ra</button>
+                            </div>
+
+                            <div class="event-row">
+                                <div class="event-date orange">
+                                    <span class="date-num">01</span>
+                                    <span class="date-text">Tháng 5</span>
+                                </div>
+                                <div class="event-info-box">
+                                    <h4>Cuộc thi Lập trình Thuật toán sinh viên</h4>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-map-marker-alt"></i> Phòng máy tính B3</span>
+                                        <span><i class="far fa-user"></i> 80 SV</span>
+                                        <span><i class="far fa-building"></i> Khoa CNTT</span>
+                                    </div>
+                                </div>
+                                <button class="btn-action">Đăng ký</button>
+                            </div>
+
+                            <div class="event-row">
+                                <div class="event-date purple">
+                                    <span class="date-num">05</span>
+                                    <span class="date-text">Tháng 5</span>
+                                </div>
+                                <div class="event-info-box">
+                                    <h4>Ngày hội Thể thao sinh viên DUT 2024</h4>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-map-marker-alt"></i> Sân thi đấu</span>
+                                        <span><i class="far fa-user"></i> 500 SV</span>
+                                        <span><i class="far fa-building"></i> ĐTTX-CSPH</span>
+                                    </div>
+                                </div>
+                                <button class="btn-action closed">Hết chỗ</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Sidebar -->
+                <aside class="right-sidebar">
+                    <!-- Notifications -->
+                    <section class="card">
+                        <h3><i class="fas fa-bell"></i> THÔNG BÁO MỚI</h3>
+                        <div class="notifications">
+                            <div class="notification-item">
+                                <span class="notif-icon">📢</span>
+                                <div class="notif-content">
+                                    <p>Sự kiện Hội thảo Khởi nghiệp đã được phê duyệt</p>
+                                    <span class="notif-time">2 giờ trước</span>
+                                </div>
+                            </div>
+                            <div class="notification-item">
+                                <span class="notif-icon">📝</span>
+                                <div class="notif-content">
+                                    <p>Nhắc lịch: Tuần lễ Văn hóa sắp ra vào ngày mai</p>
+                                    <span class="notif-time">5 giờ trước</span>
+                                </div>
+                            </div>
+                            <div class="notification-item">
+                                <span class="notif-icon">📋</span>
+                                <div class="notif-content">
+                                    <p>Bạn đã đăng ký thành công Cuộc thi Lập trình</p>
+                                    <span class="notif-time">1 ngày trước</span>
+                                </div>
+                            </div>
+                            <div class="notification-item">
+                                <span class="notif-icon">⚠️</span>
+                                <div class="notif-content">
+                                    <p>Ngày hội Thể thao đã đủ chỗ đăng ký</p>
+                                    <span class="notif-time">2 ngày trước</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Calendar -->
+                    <section class="card">
+                        <h3><i class="far fa-calendar"></i> LỊCH SỰ KIỆN</h3>
+                        <div class="calendar-events">
+                            <div class="calendar-item">
+                                <h4>Hội thảo Khởi nghiệp 2024</h4>
+                                <p>20/04 — Hội trường A</p>
+                                <span class="days-left">1 ngày</span>
+                            </div>
+                            <div class="calendar-item">
+                                <h4>Tuần lễ Văn hóa SV</h4>
+                                <p>22/04 — Sân trường</p>
+                                <span class="days-left">3 ngày</span>
+                            </div>
+                            <div class="calendar-item">
+                                <h4>Lễ trao bằng 2024</h4>
+                                <p>25/04 — Nhà thi đấu</p>
+                                <span class="days-left">6 ngày</span>
+                            </div>
+                            <div class="calendar-item">
+                                <h4>Cuộc thi Lập trình</h4>
+                                <p>01/05 — Phòng B3</p>
+                                <span class="days-left">12 ngày</span>
+                            </div>
+                            <div class="calendar-item">
+                                <h4>Ngày hội Thể thao DUT</h4>
+                                <p>05/05 — Sân thi đấu</p>
+                                <span class="days-left">16 ngày</span>
+                            </div>
+                        </div>
+                    </section>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
