@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Ngân sách - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/btc-auth.css">
+    <link rel="stylesheet" href="../css/btc-budget.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm ngân sách, sự kiện...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Nguyễn Văn A</span>
+                    <span class="user-role">Trưởng Ban Tổ chức</span>
+                </div>
+                <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Van+A&background=0D5A9C&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="btc-dashboard.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="btc-events.html" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Sự kiện của tôi</span>
+                </a>
+                <a href="btc-budget.html" class="nav-item active">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Ngân sách</span>
+                </a>
+                <a href="btc-approval.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Phê duyệt</span>
+                </a>
+                <a href="btc-team-tasks.html" class="nav-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>Công việc (Task)</span>
+                </a>
+                <a href="btc-attendance.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Người tham gia</span>
+                </a>
+                <a href="btc-reports.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-create">
+                    <i class="fas fa-plus-circle"></i>
+                    Tạo sự kiện mới
+                </button>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Quản lý Ngân sách</h1>
+                    <p>Lập kế hoạch và theo dõi chi phí cho các sự kiện</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary">
+                        <i class="fas fa-file-export"></i>
+                        Xuất báo cáo
+                    </button>
+                    <button class="btn-primary" onclick="openCreateBudgetModal()">
+                        <i class="fas fa-plus"></i>
+                        Lập kế hoạch mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Budget Overview Cards -->
+            <div class="budget-overview">
+                <div class="overview-card total">
+                    <div class="card-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Tổng ngân sách</h3>
+                        <p class="amount">450,000,000 đ</p>
+                        <span class="sub-text">Tất cả sự kiện</span>
+                    </div>
+                </div>
+                <div class="overview-card spent">
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Đã chi</h3>
+                        <p class="amount">285,500,000 đ</p>
+                        <span class="sub-text">63.4% tổng ngân sách</span>
+                    </div>
+                </div>
+                <div class="overview-card remaining">
+                    <div class="card-icon">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Còn lại</h3>
+                        <p class="amount">164,500,000 đ</p>
+                        <span class="sub-text">36.6% tổng ngân sách</span>
+                    </div>
+                </div>
+                <div class="overview-card pending">
+                    <div class="card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Chờ duyệt</h3>
+                        <p class="amount">75,000,000 đ</p>
+                        <span class="sub-text">3 yêu cầu</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Budget List -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Kế hoạch chi phí theo sự kiện</h2>
+                    <div class="card-actions">
+                        <select class="filter-select">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="approved">Đã duyệt</option>
+                            <option value="pending">Chờ duyệt</option>
+                            <option value="rejected">Từ chối</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="budget-table-wrapper">
+                    <table class="budget-table">
+                        <thead>
+                            <tr>
+                                <th>Sự kiện</th>
+                                <th>Tổng ngân sách</th>
+                                <th>Đã chi</th>
+                                <th>Còn lại</th>
+                                <th>Tiến độ</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="event-info">
+                                        <h4>Hội thảo Công nghệ Thường niên 2024</h4>
+                                        <span class="event-date">15/12/2024</span>
+                                    </div>
+                                </td>
+                                <td><strong>150,000,000 đ</strong></td>
+                                <td>92,450,000 đ</td>
+                                <td>57,550,000 đ</td>
+                                <td>
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 61.6%"></div>
+                                        </div>
+                                        <span class="progress-text">61.6%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge approved">Đã duyệt</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action" onclick="viewBudgetDetail(1)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-action" onclick="editBudget(1)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="event-info">
+                                        <h4>Workshop Khởi nghiệp Sinh viên</h4>
+                                        <span class="event-date">10/12/2024</span>
+                                    </div>
+                                </td>
+                                <td><strong>75,000,000 đ</strong></td>
+                                <td>45,000,000 đ</td>
+                                <td>30,000,000 đ</td>
+                                <td>
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 60%"></div>
+                                        </div>
+                                        <span class="progress-text">60%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge pending">Chờ duyệt</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action" onclick="viewBudgetDetail(2)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-action" onclick="editBudget(2)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="event-info">
+                                        <h4>Ngày hội Việc làm 2024</h4>
+                                        <span class="event-date">20/12/2024</span>
+                                    </div>
+                                </td>
+                                <td><strong>200,000,000 đ</strong></td>
+                                <td>125,000,000 đ</td>
+                                <td>75,000,000 đ</td>
+                                <td>
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 62.5%"></div>
+                                        </div>
+                                        <span class="progress-text">62.5%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge approved">Đã duyệt</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action" onclick="viewBudgetDetail(3)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-action" onclick="editBudget(3)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="event-info">
+                                        <h4>Đêm nhạc Acoustic</h4>
+                                        <span class="event-date">05/12/2024</span>
+                                    </div>
+                                </td>
+                                <td><strong>25,000,000 đ</strong></td>
+                                <td>23,050,000 đ</td>
+                                <td>1,950,000 đ</td>
+                                <td>
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill success" style="width: 92.2%"></div>
+                                        </div>
+                                        <span class="progress-text">92.2%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge approved">Đã duyệt</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action" onclick="viewBudgetDetail(4)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Budget Modal -->
+    <div id="budgetModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="budgetModalTitle">Lập kế hoạch chi phí</h2>
+                <button class="btn-close" onclick="closeBudgetModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="budgetForm">
+                    <!-- Event Selection -->
+                    <div class="form-section">
+                        <h3>Chọn sự kiện</h3>
+                        <div class="form-group">
+                            <label>Sự kiện <span class="required">*</span></label>
+                            <select id="eventSelect" required>
+                                <option value="">Chọn sự kiện</option>
+                                <option value="1">Hội thảo Công nghệ Thường niên 2024</option>
+                                <option value="2">Workshop Khởi nghiệp Sinh viên</option>
+                                <option value="3">Ngày hội Việc làm 2024</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Budget Items -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h3>Chi tiết kế hoạch chi phí</h3>
+                            <button type="button" class="btn-add-item" onclick="addBudgetItem()">
+                                <i class="fas fa-plus"></i> Thêm hạng mục
+                            </button>
+                        </div>
+                        
+                        <div class="budget-items-container">
+                            <table class="budget-items-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 30%">Hạng mục</th>
+                                        <th style="width: 20%">Danh mục</th>
+                                        <th style="width: 12%">Số lượng</th>
+                                        <th style="width: 15%">Đơn giá (VNĐ)</th>
+                                        <th style="width: 15%">Thành tiền</th>
+                                        <th style="width: 8%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="budgetItemsBody">
+                                    <tr class="budget-item-row">
+                                        <td>
+                                            <input type="text" class="item-name" placeholder="Ví dụ: Văn phòng phẩm & In ấn" required>
+                                        </td>
+                                        <td>
+                                            <select class="item-category">
+                                                <option value="venue">Địa điểm</option>
+                                                <option value="food">Ăn uống</option>
+                                                <option value="decoration">Trang trí</option>
+                                                <option value="equipment">Thiết bị</option>
+                                                <option value="marketing">Marketing</option>
+                                                <option value="staff">Nhân sự</option>
+                                                <option value="other">Khác</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="item-quantity" value="1" min="1" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="item-price" value="0" min="0" required>
+                                        </td>
+                                        <td class="item-total">0 đ</td>
+                                        <td>
+                                            <button type="button" class="btn-remove-item" onclick="removeBudgetItem(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Budget Summary -->
+                        <div class="budget-summary">
+                            <div class="summary-row">
+                                <span>Tổng cộng:</span>
+                                <span class="summary-total" id="budgetTotal">0 đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-section">
+                        <h3>Ghi chú</h3>
+                        <div class="form-group">
+                            <textarea id="budgetNotes" rows="4" placeholder="Ghi chú thêm về kế hoạch chi phí..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeBudgetModal()">Hủy</button>
+                <button type="button" class="btn-save-draft">Lưu nháp</button>
+                <button type="submit" class="btn-submit" form="budgetForm">Gửi phê duyệt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Detail Modal -->
+    <div id="budgetDetailModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Chi tiết ngân sách</h2>
+                <button class="btn-close" onclick="closeBudgetDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-header">
+                    <h3 id="detailEventName">Hội thảo Công nghệ Thường niên 2024</h3>
+                    <span class="status-badge approved" id="detailStatus">Đã duyệt</span>
+                </div>
+
+                <div class="detail-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Tổng ngân sách</span>
+                        <span class="stat-value" id="detailTotalBudget">150,000,000 đ</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Đã chi</span>
+                        <span class="stat-value spent" id="detailSpent">92,450,000 đ</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Còn lại</span>
+                        <span class="stat-value remaining" id="detailRemaining">57,550,000 đ</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Chi tiết các hạng mục</h4>
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Hạng mục</th>
+                                <th>Danh mục</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailItemsBody">
+                            <tr>
+                                <td>Văn phòng phẩm & In ấn</td>
+                                <td><span class="category-badge marketing">Marketing</span></td>
+                                <td>100</td>
+                                <td>15,000 đ</td>
+                                <td><strong>1,500,000 đ</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Tiệc trà khách mời</td>
+                                <td><span class="category-badge food">Ăn uống</span></td>
+                                <td>10</td>
+                                <td>250,000 đ</td>
+                                <td><strong>2,500,000 đ</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Ghi chú</h4>
+                    <p id="detailNotes">Kế hoạch chi phí đã được phê duyệt bởi Ban Giám hiệu</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeBudgetDetailModal()">Đóng</button>
+                <button type="button" class="btn-primary" onclick="editFromDetail()">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/btc-auth.js"></script>
+    <script src="../js/btc-budget.js"></script>
+</body>
+</html>

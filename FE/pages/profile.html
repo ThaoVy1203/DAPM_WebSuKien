@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ cá nhân - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-wrapper">
+                <div class="logo">
+                    <img src="../images/logo.png" alt="UTE Events" onerror="this.src='https://via.placeholder.com/150x50/0D5A9C/FFFFFF?text=UTE+Events'">
+                </div>
+                <nav class="nav-menu">
+                    <a href="../index.html" class="nav-link">Trang chủ</a>
+                    <a href="events.html" class="nav-link">Sự kiện</a>
+                    <a href="calender.html" class="nav-link">Lịch cá nhân</a>
+                    <a href="notifications.html" class="nav-link">Thông báo</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn-notification">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <div class="user-menu">
+                        <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-layout">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <nav class="sidebar-nav">
+                        <a href="home-user.html" class="nav-item">
+                            <i class="fas fa-home"></i>
+                            <span>Trang chủ</span>
+                        </a>
+                        <a href="events.html" class="nav-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Sự kiện</span>
+                        </a>
+                        <a href="calender.html" class="nav-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Lịch cá nhân</span>
+                        </a>
+                        <a href="profile.html" class="nav-item active">
+                            <i class="fas fa-user"></i>
+                            <span>Hồ sơ cá nhân</span>
+                        </a>
+                        <a href="history.html" class="nav-item">
+                            <i class="fas fa-history"></i>
+                            <span>Lịch sử tham gia</span>
+                        </a>
+                        <a href="notifications.html" class="nav-item">
+                            <i class="fas fa-bell"></i>
+                            <span>Thông báo</span>
+                        </a>
+                    </nav>
+
+                    <div class="help-section">
+                        <h4>HỖ TRỢ SINH VIÊN</h4>
+                        <button class="btn-help">Gửi yêu cầu</button>
+                    </div>
+                </aside>
+
+                <!-- Main Profile Content -->
+                <div class="profile-content">
+                    <!-- Profile Header -->
+                    <div class="profile-header">
+                        <div class="profile-avatar-section">
+                            <div class="avatar-wrapper">
+                                <img src="../images/avatar1.jpg" alt="Avatar" class="profile-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Thanh+Trung&background=0D5A9C&color=fff&size=150'">
+                                <button class="edit-avatar-btn">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <div class="profile-info">
+                                <h1 class="profile-name">Nguyễn Thành Trung</h1>
+                                <div class="profile-meta">
+                                    <span><i class="fas fa-id-card"></i> ID: 21110156</span>
+                                    <span class="profile-badge">CÔNG NGHỆ THÔNG TIN</span>
+                                    <span class="profile-class">LỚP: 21CT111</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Sections -->
+                    <div class="profile-sections">
+                        <!-- Personal Information -->
+                        <section class="profile-section">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-user"></i>
+                                    <h2>Thông tin cá nhân</h2>
+                                </div>
+                                <button class="btn-edit" id="editPersonalInfo">Sửa</button>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>EMAIL</label>
+                                    <p>trung.nt.21@student.ute.edu.vn</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>SỐ ĐIỆN THOẠI</label>
+                                    <p>0987 654 321</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>NGÀY SINH</label>
+                                    <p>15/05/2003</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>ĐỊA CHỈ</label>
+                                    <p>Thủ Đức, TP. Hồ Chí Minh</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Account Settings -->
+                        <section class="profile-section">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-cog"></i>
+                                    <h2>Cài đặt tài khoản</h2>
+                                </div>
+                            </div>
+                            <div class="settings-list">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <i class="fas fa-lock"></i>
+                                        <div>
+                                            <h4>Thay đổi mật khẩu</h4>
+                                            <p>Quản lý mật khẩu đăng nhập định kỳ</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <i class="fas fa-shield-alt"></i>
+                                        <div>
+                                            <h4>Quyền riêng tư</h4>
+                                            <p>Quản lý ai thấy thông tin của bạn</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <i class="fas fa-envelope"></i>
+                                        <div>
+                                            <h4>Thông báo Email</h4>
+                                            <p>Quản lý các loại tin nhận được</p>
+                                        </div>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="setting-item danger">
+                                    <div class="setting-info">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <div>
+                                            <h4>Đăng xuất</h4>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Interests -->
+                        <section class="profile-section">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-heart"></i>
+                                    <h2>Sở thích cá nhân</h2>
+                                </div>
+                                <button class="btn-edit" id="editInterests">Lưu sở thích</button>
+                            </div>
+                            <p class="section-description">
+                                <i class="fas fa-info-circle" style="color: #0D5A9C; margin-right: 8px;"></i>
+                                Chọn các lĩnh vực bạn quan tâm để nhận gợi ý sự kiện phù hợp nhất. Hệ thống sẽ ưu tiên hiển thị các sự kiện liên quan đến sở thích của bạn trên trang chủ và gửi thông báo khi có sự kiện mới.
+                            </p>
+                            <div class="interests-grid">
+                                <button class="interest-tag active">
+                                    <i class="fas fa-laptop-code"></i>
+                                    <span>Công nghệ</span>
+                                </button>
+                                <button class="interest-tag">
+                                    <i class="fas fa-briefcase"></i>
+                                    <span>Nghề nghiệp</span>
+                                </button>
+                                <button class="interest-tag active">
+                                    <i class="fas fa-hands-helping"></i>
+                                    <span>Tình nguyện</span>
+                                </button>
+                                <button class="interest-tag">
+                                    <i class="fas fa-comments"></i>
+                                    <span>Thảo luận</span>
+                                </button>
+                                <button class="interest-tag active">
+                                    <i class="fas fa-globe"></i>
+                                    <span>Ngoại ngữ</span>
+                                </button>
+                                <button class="interest-tag">
+                                    <i class="fas fa-music"></i>
+                                    <span>Âm nhạc</span>
+                                </button>
+                                <button class="interest-tag">
+                                    <i class="fas fa-dumbbell"></i>
+                                    <span>Kỹ năng mềm</span>
+                                </button>
+                                <button class="interest-tag">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span>Nghiên cứu khoa học</span>
+                                </button>
+                                <button class="interest-tag">
+                                    <i class="fas fa-bullhorn"></i>
+                                    <span>Marketing</span>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar - Stats -->
+                <aside class="stats-sidebar">
+                    <div class="stats-card">
+                        <div class="stats-header">
+                            <h3>ĐIỂM RÈN LUYỆN</h3>
+                            <div class="stats-score">92</div>
+                            <p class="stats-rank">Hạng: Xuất sắc</p>
+                            <button class="btn-view-details">Xem chi tiết</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-summary">
+                        <h3>HOẠT ĐỘNG</h3>
+                        <div class="activity-stats">
+                            <div class="activity-stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-number">12</div>
+                                    <div class="stat-label">Sự kiện đã tham gia</div>
+                                </div>
+                            </div>
+                            <div class="activity-stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-number">3</div>
+                                    <div class="stat-label">Sự kiện sắp tới</div>
+                                </div>
+                            </div>
+                            <div class="activity-stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-certificate"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-number">8</div>
+                                    <div class="stat-label">Chứng nhận</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-events">
+                        <h3>SỰ KIỆN GẦN ĐÂY</h3>
+                        <div class="recent-event-item">
+                            <div class="event-date">
+                                <span class="date-day">15</span>
+                                <span class="date-month">T10</span>
+                            </div>
+                            <div class="event-info">
+                                <h4>Hội thảo AI 4.0</h4>
+                                <p><i class="fas fa-map-marker-alt"></i> Hội trường A</p>
+                            </div>
+                        </div>
+                        <div class="recent-event-item">
+                            <div class="event-date">
+                                <span class="date-day">20</span>
+                                <span class="date-month">T10</span>
+                            </div>
+                            <div class="event-info">
+                                <h4>UTE Hackathon</h4>
+                                <p><i class="fas fa-map-marker-alt"></i> Tòa E</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/profile.js"></script>
+</body>
+</html>

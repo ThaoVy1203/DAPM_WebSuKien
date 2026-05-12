@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vé của tôi - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/my-tickets.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-wrapper">
+                <div class="logo">
+                    <img src="../images/logo.png" alt="UTE Events" onerror="this.src='https://via.placeholder.com/150x50/0D5A9C/FFFFFF?text=UTE+Events'">
+                </div>
+                <nav class="nav-menu">
+                    <a href="../index.html" class="nav-link">Trang chủ</a>
+                    <a href="events.html" class="nav-link">Sự kiện</a>
+                    <a href="profile.html" class="nav-link active">Lịch cá nhân</a>
+                    <a href="#" class="nav-link">Thông báo</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn-notification">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="user-menu">
+                        <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Vé của tôi</h1>
+                <p>Quản lý và sử dụng vé điện tử của bạn để tham gia sự kiện.</p>
+            </div>
+
+            <div class="content-layout">
+                <!-- Left Side - Ticket Detail -->
+                <div class="ticket-detail-section">
+                    <div class="ticket-card">
+                        <div class="ticket-image">
+                            <img src="../images/Event cover.png" alt="Event" onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=Event'">
+                            <span class="ticket-badge">SẮP DIỄN RA</span>
+                        </div>
+                        
+                        <div class="ticket-info">
+                            <div class="ticket-header">
+                                <h2>Hội thảo Chuyển đổi số 2025</h2>
+                                <button class="btn-verified">
+                                    <i class="fas fa-check-circle"></i>
+                                </button>
+                            </div>
+
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">NGÀY</span>
+                                    <span class="info-value">15 Tháng 11, 2025</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">GIỜ</span>
+                                    <span class="info-value">08:00 - 17:00</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item full-width">
+                                <span class="info-label">ĐỊA ĐIỂM</span>
+                                <span class="info-value">Hội trường A, Tòa nhà A, Tầng 1</span>
+                            </div>
+
+                            <div class="attendee-info">
+                                <div class="attendee-avatar">NV</div>
+                                <div class="attendee-details">
+                                    <div class="attendee-name">Nguyễn Văn An</div>
+                                    <div class="attendee-id">MSSV: 23115053001</div>
+                                </div>
+                                <button class="btn-share">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+
+                            <div class="ticket-actions">
+                                <button class="btn-cancel-ticket" onclick="cancelTicket()">
+                                    <i class="fas fa-times-circle"></i>
+                                    Hủy đăng ký
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Section -->
+                    <div class="qr-section">
+                        <h3>Mã QR Check-in</h3>
+                        <p class="qr-description">Vui lòng đưa mã này cho nhân viên soát vé tại cửa</p>
+                        
+                        <div class="qr-container">
+                            <div class="qr-code">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=UTE-EVENT-ND001-SK001" alt="QR Code">
+                            </div>
+                        </div>
+
+                        <div class="wallet-buttons">
+                            <button class="btn-wallet apple">
+                                <i class="fab fa-apple"></i>
+                                <span>Add to Apple Wallet</span>
+                            </button>
+                            <button class="btn-wallet google">
+                                <i class="fab fa-google"></i>
+                                <span>Add to Google Pay</span>
+                            </button>
+                        </div>
+
+                        <div class="ticket-code">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Mã vé tự động làm mới sau</span>
+                            <strong>45s</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar -->
+                <aside class="sidebar">
+                    <!-- Upcoming Tickets -->
+                    <div class="sidebar-section">
+                        <h3>VÉ SẮP TỚI KHÁC</h3>
+                        <div class="upcoming-tickets">
+                            <a href="my-tickets.html?id=2" class="upcoming-ticket-item">
+                                <img src="../images/Workshop.png" alt="Event" onerror="this.src='https://via.placeholder.com/80x80/1976D2/FFFFFF?text=Event'">
+                                <div class="upcoming-ticket-info">
+                                    <div class="upcoming-date">05 THÁNG 12</div>
+                                    <h4>Workshop Kỹ năng thuyết trình</h4>
+                                    <p><i class="fas fa-map-marker-alt"></i> Phòng hội thảo B1</p>
+                                </div>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                            <a href="my-tickets.html?id=3" class="upcoming-ticket-item">
+                                <img src="../images/Festival.png" alt="Event" onerror="this.src='https://via.placeholder.com/80x80/10B981/FFFFFF?text=Event'">
+                                <div class="upcoming-ticket-info">
+                                    <div class="upcoming-date">20 THÁNG 07</div>
+                                    <h4>Ngày hội Tình nguyện Mùa Hè Xanh</h4>
+                                    <p><i class="fas fa-map-marker-alt"></i> Sân khấu ngoài trời</p>
+                                </div>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- History -->
+                    <div class="sidebar-section">
+                        <h3>LỊCH SỬ THAM GIA</h3>
+                        <div class="history-list">
+                            <div class="history-item">
+                                <div class="history-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="history-info">
+                                    <div class="history-date">15 THÁNG 09, 2025</div>
+                                    <h5>Lễ Khai giảng năm học mới</h5>
+                                    <span class="history-status completed">ĐÃ THAM GIA</span>
+                                </div>
+                            </div>
+                            <div class="history-item">
+                                <div class="history-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="history-info">
+                                    <div class="history-date">02 THÁNG 09, 2025</div>
+                                    <h5>Ngày hội Việc làm CNTT</h5>
+                                    <span class="history-status completed">ĐÃ KẾT THÚC</span>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="history.html" class="view-all-link">Xem tất cả lịch sử (12)</a>
+                    </div>
+
+                    <!-- Help Section -->
+                    <div class="help-box">
+                        <div class="help-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="help-content">
+                            <h4>Cần hỗ trợ?</h4>
+                            <p>Nếu bạn gặp vấn đề khi soát vé, vui lòng liên hệ bộ phận hỗ trợ sinh viên tại bàn trực sự kiện.</p>
+                            <button class="btn-help">Trung tâm hỗ trợ</button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/my-tickets.js"></script>
+</body>
+</html>

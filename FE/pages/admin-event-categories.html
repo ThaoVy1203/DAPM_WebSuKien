@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Danh mục Sự kiện - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/ctsv-approval.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm danh mục...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">5</span>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Admin</span>
+                    <span class="user-role">Quản trị viên hệ thống</span>
+                </div>
+                <img src="../images/avatar-admin.jpg" alt="Admin" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin-users.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Tài khoản</span>
+                </a>
+                <a href="admin-roles.html" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Phân quyền</span>
+                </a>
+                <a href="admin-event-categories.html" class="nav-item active">
+                    <i class="fas fa-tags"></i>
+                    <span>Danh mục SK</span>
+                </a>
+                <a href="admin-locations.html" class="nav-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Địa điểm</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Quản lý loại sự kiện</h1>
+                    <p>Thêm, sửa, xóa danh mục sự kiện</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openAddCategoryModal()">
+                        <i class="fas fa-plus"></i>
+                        Thêm danh mục
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">TỔNG DANH MỤC</div>
+                    <div class="stat-description">Loại sự kiện</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">ĐANG SỬ DỤNG</div>
+                    <div class="stat-description">Danh mục active</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">SỰ KIỆN</div>
+                    <div class="stat-description">Tổng số sự kiện</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-number">Học thuật</div>
+                    <div class="stat-label">PHỔ BIẾN NHẤT</div>
+                    <div class="stat-description">2 sự kiện</div>
+                </div>
+            </div>
+
+            <!-- Categories Grid -->
+            <div class="categories-grid" style="margin-bottom: 32px;">
+                <div class="category-card">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="category-info">
+                        <h3>Học thuật</h3>
+                        <p>Hội thảo, seminar, tọa đàm học thuật</p>
+                        <div class="category-stats">
+                            <span><i class="fas fa-calendar"></i> 2 sự kiện</span>
+                            <span><i class="fas fa-users"></i> 380 người tham gia</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn-action edit" onclick="editCategory(1)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-action delete" onclick="deleteCategory(1)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-card">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <div class="category-info">
+                        <h3>Tình nguyện</h3>
+                        <p>Hoạt động tình nguyện cộng đồng</p>
+                        <div class="category-stats">
+                            <span><i class="fas fa-calendar"></i> 1 sự kiện</span>
+                            <span><i class="fas fa-users"></i> 500 người tham gia</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn-action edit" onclick="editCategory(2)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-action delete" onclick="deleteCategory(2)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-card">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="category-info">
+                        <h3>Văn nghệ thể thao</h3>
+                        <p>Sự kiện văn hóa, thể dục thể thao</p>
+                        <div class="category-stats">
+                            <span><i class="fas fa-calendar"></i> 0 sự kiện</span>
+                            <span><i class="fas fa-users"></i> 0 người tham gia</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn-action edit" onclick="editCategory(3)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-action delete" onclick="deleteCategory(3)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-card">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <div class="category-info">
+                        <h3>Kỹ năng mềm</h3>
+                        <p>Đào tạo kỹ năng, workshop</p>
+                        <div class="category-stats">
+                            <span><i class="fas fa-calendar"></i> 2 sự kiện</span>
+                            <span><i class="fas fa-users"></i> 380 người tham gia</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn-action edit" onclick="editCategory(4)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-action delete" onclick="deleteCategory(4)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-card">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="category-info">
+                        <h3>Phong trào Đoàn</h3>
+                        <p>Hoạt động Đoàn – Hội sinh viên</p>
+                        <div class="category-stats">
+                            <span><i class="fas fa-calendar"></i> 1 sự kiện</span>
+                            <span><i class="fas fa-users"></i> 500 người tham gia</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn-action edit" onclick="editCategory(5)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-action delete" onclick="deleteCategory(5)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Table -->
+            <div class="chart-card" style="margin-bottom: 24px;">
+                <div class="chart-header">
+                    <h3><i class="fas fa-list"></i> Danh sách chi tiết</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên danh mục</th>
+                                <th>Mô tả</th>
+                                <th>Số sự kiện</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                            <i class="fas fa-chalkboard-teacher"></i>
+                                        </div>
+                                        <strong>Học thuật</strong>
+                                    </div>
+                                </td>
+                                <td>Hội thảo, seminar, tọa đàm học thuật</td>
+                                <td>2</td>
+                                <td><span class="status-badge active">Đang sử dụng</span></td>
+                                <td>01/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editCategory(1)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteCategory(1)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                            <i class="fas fa-hands-helping"></i>
+                                        </div>
+                                        <strong>Tình nguyện</strong>
+                                    </div>
+                                </td>
+                                <td>Hoạt động tình nguyện cộng đồng</td>
+                                <td>1</td>
+                                <td><span class="status-badge active">Đang sử dụng</span></td>
+                                <td>01/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editCategory(2)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteCategory(2)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                            <i class="fas fa-music"></i>
+                                        </div>
+                                        <strong>Văn nghệ thể thao</strong>
+                                    </div>
+                                </td>
+                                <td>Sự kiện văn hóa, thể dục thể thao</td>
+                                <td>0</td>
+                                <td><span class="status-badge active">Đang sử dụng</span></td>
+                                <td>01/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editCategory(3)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteCategory(3)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                            <i class="fas fa-laptop-code"></i>
+                                        </div>
+                                        <strong>Kỹ năng mềm</strong>
+                                    </div>
+                                </td>
+                                <td>Đào tạo kỹ năng, workshop</td>
+                                <td>2</td>
+                                <td><span class="status-badge active">Đang sử dụng</span></td>
+                                <td>01/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editCategory(4)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteCategory(4)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                            <i class="fas fa-flag"></i>
+                                        </div>
+                                        <strong>Phong trào Đoàn</strong>
+                                    </div>
+                                </td>
+                                <td>Hoạt động Đoàn – Hội sinh viên</td>
+                                <td>1</td>
+                                <td><span class="status-badge active">Đang sử dụng</span></td>
+                                <td>01/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editCategory(5)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteCategory(5)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Add/Edit Category Modal -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Thêm danh mục mới</h2>
+                <button class="btn-close" onclick="closeCategoryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div class="form-group">
+                        <label>Tên danh mục <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="categoryName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả</label>
+                        <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Icon</label>
+                        <select class="form-control" id="categoryIcon">
+                            <option value="fa-chalkboard-teacher">Hội thảo</option>
+                            <option value="fa-laptop-code">Workshop</option>
+                            <option value="fa-trophy">Thi đấu</option>
+                            <option value="fa-music">Văn nghệ</option>
+                            <option value="fa-globe">Văn hóa</option>
+                            <option value="fa-briefcase">Việc làm</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Trạng thái</label>
+                        <select class="form-control" id="categoryStatus">
+                            <option value="active">Đang sử dụng</option>
+                            <option value="inactive">Tạm ngưng</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeCategoryModal()">Hủy</button>
+                <button type="button" class="btn-submit success" onclick="saveCategory()">
+                    <i class="fas fa-save"></i>
+                    Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/admin-event-categories.js"></script>
+</body>
+</html>

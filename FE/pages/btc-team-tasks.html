@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhiệm vụ nhóm - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/btc-auth.css">
+    <link rel="stylesheet" href="../css/btc-team-tasks.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm nhiệm vụ, thành viên...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Nguyễn Văn A</span>
+                    <span class="user-role">Trưởng Ban Tổ chức</span>
+                </div>
+                <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Van+A&background=0D5A9C&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="btc-dashboard.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="btc-events.html" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Sự kiện của tôi</span>
+                </a>
+                <a href="btc-budget.html" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Ngân sách</span>
+                </a>
+                <a href="btc-approval.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Phê duyệt</span>
+                </a>
+                <a href="btc-team-tasks.html" class="nav-item active">
+                    <i class="fas fa-tasks"></i>
+                    <span>Công việc (Task)</span>
+                </a>
+                <a href="btc-attendance.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Người tham gia</span>
+                </a>
+                <a href="btc-reports.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-create">
+                    <i class="fas fa-plus-circle"></i>
+                    Tạo sự kiện mới
+                </button>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Nhiệm vụ nhóm</h1>
+                <div class="header-actions">
+                    <div class="event-selector">
+                        <span class="event-label">LỌC THEO SỰ KIỆN</span>
+                        <button class="event-dropdown">
+                            Hội nghị Công nghệ Thường niên 2024
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="team-members">
+                        <img src="https://ui-avatars.com/api/?name=A&background=0D5A9C&color=fff" alt="Member">
+                        <img src="https://ui-avatars.com/api/?name=B&background=1976D2&color=fff" alt="Member">
+                        <img src="https://ui-avatars.com/api/?name=C&background=10B981&color=fff" alt="Member">
+                        <button class="btn-add-member">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <button class="btn-add-task" onclick="openCreateTaskModal()">
+                        <i class="fas fa-plus"></i>
+                        Thêm Nhiệm vụ Mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kanban Board -->
+            <div class="kanban-board">
+                <!-- Column 1: Cần làm -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span class="status-dot todo"></span>
+                            <span>CẦN LÀM</span>
+                            <span class="task-count">3</span>
+                        </div>
+                        <button class="btn-column-menu">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    <div class="tasks-list">
+                        <div class="task-card" onclick="openTaskDetailModal(1)">
+                            <div class="task-priority high">ƯU TIÊN CAO</div>
+                            <h3 class="task-title">Ký kết hợp đồng ăn uống cho Tiệc tối VIP</h3>
+                            <div class="task-footer">
+                                <div class="task-assignee">
+                                    <img src="https://ui-avatars.com/api/?name=TS+Aris&background=0D5A9C&color=fff" alt="Assignee">
+                                    <span>TS. Aris</span>
+                                </div>
+                                <div class="task-date">
+                                    <i class="fas fa-calendar"></i>
+                                    12 TH10
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="task-card" onclick="openTaskDetailModal(2)">
+                            <div class="task-priority medium">TRUNG BÌNH</div>
+                            <h3 class="task-title">Hoàn tất danh sách diễn giả và sắp xếp đi lại</h3>
+                            <div class="task-footer">
+                                <div class="task-assignee">
+                                    <img src="https://ui-avatars.com/api/?name=Sarah+L&background=10B981&color=fff" alt="Assignee">
+                                    <span>Sarah L.</span>
+                                </div>
+                                <div class="task-date">
+                                    <i class="fas fa-calendar"></i>
+                                    15 TH10
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Đang thực hiện -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span class="status-dot in-progress"></span>
+                            <span>ĐANG THỰC HIỆN</span>
+                            <span class="task-count">2</span>
+                        </div>
+                        <button class="btn-column-menu">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    <div class="tasks-list">
+                        <div class="task-card" onclick="openTaskDetailModal(3)">
+                            <div class="task-priority low">ƯU TIÊN THẤP</div>
+                            <h3 class="task-title">Thiết kế banner mạng xã hội cho đợt Tuyển dụng</h3>
+                            <div class="task-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div class="task-footer">
+                                <div class="task-assignee">
+                                    <img src="https://ui-avatars.com/api/?name=Mike+T&background=1976D2&color=fff" alt="Assignee">
+                                    <span>Mike T.</span>
+                                </div>
+                                <div class="task-date">
+                                    <i class="fas fa-calendar"></i>
+                                    08 TH10
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Xem xét -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span class="status-dot review"></span>
+                            <span>XEM XÉT</span>
+                            <span class="task-count">1</span>
+                        </div>
+                        <button class="btn-column-menu">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    <div class="tasks-list">
+                        <div class="task-card" onclick="openTaskDetailModal(4)">
+                            <div class="task-priority high">ƯU TIÊN CAO</div>
+                            <h3 class="task-title">Kiểm tra các giao thức an toàn cho sự kiện trong khuôn viên</h3>
+                            <div class="task-footer">
+                                <div class="task-assignee">
+                                    <img src="https://ui-avatars.com/api/?name=D+Jane&background=F59E0B&color=fff" alt="Assignee">
+                                    <span>D/u Jane</span>
+                                </div>
+                                <div class="task-date">
+                                    <i class="fas fa-calendar"></i>
+                                    HÔM NAY
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Create/Edit Task Modal -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="taskModalTitle">Tạo nhiệm vụ mới</h2>
+                <button class="btn-close" onclick="closeTaskModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <div class="form-group">
+                        <label>Tiêu đề nhiệm vụ <span class="required">*</span></label>
+                        <input type="text" id="taskTitle" placeholder="Ví dụ: Thiết kế backdrop sân khấu" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Mô tả chi tiết</label>
+                        <textarea id="taskDescription" rows="4" placeholder="Mô tả chi tiết về nhiệm vụ..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Độ ưu tiên <span class="required">*</span></label>
+                            <select id="taskPriority" required>
+                                <option value="">Chọn độ ưu tiên</option>
+                                <option value="high">Ưu tiên cao</option>
+                                <option value="medium">Trung bình</option>
+                                <option value="low">Ưu tiên thấp</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái <span class="required">*</span></label>
+                            <select id="taskStatus" required>
+                                <option value="todo">Cần làm</option>
+                                <option value="in-progress">Đang thực hiện</option>
+                                <option value="review">Xem xét</option>
+                                <option value="done">Hoàn thành</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hạn chót <span class="required">*</span></label>
+                            <input type="date" id="taskDeadline" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tiến độ (%)</label>
+                            <input type="number" id="taskProgress" min="0" max="100" value="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phân công cho <span class="required">*</span></label>
+                        <select id="taskAssignee" required>
+                            <option value="">Chọn người phụ trách</option>
+                            <option value="1">Nguyễn Văn A</option>
+                            <option value="2">Trần Hoàng M.</option>
+                            <option value="3">Lê Thị B.</option>
+                            <option value="4">Phạm Hải Y.</option>
+                            <option value="5">Sarah L.</option>
+                            <option value="6">Mike T.</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ghi chú</label>
+                        <textarea id="taskNotes" rows="3" placeholder="Ghi chú thêm về nhiệm vụ..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeTaskModal()">Hủy</button>
+                <button type="submit" class="btn-submit" form="taskForm">Lưu nhiệm vụ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Detail Modal -->
+    <div id="taskDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chi tiết nhiệm vụ</h2>
+                <button class="btn-close" onclick="closeTaskDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="task-detail-content">
+                    <div class="detail-section">
+                        <h3 id="detailTaskTitle">Ký kết hợp đồng ăn uống cho Tiệc tối VIP</h3>
+                        <div class="detail-badges">
+                            <span class="task-priority high" id="detailPriority">ƯU TIÊN CAO</span>
+                            <span class="task-status-badge todo" id="detailStatus">CẦN LÀM</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4><i class="fas fa-align-left"></i> Mô tả</h4>
+                        <p id="detailDescription">Liên hệ và ký kết hợp đồng với nhà cung cấp dịch vụ ăn uống cho tiệc tối VIP trong sự kiện.</p>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <h4><i class="fas fa-user"></i> Người phụ trách</h4>
+                            <div class="assignee-info">
+                                <img src="https://ui-avatars.com/api/?name=TS+Aris&background=0D5A9C&color=fff" alt="Avatar" id="detailAssigneeAvatar">
+                                <span id="detailAssigneeName">TS. Aris</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <h4><i class="fas fa-calendar"></i> Hạn chót</h4>
+                            <p id="detailDeadline">12/10/2024</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4><i class="fas fa-tasks"></i> Tiến độ</h4>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="detailProgressBar" style="width: 0%"></div>
+                            </div>
+                            <span id="detailProgressText">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4><i class="fas fa-sticky-note"></i> Ghi chú</h4>
+                        <p id="detailNotes">Không có ghi chú</p>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4><i class="fas fa-history"></i> Lịch sử hoạt động</h4>
+                        <div class="activity-timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <p><strong>Nguyễn Văn A</strong> đã tạo nhiệm vụ</p>
+                                    <span class="timeline-time">10/10/2024 - 09:00</span>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <p><strong>Nguyễn Văn A</strong> đã phân công cho <strong>TS. Aris</strong></p>
+                                    <span class="timeline-time">10/10/2024 - 09:15</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeTaskDetailModal()">Đóng</button>
+                <button type="button" class="btn-primary" onclick="editTaskFromDetail()">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/btc-auth.js"></script>
+    <script src="../js/btc-team-tasks.js"></script>
+</body>
+</html>

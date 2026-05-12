@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chờ duyệt - Phòng CTSV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/ctsv-approval.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm hồ sơ, sự kiện...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">5</span>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Nguyễn Thị Mai</span>
+                    <span class="user-role">Cán bộ phê duyệt cấp 1</span>
+                </div>
+                <img src="../images/avatar-ctsv.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Thi+Mai&background=059669&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="ctsv-pending-approval.html" class="nav-item active">
+                    <i class="fas fa-clock"></i>
+                    <span>Chờ duyệt</span>
+                </a>
+                <a href="ctsv-approval-history.html" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Lịch sử duyệt</span>
+                </a>
+                <a href="ctsv-reports.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Hồ sơ chờ duyệt</h1>
+                    <p>Danh sách hồ sơ mới cần xét duyệt từ Ban Tổ chức</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="exportPendingList()">
+                        <i class="fas fa-file-export"></i>
+                        Xuất danh sách
+                    </button>
+                    <button class="btn-primary" onclick="openBulkApprovalModal()">
+                        <i class="fas fa-check-double"></i>
+                        Duyệt hàng loạt
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card pending-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-clock"></i>
+                        <span class="stat-change warning">+1 mới</span>
+                    </div>
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">CHỜ DUYỆT</div>
+                    <div class="stat-description">Hồ sơ cần xét duyệt</div>
+                </div>
+
+                <div class="stat-card urgent-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span class="stat-change danger">Khẩn cấp</span>
+                    </div>
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">KHẨN CẤP</div>
+                    <div class="stat-description">Cần duyệt trong 24h</div>
+                </div>
+
+                <div class="stat-card approved-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">ĐÃ DUYỆT</div>
+                    <div class="stat-description">Trong tháng này</div>
+                </div>
+
+                <div class="stat-card rejected-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">TỪ CHỐI</div>
+                    <div class="stat-description">Cần chỉnh sửa</div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-filter="all">Tất cả (1)</button>
+                    <button class="tab-btn" data-filter="urgent">Khẩn cấp (0)</button>
+                    <button class="tab-btn" data-filter="normal">Bình thường (1)</button>
+                    <button class="tab-btn" data-filter="low">Không khẩn (0)</button>
+                </div>
+                <div class="filter-controls">
+                    <select class="filter-select" id="eventTypeFilter">
+                        <option value="all">Tất cả loại sự kiện</option>
+                        <option value="hoi-thao">Hội thảo</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="thi-dau">Thi đấu</option>
+                        <option value="van-nghe">Văn nghệ</option>
+                    </select>
+                    <select class="filter-select" id="dateFilter">
+                        <option value="all">Tất cả thời gian</option>
+                        <option value="today">Hôm nay</option>
+                        <option value="week">Tuần này</option>
+                        <option value="month">Tháng này</option>
+                    </select>
+                    <button class="btn-filter" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i>
+                        Lọc
+                    </button>
+                </div>
+            </div>
+
+            <!-- Approval List -->
+            <div class="approval-list">
+                <!-- Approval Item 1 - Workshop Kỹ năng thuyết trình -->
+                <div class="approval-item normal" data-priority="normal">
+                    <div class="approval-header">
+                        <div class="approval-info">
+                            <span class="approval-badge normal">BÌNH THƯỜNG</span>
+                            <span class="approval-id">#HS2024-003</span>
+                            <span class="approval-date">
+                                <i class="fas fa-calendar"></i>
+                                Gửi: 29/11/2026 14:30
+                            </span>
+                        </div>
+                        <div class="approval-deadline">
+                            <i class="fas fa-clock"></i>
+                            <span class="deadline-text">Còn 5 ngày</span>
+                        </div>
+                    </div>
+                    <div class="approval-body">
+                        <h3>Workshop Kỹ năng thuyết trình chuyên nghiệp</h3>
+                        <div class="approval-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>Gửi bởi: <strong>Lê Văn Cường</strong> (Trưởng BTC)</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Ngày tổ chức: <strong>05/12/2025</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>Quy mô: <strong>80 người</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Ngân sách: <strong>2,000,000 đ</strong></span>
+                            </div>
+                        </div>
+                        <div class="approval-description">
+                            <p>Rèn luyện kỹ năng thuyết trình và giao tiếp cho sinh viên năm 2-3. Workshop bao gồm lý thuyết và thực hành...</p>
+                        </div>
+                        <div class="approval-documents">
+                            <span class="doc-label">Tài liệu đính kèm:</span>
+                            <div class="doc-list">
+                                <span class="doc-item"><i class="fas fa-file-pdf"></i> Kế hoạch workshop.pdf</span>
+                                <span class="doc-item"><i class="fas fa-file-excel"></i> Dự toán ngân sách.xlsx</span>
+                            </div>
+                        </div>
+                        <div class="approval-comment" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-top: 12px; border-radius: 6px;">
+                            <div class="comment-label" style="color: #f59e0b; font-weight: 600; margin-bottom: 6px;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Yêu cầu bổ sung:
+                            </div>
+                            <p style="margin: 0; color: #92400e;">Cần bổ sung danh sách giảng viên hỗ trợ</p>
+                        </div>
+                    </div>
+                    <div class="approval-footer">
+                        <button class="btn-view" onclick="viewApprovalDetail(1)">
+                            <i class="fas fa-eye"></i>
+                            Xem chi tiết
+                        </button>
+                        <button class="btn-reject" onclick="openRejectModal(1)">
+                            <i class="fas fa-times"></i>
+                            Từ chối
+                        </button>
+                        <button class="btn-approve" onclick="openApproveModal(1)">
+                            <i class="fas fa-check"></i>
+                            Phê duyệt
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Approve Modal -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Phê duyệt Hồ sơ</h2>
+                <button class="btn-close" onclick="closeApproveModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="approval-confirm-info">
+                    <i class="fas fa-check-circle success-icon"></i>
+                    <h3>Xác nhận phê duyệt hồ sơ</h3>
+                    <p id="approveEventName">Hội thảo Công nghệ AI và Ứng dụng 2024</p>
+                </div>
+                <div class="form-group">
+                    <label>Ý kiến phê duyệt</label>
+                    <textarea id="approveComment" rows="4" placeholder="Nhập ý kiến của bạn (không bắt buộc)..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="notifyOrganizer" checked>
+                        Gửi thông báo cho Ban Tổ chức
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeApproveModal()">Hủy</button>
+                <button type="button" class="btn-submit success" onclick="confirmApprove()">
+                    <i class="fas fa-check"></i>
+                    Xác nhận phê duyệt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Từ chối Hồ sơ</h2>
+                <button class="btn-close" onclick="closeRejectModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="approval-confirm-info reject">
+                    <i class="fas fa-times-circle error-icon"></i>
+                    <h3>Xác nhận từ chối hồ sơ</h3>
+                    <p id="rejectEventName">Hội thảo Công nghệ AI và Ứng dụng 2024</p>
+                </div>
+                <div class="form-group">
+                    <label>Lý do từ chối <span class="required">*</span></label>
+                    <textarea id="rejectReason" rows="4" placeholder="Nhập lý do từ chối (bắt buộc)..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Yêu cầu chỉnh sửa</label>
+                    <textarea id="rejectSuggestion" rows="3" placeholder="Gợi ý những điểm cần chỉnh sửa..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="allowResubmit" checked>
+                        Cho phép gửi lại hồ sơ sau khi chỉnh sửa
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeRejectModal()">Hủy</button>
+                <button type="button" class="btn-submit danger" onclick="confirmReject()">
+                    <i class="fas fa-times"></i>
+                    Xác nhận từ chối
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Detail Modal -->
+    <div id="viewDetailModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Chi tiết Hồ sơ</h2>
+                <button class="btn-close" onclick="closeViewDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Detail Header -->
+                <div class="detail-header">
+                    <div class="detail-title-section">
+                        <h3 id="detailEventName">Hội thảo Công nghệ AI và Ứng dụng 2024</h3>
+                        <div class="detail-badges">
+                            <span class="approval-badge urgent" id="detailPriority">KHẨN CẤP</span>
+                            <span class="approval-id" id="detailId">#HS2024-001</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Meta -->
+                <div class="detail-meta-grid">
+                    <div class="meta-box">
+                        <i class="fas fa-user"></i>
+                        <div>
+                            <span class="meta-label">Người gửi</span>
+                            <span class="meta-value" id="detailSender">Nguyễn Văn A (Trưởng BTC)</span>
+                        </div>
+                    </div>
+                    <div class="meta-box">
+                        <i class="fas fa-calendar"></i>
+                        <div>
+                            <span class="meta-label">Ngày gửi</span>
+                            <span class="meta-value" id="detailSubmitDate">30/12/2024 09:15</span>
+                        </div>
+                    </div>
+                    <div class="meta-box">
+                        <i class="fas fa-calendar-check"></i>
+                        <div>
+                            <span class="meta-label">Ngày tổ chức</span>
+                            <span class="meta-value" id="detailEventDate">15/01/2025</span>
+                        </div>
+                    </div>
+                    <div class="meta-box">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <span class="meta-label">Thời hạn duyệt</span>
+                            <span class="meta-value danger" id="detailDeadline">Còn 8 giờ</span>
+                        </div>
+                    </div>
+                    <div class="meta-box">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <span class="meta-label">Quy mô</span>
+                            <span class="meta-value" id="detailScale">500 người</span>
+                        </div>
+                    </div>
+                    <div class="meta-box">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div>
+                            <span class="meta-label">Ngân sách</span>
+                            <span class="meta-value" id="detailBudget">150,000,000 đ</span>
+                        </div>
+                    </div>
+                    <div class="meta-box">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <span class="meta-label">Địa điểm</span>
+                            <span class="meta-value" id="detailLocation">Hội trường A1</span>
+                        </div>
+                    </div>
+                    <div class="meta-box">
+                        <i class="fas fa-tag"></i>
+                        <div>
+                            <span class="meta-label">Loại sự kiện</span>
+                            <span class="meta-value" id="detailType">Hội thảo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Description -->
+                <div class="detail-section">
+                    <h4><i class="fas fa-align-left"></i> Mô tả sự kiện</h4>
+                    <div class="detail-content" id="detailDescription">
+                        <p>Hội thảo về công nghệ AI với sự tham gia của các chuyên gia hàng đầu trong lĩnh vực. Bao gồm 3 phiên thảo luận chính và workshop thực hành về Machine Learning, Deep Learning và ứng dụng AI trong thực tế.</p>
+                    </div>
+                </div>
+
+                <!-- Detail Objectives -->
+                <div class="detail-section">
+                    <h4><i class="fas fa-bullseye"></i> Mục tiêu</h4>
+                    <div class="detail-content" id="detailObjectives">
+                        <ul>
+                            <li>Cung cấp kiến thức cơ bản và nâng cao về AI cho sinh viên</li>
+                            <li>Tạo cơ hội giao lưu với các chuyên gia trong ngành</li>
+                            <li>Thúc đẩy nghiên cứu và ứng dụng AI tại trường</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Detail Schedule -->
+                <div class="detail-section">
+                    <h4><i class="fas fa-calendar-alt"></i> Lịch trình</h4>
+                    <div class="detail-content" id="detailSchedule">
+                        <ul>
+                            <li><strong>08:00 - 08:30:</strong> Đón tiếp và đăng ký</li>
+                            <li><strong>08:30 - 09:00:</strong> Khai mạc và phát biểu</li>
+                            <li><strong>09:00 - 11:00:</strong> Phiên 1 - Giới thiệu về AI</li>
+                            <li><strong>11:00 - 12:00:</strong> Workshop thực hành</li>
+                            <li><strong>12:00 - 13:00:</strong> Nghỉ trưa</li>
+                            <li><strong>13:00 - 15:00:</strong> Phiên 2 - Ứng dụng AI</li>
+                            <li><strong>15:00 - 16:00:</strong> Thảo luận và Q&A</li>
+                            <li><strong>16:00 - 16:30:</strong> Bế mạc</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Detail Documents -->
+                <div class="detail-section">
+                    <h4><i class="fas fa-paperclip"></i> Tài liệu đính kèm</h4>
+                    <div class="documents-grid" id="detailDocuments">
+                        <div class="document-card">
+                            <div class="doc-icon pdf">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="doc-info">
+                                <span class="doc-name">Kế hoạch chi tiết.pdf</span>
+                                <span class="doc-size">2.5 MB</span>
+                            </div>
+                            <button class="btn-download-doc">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="document-card">
+                            <div class="doc-icon excel">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <div class="doc-info">
+                                <span class="doc-name">Dự toán ngân sách.xlsx</span>
+                                <span class="doc-size">1.2 MB</span>
+                            </div>
+                            <button class="btn-download-doc">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="document-card">
+                            <div class="doc-icon word">
+                                <i class="fas fa-file-word"></i>
+                            </div>
+                            <div class="doc-info">
+                                <span class="doc-name">Đề cương chương trình.docx</span>
+                                <span class="doc-size">800 KB</span>
+                            </div>
+                            <button class="btn-download-doc">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeViewDetailModal()">Đóng</button>
+                <button type="button" class="btn-submit danger" onclick="rejectFromDetail()">
+                    <i class="fas fa-times"></i>
+                    Từ chối
+                </button>
+                <button type="button" class="btn-submit success" onclick="approveFromDetail()">
+                    <i class="fas fa-check"></i>
+                    Phê duyệt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/ctsv-approval.js"></script>
+</body>
+</html>

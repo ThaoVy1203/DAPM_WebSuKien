@@ -1,8 +1,12 @@
 ﻿USE master;
 GO
 
+-- Đóng tất cả kết nối đến database trước khi drop
 IF EXISTS (SELECT name FROM sys.databases WHERE name = N'QuanLySuKien_DHSPKT')
+BEGIN
+    ALTER DATABASE QuanLySuKien_DHSPKT SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE QuanLySuKien_DHSPKT;
+END
 GO
 
 CREATE DATABASE QuanLySuKien_DHSPKT
@@ -13,6 +17,10 @@ USE QuanLySuKien_DHSPKT;
 GO
 
 -- 1. BẢNG VaiTro
+IF OBJECT_ID('VaiTro', 'U') IS NOT NULL
+    DROP TABLE VaiTro;
+GO
+
 CREATE TABLE VaiTro (
     idVaiTro INTEGER NOT NULL IDENTITY(1,1),
     tenVaiTro NVARCHAR(50) NOT NULL,
@@ -23,6 +31,10 @@ CREATE TABLE VaiTro (
 GO
 
 -- 2. BẢNG NguoiDung
+IF OBJECT_ID('NguoiDung', 'U') IS NOT NULL
+    DROP TABLE NguoiDung;
+GO
+
 CREATE TABLE NguoiDung (
     idNguoiDung CHAR(5) NOT NULL,
     maSoSSO NVARCHAR(15) NOT NULL,
@@ -39,6 +51,10 @@ CREATE TABLE NguoiDung (
 GO
 
 -- 3. BẢNG VaiTro_NguoiDung
+IF OBJECT_ID('VaiTro_NguoiDung', 'U') IS NOT NULL
+    DROP TABLE VaiTro_NguoiDung;
+GO
+
 CREATE TABLE VaiTro_NguoiDung (
     idVaiTro INTEGER NOT NULL,
     idNguoiDung CHAR(5) NOT NULL,
@@ -52,6 +68,10 @@ CREATE TABLE VaiTro_NguoiDung (
 GO
 
 -- 4. BẢNG DiaDiem
+IF OBJECT_ID('DiaDiem', 'U') IS NOT NULL
+    DROP TABLE DiaDiem;
+GO
+
 CREATE TABLE DiaDiem (
     idDiaDiem INTEGER NOT NULL IDENTITY(1,1),
     tenDiaDiem NVARCHAR(50) NOT NULL,
@@ -64,6 +84,10 @@ CREATE TABLE DiaDiem (
 GO
 
 -- 5. BẢNG DanhMucSuKien
+IF OBJECT_ID('DanhMucSuKien', 'U') IS NOT NULL
+    DROP TABLE DanhMucSuKien;
+GO
+
 CREATE TABLE DanhMucSuKien (
     idDanhMuc INTEGER NOT NULL IDENTITY(1,1),
     tenDanhMuc NVARCHAR(50) NOT NULL,
@@ -74,6 +98,10 @@ CREATE TABLE DanhMucSuKien (
 GO
 
 -- 6. BẢNG SuKien
+IF OBJECT_ID('SuKien', 'U') IS NOT NULL
+    DROP TABLE SuKien;
+GO
+
 CREATE TABLE SuKien (
     idSuKien INTEGER NOT NULL IDENTITY(1,1),
     tenSuKien NVARCHAR(50) NOT NULL,
@@ -98,6 +126,10 @@ CREATE TABLE SuKien (
 GO
 
 -- 7. BẢNG SuKien_DanhMuc
+IF OBJECT_ID('SuKien_DanhMuc', 'U') IS NOT NULL
+    DROP TABLE SuKien_DanhMuc;
+GO
+
 CREATE TABLE SuKien_DanhMuc (
     idSuKien INTEGER NOT NULL,
     idDanhMuc INTEGER NOT NULL,
@@ -109,6 +141,10 @@ CREATE TABLE SuKien_DanhMuc (
 GO
 
 -- 8. BẢNG HoSoSuKien
+IF OBJECT_ID('HoSoSuKien', 'U') IS NOT NULL
+    DROP TABLE HoSoSuKien;
+GO
+
 CREATE TABLE HoSoSuKien (
     idHoSo INTEGER NOT NULL IDENTITY(1,1),
     idSuKien INTEGER NOT NULL,
@@ -125,6 +161,10 @@ CREATE TABLE HoSoSuKien (
 GO
 
 -- 9. BẢNG LichSuPheDuyet
+IF OBJECT_ID('LichSuPheDuyet', 'U') IS NOT NULL
+    DROP TABLE LichSuPheDuyet;
+GO
+
 CREATE TABLE LichSuPheDuyet (
     idPheDuyet INTEGER NOT NULL IDENTITY(1,1),
     idHoSo INTEGER NOT NULL,
@@ -142,6 +182,10 @@ CREATE TABLE LichSuPheDuyet (
 GO
 
 -- 10. BẢNG NganSachDuKien
+IF OBJECT_ID('NganSachDuKien', 'U') IS NOT NULL
+    DROP TABLE NganSachDuKien;
+GO
+
 CREATE TABLE NganSachDuKien (
     idNganSach INTEGER NOT NULL IDENTITY(1,1),
     idSuKien INTEGER NOT NULL,
@@ -155,6 +199,10 @@ CREATE TABLE NganSachDuKien (
 GO
 
 -- 11. BẢNG CongViec
+IF OBJECT_ID('CongViec', 'U') IS NOT NULL
+    DROP TABLE CongViec;
+GO
+
 CREATE TABLE CongViec (
     idCongViec INTEGER NOT NULL IDENTITY(1,1),
     tenCongViec NVARCHAR(50) NOT NULL,
@@ -172,6 +220,10 @@ CREATE TABLE CongViec (
 GO
 
 -- 12. BẢNG PhanCong
+IF OBJECT_ID('PhanCong', 'U') IS NOT NULL
+    DROP TABLE PhanCong;
+GO
+
 CREATE TABLE PhanCong (
     idPhanCong INTEGER NOT NULL IDENTITY(1,1),
     idCongViec INTEGER NOT NULL,
@@ -186,6 +238,10 @@ CREATE TABLE PhanCong (
 GO
 
 -- 13. BẢNG NguoiDung_SuKien
+IF OBJECT_ID('NguoiDung_SuKien', 'U') IS NOT NULL
+    DROP TABLE NguoiDung_SuKien;
+GO
+
 CREATE TABLE NguoiDung_SuKien (
     idNguoiDung CHAR(5) NOT NULL,
     idSuKien INTEGER NOT NULL,
@@ -198,6 +254,10 @@ CREATE TABLE NguoiDung_SuKien (
 GO
 
 -- 14. BẢNG DangKySuKien
+IF OBJECT_ID('DangKySuKien', 'U') IS NOT NULL
+    DROP TABLE DangKySuKien;
+GO
+
 CREATE TABLE DangKySuKien (
     idDangKy INTEGER NOT NULL IDENTITY(1,1),
     idSuKien INTEGER NOT NULL,
@@ -218,6 +278,10 @@ CREATE TABLE DangKySuKien (
 GO
 
 -- 15. BẢNG ThongBao
+IF OBJECT_ID('ThongBao', 'U') IS NOT NULL
+    DROP TABLE ThongBao;
+GO
+
 CREATE TABLE ThongBao (
     idThongBao  INTEGER NOT NULL IDENTITY(1,1),
     idNguoiDung CHAR(5) NOT NULL,
@@ -234,22 +298,38 @@ CREATE TABLE ThongBao (
 GO
 
 -- INDEXES
-CREATE INDEX IX_NguoiDung_MaSoSSO ON NguoiDung(maSoSSO);
-CREATE INDEX IX_NguoiDung_Email ON NguoiDung(email);
-CREATE INDEX IX_SuKien_TrangThai ON SuKien(trangThai);
-CREATE INDEX IX_SuKien_ThoiGian ON SuKien(thoiGianBatDau, thoiGianKetThuc);
-CREATE INDEX IX_SuKien_NguoiTao ON SuKien(idNguoiTao);
-CREATE INDEX IX_SuKien_DiaDiem ON SuKien(idDiaDiem);
-CREATE INDEX IX_DKSK_SuKien ON DangKySuKien(idSuKien);
-CREATE INDEX IX_DKSK_NguoiDung ON DangKySuKien(idNguoiDung);
-CREATE INDEX IX_DKSK_TrangThai ON DangKySuKien(trangThai);
-CREATE INDEX IX_TB_NguoiDung ON ThongBao(idNguoiDung);
-CREATE INDEX IX_TB_DaDoc ON ThongBao(daDoc);
-CREATE INDEX IX_HSSL_SuKien ON HoSoSuKien(idSuKien);
-CREATE INDEX IX_LSPD_HoSo ON LichSuPheDuyet(idHoSo);
-CREATE INDEX IX_LSPD_NguoiDuyet ON LichSuPheDuyet(idNguoiDuyet);
-CREATE INDEX IX_PC_CongViec ON PhanCong(idCongViec);
-CREATE INDEX IX_PC_NguoiDung ON PhanCong(idNguoiDung);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_NguoiDung_MaSoSSO')
+    CREATE INDEX IX_NguoiDung_MaSoSSO ON NguoiDung(maSoSSO);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_NguoiDung_Email')
+    CREATE INDEX IX_NguoiDung_Email ON NguoiDung(email);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_SuKien_TrangThai')
+    CREATE INDEX IX_SuKien_TrangThai ON SuKien(trangThai);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_SuKien_ThoiGian')
+    CREATE INDEX IX_SuKien_ThoiGian ON SuKien(thoiGianBatDau, thoiGianKetThuc);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_SuKien_NguoiTao')
+    CREATE INDEX IX_SuKien_NguoiTao ON SuKien(idNguoiTao);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_SuKien_DiaDiem')
+    CREATE INDEX IX_SuKien_DiaDiem ON SuKien(idDiaDiem);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_DKSK_SuKien')
+    CREATE INDEX IX_DKSK_SuKien ON DangKySuKien(idSuKien);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_DKSK_NguoiDung')
+    CREATE INDEX IX_DKSK_NguoiDung ON DangKySuKien(idNguoiDung);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_DKSK_TrangThai')
+    CREATE INDEX IX_DKSK_TrangThai ON DangKySuKien(trangThai);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_TB_NguoiDung')
+    CREATE INDEX IX_TB_NguoiDung ON ThongBao(idNguoiDung);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_TB_DaDoc')
+    CREATE INDEX IX_TB_DaDoc ON ThongBao(daDoc);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_HSSL_SuKien')
+    CREATE INDEX IX_HSSL_SuKien ON HoSoSuKien(idSuKien);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LSPD_HoSo')
+    CREATE INDEX IX_LSPD_HoSo ON LichSuPheDuyet(idHoSo);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LSPD_NguoiDuyet')
+    CREATE INDEX IX_LSPD_NguoiDuyet ON LichSuPheDuyet(idNguoiDuyet);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_PC_CongViec')
+    CREATE INDEX IX_PC_CongViec ON PhanCong(idCongViec);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_PC_NguoiDung')
+    CREATE INDEX IX_PC_NguoiDung ON PhanCong(idNguoiDung);
 GO
 
 -- DỮ LIỆU MẪU
@@ -401,6 +481,10 @@ GO
 -- ============================================================
 -- VIEWS
 -- ============================================================
+IF OBJECT_ID('vw_SuKienDayDu', 'V') IS NOT NULL
+    DROP VIEW vw_SuKienDayDu;
+GO
+
 CREATE VIEW vw_SuKienDayDu AS
 SELECT
     sk.idSuKien, sk.tenSuKien, sk.moTa,
@@ -420,6 +504,10 @@ GROUP BY
     sk.thoiGianBatDau, sk.thoiGianKetThuc,
     sk.soLuongToiDa, sk.trangThai, sk.thoiGianTao,
     dd.tenDiaDiem, dd.viTri, nd.hoTen, nd.email;
+GO
+
+IF OBJECT_ID('vw_ThongKeThamGia', 'V') IS NOT NULL
+    DROP VIEW vw_ThongKeThamGia;
 GO
 
 CREATE VIEW vw_ThongKeThamGia AS
@@ -443,6 +531,10 @@ LEFT JOIN DangKySuKien dksk ON sk.idSuKien = dksk.idSuKien
 GROUP BY sk.idSuKien, sk.tenSuKien, sk.soLuongToiDa;
 GO
 
+IF OBJECT_ID('vw_LichSuThamGia', 'V') IS NOT NULL
+    DROP VIEW vw_LichSuThamGia;
+GO
+
 CREATE VIEW vw_LichSuThamGia AS
 SELECT
     nd.idNguoiDung, nd.hoTen, nd.maSoSSO,
@@ -460,6 +552,10 @@ GO
 -- ============================================================
 -- STORED PROCEDURES
 -- ============================================================
+IF OBJECT_ID('sp_DangKySuKien', 'P') IS NOT NULL
+    DROP PROCEDURE sp_DangKySuKien;
+GO
+
 CREATE PROCEDURE sp_DangKySuKien
     @idSuKien INTEGER,
     @idNguoiDung CHAR(5),
@@ -517,6 +613,10 @@ BEGIN
 END;
 GO
 
+IF OBJECT_ID('sp_CheckInSuKien', 'P') IS NOT NULL
+    DROP PROCEDURE sp_CheckInSuKien;
+GO
+
 CREATE PROCEDURE sp_CheckInSuKien
     @idSuKien    INTEGER,
     @idNguoiDung CHAR(5),
@@ -541,6 +641,10 @@ BEGIN
 
     SET @ketQua = N'Check-in thành công. Chào mừng bạn đến sự kiện!';
 END;
+GO
+
+IF OBJECT_ID('sp_HuyDangKy', 'P') IS NOT NULL
+    DROP PROCEDURE sp_HuyDangKy;
 GO
 
 CREATE PROCEDURE sp_HuyDangKy
@@ -576,4 +680,70 @@ END;
 GO
 
 PRINT N'=== Script tạo CSDL QuanLySuKien_DHSPKT hoàn tất thành công! ===';
+GO
+
+SELECT * FROM VaiTro;
+SELECT * FROM NguoiDung;
+SELECT * FROM VaiTro_NguoiDung
+SELECT * FROM DiaDiem;
+SELECT * FROM DanhMucSuKien;
+SELECT * FROM SuKien
+SELECT * FROM SuKien_DanhMuc
+SELECT * FROM HoSoSuKien
+SELECT * FROM LichSuPheDuyet
+SELECT * FROM NganSachDuKien
+SELECT * FROM CongViec
+SELECT * FROM PhanCong
+SELECT * FROM NguoiDung_SuKien
+SELECT * FROM DangKySuKien
+SELECT * FROM ThongBao
+-- ============================================================
+-- KIỂM TRA VIEWS
+-- ============================================================
+
+PRINT N'=== KIỂM TRA VIEWS ===';
+PRINT N'';
+
+-- View 1: Sự kiện đầy đủ
+PRINT N'VIEW 1: vw_SuKienDayDu';
+SELECT * FROM vw_SuKienDayDu;
+PRINT N'';
+
+-- View 2: Thống kê tham gia
+PRINT N'VIEW 2: vw_ThongKeThamGia';
+SELECT * FROM vw_ThongKeThamGia;
+PRINT N'';
+
+-- View 3: Lịch sử tham gia
+PRINT N'VIEW 3: vw_LichSuThamGia';
+SELECT * FROM vw_LichSuThamGia;
+PRINT N'';
+
+-- ============================================================
+-- THỐNG KÊ TỔNG QUAN
+-- ============================================================
+
+PRINT N'=== THỐNG KÊ TỔNG QUAN ===';
+PRINT N'';
+
+PRINT N'Tổng số bản ghi trong các bảng:';
+SELECT 
+    'VaiTro' AS BangDuLieu, COUNT(*) AS SoLuong FROM VaiTro
+UNION ALL SELECT 'NguoiDung', COUNT(*) FROM NguoiDung
+UNION ALL SELECT 'VaiTro_NguoiDung', COUNT(*) FROM VaiTro_NguoiDung
+UNION ALL SELECT 'DiaDiem', COUNT(*) FROM DiaDiem
+UNION ALL SELECT 'DanhMucSuKien', COUNT(*) FROM DanhMucSuKien
+UNION ALL SELECT 'SuKien', COUNT(*) FROM SuKien
+UNION ALL SELECT 'SuKien_DanhMuc', COUNT(*) FROM SuKien_DanhMuc
+UNION ALL SELECT 'HoSoSuKien', COUNT(*) FROM HoSoSuKien
+UNION ALL SELECT 'LichSuPheDuyet', COUNT(*) FROM LichSuPheDuyet
+UNION ALL SELECT 'NganSachDuKien', COUNT(*) FROM NganSachDuKien
+UNION ALL SELECT 'CongViec', COUNT(*) FROM CongViec
+UNION ALL SELECT 'PhanCong', COUNT(*) FROM PhanCong
+UNION ALL SELECT 'NguoiDung_SuKien', COUNT(*) FROM NguoiDung_SuKien
+UNION ALL SELECT 'DangKySuKien', COUNT(*) FROM DangKySuKien
+UNION ALL SELECT 'ThongBao', COUNT(*) FROM ThongBao;
+
+PRINT N'';
+PRINT N'=== HOÀN TẤT KIỂM TRA DỮ LIỆU ===';
 GO

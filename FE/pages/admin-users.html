@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Tài khoản - Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/ctsv-approval.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm người dùng...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">5</span>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Admin</span>
+                    <span class="user-role">Quản trị viên hệ thống</span>
+                </div>
+                <img src="../images/avatar-admin.jpg" alt="Admin" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin-users.html" class="nav-item active">
+                    <i class="fas fa-users"></i>
+                    <span>Tài khoản</span>
+                </a>
+                <a href="admin-roles.html" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Phân quyền</span>
+                </a>
+                <a href="admin-event-categories.html" class="nav-item">
+                    <i class="fas fa-tags"></i>
+                    <span>Danh mục SK</span>
+                </a>
+                <a href="admin-locations.html" class="nav-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Địa điểm</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Quản lý Tài khoản</h1>
+                    <p>Thêm, sửa, xóa người dùng trong hệ thống</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="exportUsers()">
+                        <i class="fas fa-file-export"></i>
+                        Xuất danh sách
+                    </button>
+                    <button class="btn-primary" onclick="openAddUserModal()">
+                        <i class="fas fa-user-plus"></i>
+                        Thêm người dùng
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" style="margin-bottom: 24px;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">1,248</div>
+                    <div class="stat-label">TỔNG NGƯỜI DÙNG</div>
+                    <div class="stat-description">Tất cả tài khoản</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-number">1,180</div>
+                    <div class="stat-label">ĐANG HOẠT ĐỘNG</div>
+                    <div class="stat-description">Tài khoản active</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="stat-number">68</div>
+                    <div class="stat-label">TẠM KHÓA</div>
+                    <div class="stat-description">Tài khoản bị khóa</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="stat-number">45</div>
+                    <div class="stat-label">MỚI THÁNG NÀY</div>
+                    <div class="stat-description">Người dùng mới</div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-filter="all">Tất cả (1,248)</button>
+                    <button class="tab-btn" data-filter="student">Sinh viên (1,050)</button>
+                    <button class="tab-btn" data-filter="teacher">Giảng viên (120)</button>
+                    <button class="tab-btn" data-filter="staff">Cán bộ (78)</button>
+                </div>
+                <div class="filter-controls">
+                    <select class="filter-select" id="roleFilter">
+                        <option value="all">Tất cả vai trò</option>
+                        <option value="admin">Admin</option>
+                        <option value="btc">Ban Tổ chức</option>
+                        <option value="ctsv">CTSV</option>
+                        <option value="bgh">BGH</option>
+                        <option value="user">Người dùng</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="active">Đang hoạt động</option>
+                        <option value="inactive">Tạm khóa</option>
+                    </select>
+                    <button class="btn-filter" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i>
+                        Lọc
+                    </button>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="chart-card" style="margin-bottom: 24px;">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll">
+                                </th>
+                                <th>Người dùng</th>
+                                <th>Email</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=3b82f6&color=fff" alt="User" class="user-avatar-small">
+                                        <div>
+                                            <div class="user-name-cell">Nguyễn Văn A</div>
+                                            <div class="user-id-cell">MSSV: 102210001</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>nguyenvana@ute.udn.vn</td>
+                                <td><span class="badge badge-info">Sinh viên</span></td>
+                                <td><span class="status-badge active">Hoạt động</span></td>
+                                <td>15/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editUser(1)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteUser(1)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=Tran+Thi+B&background=8b5cf6&color=fff" alt="User" class="user-avatar-small">
+                                        <div>
+                                            <div class="user-name-cell">Trần Thị B</div>
+                                            <div class="user-id-cell">MSSV: 102210002</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>tranthib@ute.udn.vn</td>
+                                <td><span class="badge badge-warning">BTC</span></td>
+                                <td><span class="status-badge active">Hoạt động</span></td>
+                                <td>18/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editUser(2)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteUser(2)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=Le+Van+C&background=f59e0b&color=fff" alt="User" class="user-avatar-small">
+                                        <div>
+                                            <div class="user-name-cell">Lê Văn C</div>
+                                            <div class="user-id-cell">Giảng viên - Khoa CNTT</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>levanc@ute.udn.vn</td>
+                                <td><span class="badge badge-purple">Giảng viên</span></td>
+                                <td><span class="status-badge active">Hoạt động</span></td>
+                                <td>20/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editUser(3)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteUser(3)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=Pham+Thi+D&background=ec4899&color=fff" alt="User" class="user-avatar-small">
+                                        <div>
+                                            <div class="user-name-cell">Phạm Thị D</div>
+                                            <div class="user-id-cell">Cán bộ - Phòng CTSV</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>phamthid@ute.udn.vn</td>
+                                <td><span class="badge badge-success">CTSV</span></td>
+                                <td><span class="status-badge active">Hoạt động</span></td>
+                                <td>22/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editUser(4)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteUser(4)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=Vo+Van+E&background=10b981&color=fff" alt="User" class="user-avatar-small">
+                                        <div>
+                                            <div class="user-name-cell">Võ Văn E</div>
+                                            <div class="user-id-cell">MSSV: 102210003</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>vovane@ute.udn.vn</td>
+                                <td><span class="badge badge-info">Sinh viên</span></td>
+                                <td><span class="status-badge inactive">Tạm khóa</span></td>
+                                <td>25/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editUser(5)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteUser(5)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=Hoang+Thi+F&background=ef4444&color=fff" alt="User" class="user-avatar-small">
+                                        <div>
+                                            <div class="user-name-cell">Hoàng Thị F</div>
+                                            <div class="user-id-cell">PGS.TS - BGH</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>hoangthif@ute.udn.vn</td>
+                                <td><span class="badge badge-danger">BGH</span></td>
+                                <td><span class="status-badge active">Hoạt động</span></td>
+                                <td>28/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editUser(6)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteUser(6)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=Nguyen+Van+G&background=6366f1&color=fff" alt="User" class="user-avatar-small">
+                                        <div>
+                                            <div class="user-name-cell">Nguyễn Văn G</div>
+                                            <div class="user-id-cell">Admin</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>admin@ute.udn.vn</td>
+                                <td><span class="badge" style="background: #6366f1; color: white;">Admin</span></td>
+                                <td><span class="status-badge active">Hoạt động</span></td>
+                                <td>01/01/2024</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action edit" onclick="editUser(7)" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-action delete" onclick="deleteUser(7)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button class="page-btn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">...</button>
+                    <button class="page-btn">25</button>
+                    <button class="page-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="modalTitle">Thêm người dùng mới</h2>
+                <button class="btn-close" onclick="closeUserModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ và tên <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="userName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" class="form-control" id="userEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mật khẩu <span class="required">*</span></label>
+                            <input type="password" class="form-control" id="userPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Xác nhận mật khẩu <span class="required">*</span></label>
+                            <input type="password" class="form-control" id="userPasswordConfirm" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Vai trò <span class="required">*</span></label>
+                            <select class="form-control" id="userRole" required>
+                                <option value="">Chọn vai trò</option>
+                                <option value="student">Sinh viên</option>
+                                <option value="teacher">Giảng viên</option>
+                                <option value="staff">Cán bộ</option>
+                                <option value="btc">Ban Tổ chức</option>
+                                <option value="ctsv">CTSV</option>
+                                <option value="bgh">BGH</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái</label>
+                            <select class="form-control" id="userStatus">
+                                <option value="active">Hoạt động</option>
+                                <option value="inactive">Tạm khóa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mã số (MSSV/Mã CB)</label>
+                        <input type="text" class="form-control" id="userId">
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="tel" class="form-control" id="userPhone">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeUserModal()">Hủy</button>
+                <button type="button" class="btn-submit success" onclick="saveUser()">
+                    <i class="fas fa-save"></i>
+                    Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/admin-users.js"></script>
+</body>
+</html>

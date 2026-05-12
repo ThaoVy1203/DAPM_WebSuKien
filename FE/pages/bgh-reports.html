@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo tổng thể - Ban Giám Hiệu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/ctsv-approval.css">
+    <link rel="stylesheet" href="../css/ctsv-history.css">
+    <link rel="stylesheet" href="../css/bgh-reports.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm báo cáo...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">PGS.TS Trần Văn Hùng</span>
+                    <span class="user-role">Cán bộ phê duyệt cấp 2</span>
+                </div>
+                <img src="../images/avatar-bgh.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Tran+Van+Hung&background=dc2626&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="bgh-pending-approval.html" class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Chờ duyệt cấp cao</span>
+                </a>
+                <a href="bgh-approval-history.html" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Lịch sử duyệt</span>
+                </a>
+                <a href="bgh-reports.html" class="nav-item active">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo tổng thể</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Báo cáo tổng thể</h1>
+                    <p>Thống kê và phân tích hoạt động phê duyệt sự kiện</p>
+                </div>
+                <div class="header-actions">
+                    <select class="filter-select" id="reportPeriod" style="margin-right: 12px;">
+                        <option value="month">Tháng này</option>
+                        <option value="quarter">Quý này</option>
+                        <option value="year">Năm nay</option>
+                        <option value="custom">Tùy chỉnh</option>
+                    </select>
+                    <button class="btn-secondary" onclick="exportReport()">
+                        <i class="fas fa-file-export"></i>
+                        Xuất báo cáo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Stats -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+                <div class="stat-card total-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-number">38</div>
+                    <div class="stat-label">TỔNG HỒ SƠ</div>
+                    <div class="stat-description">Đã xử lý trong tháng</div>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +12% so với tháng trước
+                    </div>
+                </div>
+
+                <div class="stat-card approved-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number">35</div>
+                    <div class="stat-label">ĐÃ DUYỆT</div>
+                    <div class="stat-description">92.1% tỷ lệ duyệt</div>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +5% so với tháng trước
+                    </div>
+                </div>
+
+                <div class="stat-card rejected-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">TỪ CHỐI</div>
+                    <div class="stat-description">7.9% tỷ lệ từ chối</div>
+                    <div class="stat-trend negative">
+                        <i class="fas fa-arrow-down"></i> -3% so với tháng trước
+                    </div>
+                </div>
+
+                <div class="stat-card time-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number">1.8h</div>
+                    <div class="stat-label">THỜI GIAN TB</div>
+                    <div class="stat-description">Xử lý mỗi hồ sơ</div>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-down"></i> -0.7h so với tháng trước
+                    </div>
+                </div>
+
+                <div class="stat-card pending-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">ĐANG CHỜ</div>
+                    <div class="stat-description">Hồ sơ chờ xử lý</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-number">2.8 tỷ</div>
+                    <div class="stat-label">NGÂN SÁCH</div>
+                    <div class="stat-description">Tổng đã phê duyệt</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <!-- Approval Trend Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line"></i> Xu hướng phê duyệt</h3>
+                        <select class="filter-select-small">
+                            <option>6 tháng gần đây</option>
+                            <option>12 tháng gần đây</option>
+                        </select>
+                    </div>
+                    <canvas id="approvalTrendChart"></canvas>
+                </div>
+
+                <!-- Event Type Distribution -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie"></i> Phân loại sự kiện</h3>
+                    </div>
+                    <canvas id="eventTypeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- More Charts -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <!-- Budget Distribution -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-bar"></i> Phân bổ ngân sách</h3>
+                    </div>
+                    <canvas id="budgetChart"></canvas>
+                </div>
+
+                <!-- Processing Time -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-clock"></i> Thời gian xử lý</h3>
+                    </div>
+                    <canvas id="processingTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Events Table -->
+            <div class="chart-card" style="margin-bottom: 24px;">
+                <div class="chart-header">
+                    <h3><i class="fas fa-trophy"></i> Top sự kiện nổi bật</h3>
+                    <button class="btn-secondary-small">Xem tất cả</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên sự kiện</th>
+                                <th>Loại</th>
+                                <th>Quy mô</th>
+                                <th>Ngân sách</th>
+                                <th>Trạng thái</th>
+                                <th>Đánh giá</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Ngày hội Việc làm và Cơ hội Nghề nghiệp</td>
+                                <td><span class="badge badge-info">Hội thảo</span></td>
+                                <td>800 người</td>
+                                <td>200,000,000 đ</td>
+                                <td><span class="badge badge-success">Đã duyệt</span></td>
+                                <td>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Chương trình Giao lưu Văn hóa Quốc tế</td>
+                                <td><span class="badge badge-purple">Văn hóa</span></td>
+                                <td>400 người</td>
+                                <td>95,000,000 đ</td>
+                                <td><span class="badge badge-success">Đã duyệt</span></td>
+                                <td>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="far fa-star" style="color: #d1d5db;"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Hội thảo Khởi nghiệp và Đổi mới Sáng tạo</td>
+                                <td><span class="badge badge-info">Hội thảo</span></td>
+                                <td>300 người</td>
+                                <td>80,000,000 đ</td>
+                                <td><span class="badge badge-success">Đã duyệt</span></td>
+                                <td>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="far fa-star" style="color: #d1d5db;"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Cuộc thi Lập trình Sáng tạo 2025</td>
+                                <td><span class="badge badge-warning">Thi đấu</span></td>
+                                <td>200 người</td>
+                                <td>60,000,000 đ</td>
+                                <td><span class="badge badge-success">Đã duyệt</span></td>
+                                <td>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Festival Âm nhạc Mùa Xuân</td>
+                                <td><span class="badge badge-danger">Văn nghệ</span></td>
+                                <td>600 người</td>
+                                <td>150,000,000 đ</td>
+                                <td><span class="badge badge-danger">Từ chối</span></td>
+                                <td>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    <i class="far fa-star" style="color: #d1d5db;"></i>
+                                    <i class="far fa-star" style="color: #d1d5db;"></i>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <h4>Hiệu suất xử lý</h4>
+                    </div>
+                    <div class="metric-body">
+                        <div class="metric-item">
+                            <span class="metric-label">Tốc độ xử lý trung bình</span>
+                            <span class="metric-value">1.8 giờ/hồ sơ</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Hồ sơ xử lý nhanh nhất</span>
+                            <span class="metric-value">0.5 giờ</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Hồ sơ xử lý chậm nhất</span>
+                            <span class="metric-value">4.2 giờ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i class="fas fa-percentage"></i>
+                        <h4>Tỷ lệ phê duyệt</h4>
+                    </div>
+                    <div class="metric-body">
+                        <div class="metric-item">
+                            <span class="metric-label">Tỷ lệ duyệt lần đầu</span>
+                            <span class="metric-value success">92.1%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Tỷ lệ từ chối</span>
+                            <span class="metric-value danger">7.9%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Tỷ lệ gửi lại sau từ chối</span>
+                            <span class="metric-value">66.7%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i class="fas fa-calendar-check"></i>
+                        <h4>Thời gian đáp ứng</h4>
+                    </div>
+                    <div class="metric-body">
+                        <div class="metric-item">
+                            <span class="metric-label">Trong hạn</span>
+                            <span class="metric-value success">95%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Trễ hạn</span>
+                            <span class="metric-value danger">5%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Thời gian cam kết</span>
+                            <span class="metric-value">48 giờ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/bgh-reports.js"></script>
+</body>
+</html>

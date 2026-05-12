@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử tham gia - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/history.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-wrapper">
+                <div class="logo">
+                    <img src="../images/logo.png" alt="UTE Events" onerror="this.src='https://via.placeholder.com/150x50/0D5A9C/FFFFFF?text=UTE+Events'">
+                </div>
+                <nav class="nav-menu">
+                    <a href="../index.html" class="nav-link">Trang chủ</a>
+                    <a href="events.html" class="nav-link">Sự kiện</a>
+                    <a href="calender.html" class="nav-link active">Lịch cá nhân</a>
+                    <a href="notifications.html" class="nav-link">Thông báo</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn-notification">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="user-menu">
+                        <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-layout">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <nav class="sidebar-nav">
+                        <a href="home-user.html" class="sidebar-item">
+                            <i class="fas fa-home"></i>
+                            <span>Trang chủ</span>
+                        </a>
+                        <a href="events.html" class="sidebar-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Sự kiện</span>
+                        </a>
+                        <a href="calender.html" class="sidebar-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Lịch cá nhân</span>
+                        </a>
+                        <a href="profile.html" class="sidebar-item">
+                            <i class="fas fa-user"></i>
+                            <span>Hồ sơ cá nhân</span>
+                        </a>
+                        <a href="history.html" class="sidebar-item active">
+                            <i class="fas fa-history"></i>
+                            <span>Lịch sử tham gia</span>
+                        </a>
+                        <a href="notifications.html" class="sidebar-item">
+                            <i class="fas fa-bell"></i>
+                            <span>Thông báo</span>
+                        </a>
+                    </nav>
+
+                    <div class="help-section">
+                        <h4>HỖ TRỢ SINH VIÊN</h4>
+                        <button class="btn-help">Gửi yêu cầu</button>
+                    </div>
+                </aside>
+
+                <!-- Main History Content -->
+                <div class="history-content">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <div>
+                            <h1>Lịch sử Tham gia & Khen thưởng</h1>
+                            <p class="subtitle">Theo dõi hoạt động ngoại khóa và điểm rèn luyện của bạn.</p>
+                        </div>
+                        <button class="btn-analyze">
+                            <i class="fas fa-chart-pie"></i>
+                            Phân tích hiệu điểm
+                        </button>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">HỌC KỲ NÀY</div>
+                                <div class="stat-number">24</div>
+                                <div class="stat-description">Tổng sự kiện tham gia</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">TÍCH LUỸ</div>
+                                <div class="stat-number">85</div>
+                                <div class="stat-description">Điểm rèn luyện (ĐRL)</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">CÔNG TÁC XÃ HỘI</div>
+                                <div class="stat-number">120.5</div>
+                                <div class="stat-description">Giờ phục vụ cộng đồng</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Event History Table -->
+                    <div class="history-section">
+                        <div class="section-header">
+                            <h2>Danh sách chi tiết</h2>
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Tìm kiếm sự kiện...">
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sự kiện</th>
+                                        <th>Ngày tham gia</th>
+                                        <th>Vai trò</th>
+                                        <th>Trạng thái</th>
+                                        <th>Điểm/Giờ</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="pagination">
+                            <span class="pagination-info">Hiển thị 1-4 trong số 24 sự kiện</span>
+                            <div class="pagination-controls">
+                                <button class="page-btn" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="page-btn active">1</button>
+                                <button class="page-btn">2</button>
+                                <button class="page-btn">3</button>
+                                <button class="page-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievement Banner -->
+                    <div class="achievement-banner">
+                        <div class="banner-content">
+                            <div class="banner-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="banner-text">
+                                <h3>Thành tích xuất sắc học kỳ!</h3>
+                                <p>Bạn nằm trong top 5% sinh viên có giá trị cộng đồng cao nhất. Tiếp tục phát huy để nhận học bổng khuyến khích hoạt động xã hội.</p>
+                            </div>
+                        </div>
+                        <button class="btn-banner">Xem bảng xếp hạng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/history.js"></script>
+</body>
+</html>

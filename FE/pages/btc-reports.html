@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/btc-auth.css">
+    <link rel="stylesheet" href="../css/btc-reports.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm báo cáo...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Nguyễn Văn A</span>
+                    <span class="user-role">Trưởng Ban Tổ chức</span>
+                </div>
+                <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Van+A&background=0D5A9C&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="btc-dashboard.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="btc-events.html" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Sự kiện của tôi</span>
+                </a>
+                <a href="btc-budget.html" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Ngân sách</span>
+                </a>
+                <a href="btc-approval.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Phê duyệt</span>
+                </a>
+                <a href="btc-team-tasks.html" class="nav-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>Công việc (Task)</span>
+                </a>
+                <a href="btc-attendance.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Người tham gia</span>
+                </a>
+                <a href="btc-reports.html" class="nav-item active">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-create">
+                    <i class="fas fa-plus-circle"></i>
+                    Tạo sự kiện mới
+                </button>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Quản lý Báo cáo</h1>
+                    <p>Tạo, xuất và quản lý báo cáo sự kiện</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="openUploadReportModal()">
+                        <i class="fas fa-upload"></i>
+                        Upload báo cáo
+                    </button>
+                    <button class="btn-primary" onclick="openCreateReportModal()">
+                        <i class="fas fa-plus"></i>
+                        Tạo báo cáo mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Stats -->
+            <div class="report-stats">
+                <div class="stat-card total-reports">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Tổng báo cáo</h3>
+                        <p class="stat-number">24</p>
+                        <span class="stat-label">Tất cả báo cáo</span>
+                    </div>
+                </div>
+                <div class="stat-card completed-reports">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Đã hoàn thành</h3>
+                        <p class="stat-number">18</p>
+                        <span class="stat-label">Báo cáo hoàn thiện</span>
+                    </div>
+                </div>
+                <div class="stat-card pending-reports">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Đang xử lý</h3>
+                        <p class="stat-number">4</p>
+                        <span class="stat-label">Báo cáo chưa hoàn thành</span>
+                    </div>
+                </div>
+                <div class="stat-card draft-reports">
+                    <div class="stat-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Bản nháp</h3>
+                        <p class="stat-number">2</p>
+                        <span class="stat-label">Báo cáo nháp</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-type="all">Tất cả</button>
+                    <button class="tab-btn" data-type="event">Báo cáo sự kiện</button>
+                    <button class="tab-btn" data-type="budget">Báo cáo tài chính</button>
+                    <button class="tab-btn" data-type="attendance">Báo cáo tham dự</button>
+                    <button class="tab-btn" data-type="summary">Báo cáo tổng kết</button>
+                </div>
+                <div class="filter-controls">
+                    <select class="filter-select" id="eventFilter">
+                        <option value="all">Tất cả sự kiện</option>
+                        <option value="1">Hội thảo Công nghệ 2024</option>
+                        <option value="2">Workshop Khởi nghiệp</option>
+                        <option value="3">Ngày hội Việc làm</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="completed">Đã hoàn thành</option>
+                        <option value="pending">Đang xử lý</option>
+                        <option value="draft">Bản nháp</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Reports Grid -->
+            <div class="reports-grid">
+                <!-- Report Card 1 -->
+                <div class="report-card" data-type="event" data-status="completed">
+                    <div class="report-header">
+                        <div class="report-type event">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Báo cáo sự kiện</span>
+                        </div>
+                        <span class="status-badge completed">Hoàn thành</span>
+                    </div>
+                    <div class="report-body">
+                        <h3>Báo cáo Hội thảo Công nghệ 2024</h3>
+                        <p class="report-description">Báo cáo tổng kết sự kiện Hội thảo Công nghệ Thường niên 2024 với 500 người tham dự</p>
+                        <div class="report-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>Ngày tạo: 20/12/2024</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>Người tạo: Nguyễn Văn A</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="report-footer">
+                        <button class="btn-action-secondary" onclick="viewReport(1)">
+                            <i class="fas fa-eye"></i> Xem
+                        </button>
+                        <button class="btn-action-secondary" onclick="downloadReport(1, 'pdf')">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn-action-secondary" onclick="downloadReport(1, 'excel')">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button class="btn-action-primary" onclick="editReport(1)">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Card 2 -->
+                <div class="report-card" data-type="budget" data-status="completed">
+                    <div class="report-header">
+                        <div class="report-type budget">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Báo cáo tài chính</span>
+                        </div>
+                        <span class="status-badge completed">Hoàn thành</span>
+                    </div>
+                    <div class="report-body">
+                        <h3>Báo cáo Tài chính Q4/2024</h3>
+                        <p class="report-description">Báo cáo chi tiết về tình hình thu chi, ngân sách các sự kiện trong quý 4</p>
+                        <div class="report-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>Ngày tạo: 28/12/2024</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>Người tạo: Trần Thị B</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="report-footer">
+                        <button class="btn-action-secondary" onclick="viewReport(2)">
+                            <i class="fas fa-eye"></i> Xem
+                        </button>
+                        <button class="btn-action-secondary" onclick="downloadReport(2, 'pdf')">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn-action-secondary" onclick="downloadReport(2, 'excel')">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button class="btn-action-primary" onclick="editReport(2)">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Card 3 -->
+                <div class="report-card" data-type="attendance" data-status="pending">
+                    <div class="report-header">
+                        <div class="report-type attendance">
+                            <i class="fas fa-users"></i>
+                            <span>Báo cáo tham dự</span>
+                        </div>
+                        <span class="status-badge pending">Đang xử lý</span>
+                    </div>
+                    <div class="report-body">
+                        <h3>Báo cáo Người tham dự Workshop</h3>
+                        <p class="report-description">Thống kê số lượng và thông tin người tham dự Workshop Khởi nghiệp</p>
+                        <div class="report-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>Ngày tạo: 15/12/2024</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>Người tạo: Lê Văn C</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="report-footer">
+                        <button class="btn-action-secondary" onclick="viewReport(3)">
+                            <i class="fas fa-eye"></i> Xem
+                        </button>
+                        <button class="btn-action-primary" onclick="editReport(3)">
+                            <i class="fas fa-edit"></i> Tiếp tục
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Card 4 -->
+                <div class="report-card" data-type="summary" data-status="draft">
+                    <div class="report-header">
+                        <div class="report-type summary">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Báo cáo tổng kết</span>
+                        </div>
+                        <span class="status-badge draft">Bản nháp</span>
+                    </div>
+                    <div class="report-body">
+                        <h3>Tổng kết hoạt động năm 2024</h3>
+                        <p class="report-description">Báo cáo tổng kết toàn bộ hoạt động, sự kiện trong năm 2024</p>
+                        <div class="report-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>Lưu lần cuối: 30/12/2024</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>Người tạo: Nguyễn Văn A</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="report-footer">
+                        <button class="btn-action-primary" onclick="editReport(4)">
+                            <i class="fas fa-edit"></i> Tiếp tục soạn
+                        </button>
+                        <button class="btn-action-danger" onclick="deleteReport(4)">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="reportModalTitle">Tạo báo cáo mới</h2>
+                <button class="btn-close" onclick="closeReportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm">
+                    <!-- Report Type -->
+                    <div class="form-section">
+                        <h3>Loại báo cáo</h3>
+                        <div class="report-type-grid">
+                            <label class="report-type-option">
+                                <input type="radio" name="reportType" value="event" required>
+                                <div class="type-card">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <span>Báo cáo sự kiện</span>
+                                </div>
+                            </label>
+                            <label class="report-type-option">
+                                <input type="radio" name="reportType" value="budget">
+                                <div class="type-card">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span>Báo cáo tài chính</span>
+                                </div>
+                            </label>
+                            <label class="report-type-option">
+                                <input type="radio" name="reportType" value="attendance">
+                                <div class="type-card">
+                                    <i class="fas fa-users"></i>
+                                    <span>Báo cáo tham dự</span>
+                                </div>
+                            </label>
+                            <label class="report-type-option">
+                                <input type="radio" name="reportType" value="summary">
+                                <div class="type-card">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Báo cáo tổng kết</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3>Thông tin cơ bản</h3>
+                        <div class="form-group">
+                            <label>Tiêu đề báo cáo <span class="required">*</span></label>
+                            <input type="text" id="reportTitle" placeholder="Ví dụ: Báo cáo Hội thảo Công nghệ 2024" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sự kiện liên quan</label>
+                                <select id="relatedEvent">
+                                    <option value="">Chọn sự kiện</option>
+                                    <option value="1">Hội thảo Công nghệ 2024</option>
+                                    <option value="2">Workshop Khởi nghiệp</option>
+                                    <option value="3">Ngày hội Việc làm</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Thời gian báo cáo</label>
+                                <input type="date" id="reportDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Content -->
+                    <div class="form-section">
+                        <h3>Nội dung báo cáo</h3>
+                        <div class="form-group">
+                            <label>Mô tả tóm tắt <span class="required">*</span></label>
+                            <textarea id="reportDescription" rows="4" placeholder="Mô tả ngắn gọn về nội dung báo cáo..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Nội dung chi tiết</label>
+                            <textarea id="reportContent" rows="8" placeholder="Nội dung chi tiết của báo cáo..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Attachments -->
+                    <div class="form-section">
+                        <h3>Tài liệu đính kèm</h3>
+                        <div class="upload-area" onclick="document.getElementById('reportFileInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Kéo thả file vào đây hoặc click để chọn</p>
+                            <span>Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX (Tối đa 20MB)</span>
+                            <input type="file" id="reportFileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" style="display: none;">
+                        </div>
+                        <div id="reportFileList" class="file-list"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeReportModal()">Hủy</button>
+                <button type="button" class="btn-save-draft" onclick="saveReportDraft()">Lưu nháp</button>
+                <button type="submit" class="btn-submit" form="reportForm">Hoàn thành</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Report Modal -->
+    <div id="viewReportModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Chi tiết báo cáo</h2>
+                <button class="btn-close" onclick="closeViewReportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="report-detail-header">
+                    <div class="detail-title-section">
+                        <h3 id="viewReportTitle">Báo cáo Hội thảo Công nghệ 2024</h3>
+                        <div class="detail-badges">
+                            <span class="report-type event" id="viewReportType">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Báo cáo sự kiện</span>
+                            </span>
+                            <span class="status-badge completed" id="viewReportStatus">Hoàn thành</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-detail-meta">
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <div>
+                                <span class="meta-label">Ngày tạo</span>
+                                <span class="meta-value" id="viewReportDate">20/12/2024</span>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <div>
+                                <span class="meta-label">Người tạo</span>
+                                <span class="meta-value" id="viewReportCreator">Nguyễn Văn A</span>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <div>
+                                <span class="meta-label">Sự kiện</span>
+                                <span class="meta-value" id="viewReportEvent">Hội thảo Công nghệ 2024</span>
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <span class="meta-label">Cập nhật lần cuối</span>
+                                <span class="meta-value" id="viewReportUpdated">20/12/2024 10:30</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-detail-section">
+                    <h4><i class="fas fa-align-left"></i> Mô tả tóm tắt</h4>
+                    <p id="viewReportDescription">Báo cáo tổng kết sự kiện Hội thảo Công nghệ Thường niên 2024 với 500 người tham dự, bao gồm các hoạt động chính, kết quả đạt được và đánh giá tổng thể.</p>
+                </div>
+
+                <div class="report-detail-section">
+                    <h4><i class="fas fa-file-alt"></i> Nội dung chi tiết</h4>
+                    <div class="report-content" id="viewReportContent">
+                        <p><strong>I. Tổng quan sự kiện</strong></p>
+                        <p>Hội thảo Công nghệ Thường niên 2024 đã được tổ chức thành công vào ngày 15/12/2024 tại Hội trường A1 với sự tham gia của 500 người bao gồm sinh viên, giảng viên và các chuyên gia trong ngành.</p>
+                        
+                        <p><strong>II. Các hoạt động chính</strong></p>
+                        <ul>
+                            <li>Phiên khai mạc và phát biểu của Ban Giám hiệu</li>
+                            <li>3 phiên thảo luận chuyên đề về AI, Blockchain và IoT</li>
+                            <li>Workshop thực hành với các công nghệ mới</li>
+                            <li>Triển lãm công nghệ từ các doanh nghiệp đối tác</li>
+                        </ul>
+
+                        <p><strong>III. Kết quả đạt được</strong></p>
+                        <ul>
+                            <li>500 người tham dự (vượt 25% so với kế hoạch)</li>
+                            <li>15 diễn giả chuyên gia chia sẻ kinh nghiệm</li>
+                            <li>20 doanh nghiệp tham gia triển lãm</li>
+                            <li>Tỷ lệ hài lòng: 95%</li>
+                        </ul>
+
+                        <p><strong>IV. Đánh giá và kiến nghị</strong></p>
+                        <p>Sự kiện đã đạt được mục tiêu đề ra, tạo được sự quan tâm lớn từ cộng đồng sinh viên. Đề xuất mở rộng quy mô và thời gian tổ chức cho các năm tiếp theo.</p>
+                    </div>
+                </div>
+
+                <div class="report-detail-section">
+                    <h4><i class="fas fa-chart-bar"></i> Thống kê số liệu</h4>
+                    <div class="stats-grid-view">
+                        <div class="stat-box">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number">500</span>
+                                <span class="stat-label">Người tham dự</span>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number">95%</span>
+                                <span class="stat-label">Tỷ lệ hài lòng</span>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number">20</span>
+                                <span class="stat-label">Doanh nghiệp</span>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number">150M</span>
+                                <span class="stat-label">Ngân sách (VNĐ)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-detail-section">
+                    <h4><i class="fas fa-paperclip"></i> Tài liệu đính kèm</h4>
+                    <div class="attachments-grid" id="viewReportAttachments">
+                        <div class="attachment-card">
+                            <div class="attachment-icon pdf">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="attachment-info">
+                                <span class="attachment-name">Báo cáo chi tiết.pdf</span>
+                                <span class="attachment-size">2.5 MB</span>
+                            </div>
+                            <button class="btn-download-attachment">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="attachment-card">
+                            <div class="attachment-icon excel">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <div class="attachment-info">
+                                <span class="attachment-name">Thống kê tham dự.xlsx</span>
+                                <span class="attachment-size">1.2 MB</span>
+                            </div>
+                            <button class="btn-download-attachment">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                        <div class="attachment-card">
+                            <div class="attachment-icon ppt">
+                                <i class="fas fa-file-powerpoint"></i>
+                            </div>
+                            <div class="attachment-info">
+                                <span class="attachment-name">Slide trình bày.pptx</span>
+                                <span class="attachment-size">5.8 MB</span>
+                            </div>
+                            <button class="btn-download-attachment">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeViewReportModal()">Đóng</button>
+                <button type="button" class="btn-secondary" onclick="downloadReportFromView('pdf')">
+                    <i class="fas fa-file-pdf"></i> Xuất PDF
+                </button>
+                <button type="button" class="btn-secondary" onclick="downloadReportFromView('excel')">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
+                </button>
+                <button type="button" class="btn-primary" onclick="editReportFromView()">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Report Modal -->
+    <div id="uploadReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Upload báo cáo</h2>
+                <button class="btn-close" onclick="closeUploadReportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadReportForm">
+                    <div class="form-group">
+                        <label>Tiêu đề báo cáo <span class="required">*</span></label>
+                        <input type="text" id="uploadReportTitle" placeholder="Nhập tiêu đề báo cáo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Loại báo cáo <span class="required">*</span></label>
+                        <select id="uploadReportType" required>
+                            <option value="">Chọn loại báo cáo</option>
+                            <option value="event">Báo cáo sự kiện</option>
+                            <option value="budget">Báo cáo tài chính</option>
+                            <option value="attendance">Báo cáo tham dự</option>
+                            <option value="summary">Báo cáo tổng kết</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>File báo cáo <span class="required">*</span></label>
+                        <div class="upload-area" onclick="document.getElementById('uploadFileInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click để chọn file</p>
+                            <span>Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX (Tối đa 20MB)</span>
+                            <input type="file" id="uploadFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display: none;" required>
+                        </div>
+                        <div id="uploadFileDisplay" class="file-display"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ghi chú</label>
+                        <textarea id="uploadNotes" rows="3" placeholder="Ghi chú thêm (nếu có)..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeUploadReportModal()">Hủy</button>
+                <button type="submit" class="btn-submit" form="uploadReportForm">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/btc-auth.js"></script>
+    <script src="../js/btc-reports.js"></script>
+</body>
+</html>
