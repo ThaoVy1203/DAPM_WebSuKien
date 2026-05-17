@@ -1,5 +1,5 @@
 // Reports Management JavaScript
-
+const API_BASE_URL = "https://localhost:7160/api";
 // Global variables
 let currentReportId = null;
 let uploadedFiles = [];

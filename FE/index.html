@@ -9,6 +9,146 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Style cho user menu */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            position: relative;
+            padding: 8px 12px;
+            border-radius: 40px;
+            background: #f0f2f5;
+            transition: all 0.3s;
+        }
+        .user-menu:hover {
+            background: #e4e6e9;
+        }
+        .user-avatar img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a1a2e;
+        }
+        .user-role {
+            font-size: 12px;
+            color: #666;
+        }
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            min-width: 200px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+        .user-dropdown a:hover {
+            background: #f0f2f5;
+        }
+        .user-dropdown hr {
+            margin: 0;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+        .btn-login {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #0D5A9C 0%, #0A4A82 100%);
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13,90,156,0.3);
+        }
+        .event-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .event-badge {
+            background: #0D5A9C;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .event-card-content {
+            padding: 20px;
+        }
+        .event-card-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #1a1a2e;
+        }
+        .event-meta {
+            display: flex;
+            gap: 16px;
+            margin: 12px 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .event-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-view-detail {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: #0D5A9C;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: background 0.3s;
+        }
+        .btn-view-detail:hover {
+            background: #0A4A82;
+        }
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -20,16 +160,17 @@
                 </div>
                 <nav class="nav-menu">
                     <a href="#" class="nav-link active">Trang chủ</a>
-                    <a href="#" class="nav-link">Sự kiện</a>
-                    <a href="#" class="nav-link">Giới thiệu</a>
-                    <a href="#" class="nav-link">Liên hệ</a>
+                    <a href="pages/events.html" class="nav-link">Sự kiện</a>
+                    <a href="#gioi-thieu" class="nav-link">Giới thiệu</a>
+                    <a href="#lien-he" class="nav-link">Liên hệ</a>
                 </nav>
                 <div class="header-actions">
                     <div class="search-wrapper">
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Tìm kiếm sự kiện...">
                     </div>
-                    <a href="pages/login.html" class="btn-login">Đăng nhập</a>
+                    <!-- Phần này sẽ được JavaScript cập nhật -->
+                    <div id="auth-section"></div>
                 </div>
             </div>
         </div>
@@ -51,11 +192,11 @@
                     cùng cộng đồng sinh viên năng động.
                 </p>
                 <div class="hero-buttons">
-                    <a href="pages/login.html" class="btn btn-primary">
+                    <a href="pages/events.html" class="btn btn-primary" id="exploreBtn">
                         <i class="fas fa-calendar-check"></i>
                         Khám phá sự kiện
                     </a>
-                    <a href="#" class="btn btn-outline">
+                    <a href="pages/login.html" class="btn btn-outline" id="registerBtn">
                         <i class="fas fa-play-circle"></i>
                         Đăng ký sự kiện
                     </a>
@@ -90,54 +231,17 @@
             <div class="section-header">
                 <h2>Sự kiện nổi bật</h2>
                 <p>Cùng tìm hiểu những hoạt động nổi bật đang diễn ra tại trường</p>
-                <a href="#" class="link-view-all">Xem tất cả →</a>
+                <a href="pages/events.html" class="link-view-all">Xem tất cả →</a>
             </div>
             
             <div class="events-grid">
-                <div class="event-card featured">
-                    <div class="event-badge">Sắp diễn ra</div>
-                    <img src="images/UTE Tech Showcase.png" alt="UTE Tech Showcase 2024" onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=UTE+Tech+2024'">
-                    <div class="event-card-content">
-                        <h3>UTE Tech Showcase 2024</h3>
-                        <div class="event-meta">
-                            <span><i class="far fa-calendar"></i> 15/12/2024 - 20/12</span>
-                            <span><i class="fas fa-map-marker-alt"></i> Hội trường A - Tòa nhà chính</span>
-                        </div>
-                        <a href="#" class="btn-view-detail">Xem chi tiết</a>
-                    </div>
-                </div>
-
-                <div class="event-card">
-                    <div class="event-badge blue">Đang diễn ra</div>
-                    <img src="images/Skills Talk.png" alt="Top đầm tay công Thế kỷ 21" onerror="this.src='https://via.placeholder.com/400x250/1976D2/FFFFFF?text=Workshop'">
-                    <div class="event-card-content">
-                        <h3>Top đầm tay công Thế kỷ 21</h3>
-                        <div class="event-meta">
-                            <span><i class="far fa-calendar"></i> 10/12/2024 - 12/12</span>
-                            <span><i class="fas fa-map-marker-alt"></i> Phòng hội thảo A2, Tòa nhà</span>
-                        </div>
-                        <a href="#" class="btn-view-detail">Xem chi tiết</a>
-                    </div>
-                </div>
-
-                <div class="event-card">
-                    <div class="event-badge green">Đã kết thúc</div>
-                    <img src="images/Culture Festival.png" alt="Ngày hội Văn hóa UTE" onerror="this.src='https://via.placeholder.com/400x250/10B981/FFFFFF?text=Culture+Day'">
-                    <div class="event-card-content">
-                        <h3>Ngày hội Văn hóa UTE</h3>
-                        <div class="event-meta">
-                            <span><i class="far fa-calendar"></i> 01/12/2024 - 03/12</span>
-                            <span><i class="fas fa-map-marker-alt"></i> Sân vận động trường</span>
-                        </div>
-                        <a href="#" class="btn-view-detail">Xem chi tiết</a>
-                    </div>
-                </div>
+                <!-- Events will be loaded here -->
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="features-section">
+    <section class="features-section" id="gioi-thieu">
         <div class="container">
             <div class="section-header centered">
                 <h2>Lợi ích quản lý</h2>
@@ -230,7 +334,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" id="lien-he">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
@@ -276,5 +380,226 @@
             </div>
         </div>
     </footer>
+
+    <script>
+    // ======================
+    // API URL
+    // ======================
+    const API_BASE = "https://localhost:7160/api";
+    const API_URL = "https://localhost:7160/api/SuKien";
+    
+    // ======================
+    // KIỂM TRA TOKEN VỚI BE TRƯỚC KHI CHO ĐĂNG NHẬP
+    // ======================
+    async function verifyTokenWithBE() {
+        const token = localStorage.getItem("token");
+        const userData = localStorage.getItem("userData");
+        
+        // Không có token hoặc userData → chưa đăng nhập
+        if (!token || !userData) {
+            return false;
+        }
+        
+        try {
+            // Gọi BE để kiểm tra token có hợp lệ không
+            const response = await fetch(`${API_BASE}/Auth/verify`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Token hợp lệ:", data);
+                
+                // Cập nhật lại userData nếu cần
+                if (data.success) {
+                    return true;
+                } else {
+                    // Token không hợp lệ → xóa
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("userData");
+                    return false;
+                }
+            } else {
+                // Token hết hạn hoặc không hợp lệ
+                console.log("Token không hợp lệ, xóa khỏi localStorage");
+                localStorage.removeItem("token");
+                localStorage.removeItem("userData");
+                return false;
+            }
+            
+        } catch (error) {
+            console.error("Không thể kết nối đến BE để xác thực:", error);
+            // Nếu không kết nối được BE, vẫn cho phép (tránh lỗi khi BE chưa chạy)
+            // Nhưng trong production nên return false
+            return false;
+        }
+    }
+    
+    // ======================
+    // CẬP NHẬT UI DỰA TRÊN TRẠNG THÁI ĐĂNG NHẬP THỰC TẾ
+    // ======================
+    let isLoggedIn = false;
+    let currentUser = null;
+    
+    async function updateAuthUI() {
+        const authSection = document.getElementById("auth-section");
+        if (!authSection) return;
+        
+        // Kiểm tra đăng nhập thực tế với BE
+        const loggedIn = await verifyTokenWithBE();
+        
+        if (loggedIn) {
+            // ĐÃ ĐĂNG NHẬP THẬT SỰ
+            const userData = localStorage.getItem("userData");
+            if (userData) {
+                currentUser = JSON.parse(userData);
+            }
+            
+            if (!currentUser) {
+                authSection.innerHTML = `<a href="pages/login.html" class="btn-login">Đăng nhập</a>`;
+                return;
+            }
+            
+            const userName = currentUser.hoTen || "Người dùng";
+            const vaiTros = currentUser.vaiTros || [];
+            
+            let dashboardLink = "#";
+            if (vaiTros.includes("Admin")) {
+                dashboardLink = "pages/admin-dashboard.html";
+            } else if (vaiTros.includes("TruongBanToChuc") || vaiTros.includes("ThanhVienBanToChuc")) {
+                dashboardLink = "pages/btc-dashboard.html";
+            } else if (vaiTros.includes("CanBoPheDuyetCap2")) {
+                dashboardLink = "pages/bgh-approval.html";
+            } else if (vaiTros.includes("CanBoPheDuyetCap1")) {
+                dashboardLink = "pages/ctsv-pending-approval.html";
+            } else {
+                dashboardLink = "pages/events.html";
+            }
+            
+            authSection.innerHTML = `
+                <div class="user-menu">
+                    <div class="user-avatar">
+                        <img src="${currentUser.anhDaiDien || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userName) + '&background=0D5A9C&color=fff'}" alt="Avatar">
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">${escapeHtml(userName)}</span>
+                        <span class="user-role">${vaiTros[0] || "Thành viên"}</span>
+                    </div>
+                    <i class="fas fa-chevron-down" style="font-size: 12px; color: #666;"></i>
+                    <div class="user-dropdown" style="display: none;">
+                        <a href="${dashboardLink}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                        <a href="pages/profile.html"><i class="fas fa-user"></i> Hồ sơ</a>
+                        <a href="pages/history.html"><i class="fas fa-history"></i> Lịch sử</a>
+                        <a href="pages/my-tickets.html"><i class="fas fa-ticket-alt"></i> Vé của tôi</a>
+                        <hr>
+                        <a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                    </div>
+                </div>
+            `;
+            
+            // Sự kiện click cho user menu
+            const userMenu = document.querySelector(".user-menu");
+            if (userMenu) {
+                const newUserMenu = userMenu.cloneNode(true);
+                userMenu.parentNode.replaceChild(newUserMenu, userMenu);
+                
+                newUserMenu.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    const dropdown = this.querySelector(".user-dropdown");
+                    if (dropdown) {
+                        dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+                    }
+                });
+            }
+        } else {
+            // CHƯA ĐĂNG NHẬP HOẶC TOKEN HẾT HẠN
+            authSection.innerHTML = `<a href="pages/login.html" class="btn-login">Đăng nhập</a>`;
+        }
+    }
+    
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener("click", function() {
+        const dropdown = document.querySelector(".user-dropdown");
+        if (dropdown) dropdown.style.display = "none";
+    });
+    
+    // ======================
+    // ĐĂNG XUẤT
+    // ======================
+    function logout(event) {
+        if (event) event.preventDefault();
+        localStorage.removeItem("token");
+        localStorage.removeItem("userData");
+        window.location.reload();
+    }
+    
+    // ======================
+    // LOAD SỰ KIỆN
+    // ======================
+    async function loadEvents() {
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error("Không lấy được dữ liệu");
+            const events = await response.json();
+            renderEvents(events);
+        } catch (error) {
+            console.error("Lỗi:", error);
+            const container = document.querySelector(".events-grid");
+            if (container) {
+                container.innerHTML = '<div style="text-align:center; padding:40px;">Không thể tải sự kiện. Vui lòng thử lại sau.</div>';
+            }
+        }
+    }
+    
+    function renderEvents(events) {
+        const container = document.querySelector(".events-grid");
+        if (!container) return;
+        container.innerHTML = "";
+        
+        if (!events || events.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px;">Hiện chưa có sự kiện nào</div>';
+            return;
+        }
+        
+        events.slice(0, 6).forEach(event => {
+            const startDate = event.thoiGianBatDau ? new Date(event.thoiGianBatDau).toLocaleDateString("vi-VN") : "Chưa có";
+            container.innerHTML += `
+                <div class="event-card">
+                    <div class="event-badge blue">Sự kiện</div>
+                    <div class="event-card-content">
+                        <h3>${escapeHtml(event.tenSuKien) || "Chưa có tên"}</h3>
+                        <div class="event-meta">
+                            <span><i class="far fa-calendar"></i> ${startDate}</span>
+                            <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(event.diaDiem?.tenDiaDiem || event.tenDiaDiem || "Đang cập nhật")}</span>
+                        </div>
+                        <a href="pages/event-detail.html?id=${event.idSuKien}" class="btn-view-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // ======================
+    // KHỞI TẠO
+    // ======================
+    document.addEventListener("DOMContentLoaded", function() {
+        updateAuthUI();   // Kiểm tra token với BE rồi mới cập nhật UI
+        loadEvents();
+    });
+</script>
 </body>
 </html>

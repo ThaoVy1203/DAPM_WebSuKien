@@ -8,8 +8,56 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/btc-dashboard.css">
-    <link rel="stylesheet" href="../css/btc-auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            position: relative;
+            padding: 8px 12px;
+            border-radius: 40px;
+            transition: background 0.3s;
+        }
+        .user-profile:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            min-width: 200px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .user-dropdown a:hover {
+            background: #f0f2f5;
+        }
+        .user-dropdown hr {
+            margin: 0;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -27,12 +75,18 @@
             <button class="btn-notification">
                 <i class="fas fa-bell"></i>
             </button>
-            <div class="user-profile">
+            <div class="user-profile" id="userProfile">
                 <div class="user-info">
-                    <span class="user-name">Nguyễn Văn A</span>
-                    <span class="user-role">Trưởng Ban Tổ chức</span>
+                    <span class="user-name" id="userName">Đang tải...</span>
+                    <span class="user-role" id="userRole">Thành viên BTC</span>
                 </div>
-                <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Van+A&background=0D5A9C&color=fff'">
+                <img src="" alt="User" class="user-avatar" id="userAvatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
+                <div class="user-dropdown" id="userDropdown" style="display: none;">
+                    <a href="btc-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a href="profile.html"><i class="fas fa-user"></i> Hồ sơ</a>
+                    <hr>
+                    <a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                </div>
             </div>
         </div>
     </header>
@@ -72,7 +126,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <button class="btn-create">
+                <button class="btn-create" onclick="window.location.href='btc-events.html'">
                     <i class="fas fa-plus-circle"></i>
                     Tạo sự kiện mới
                 </button>
@@ -80,7 +134,7 @@
                     <i class="fas fa-question-circle"></i>
                     <span>Trợ giúp</span>
                 </a>
-                <a href="#" class="nav-item danger">
+                <a href="#" class="nav-item danger" onclick="logout(event)">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Đăng xuất</span>
                 </a>
@@ -93,14 +147,14 @@
             <div class="page-header">
                 <div>
                     <h1>Tổng quan Dự án</h1>
-                    <p>Cập nhật lúc 10:30, Hôm nay. Kiểm tra tất cả nhiệm vụ và ngân sách hôm nay.</p>
+                    <p id="welcomeMsg">Cập nhật lúc hôm nay. Kiểm tra tất cả nhiệm vụ và ngân sách.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-secondary">
+                    <button class="btn-secondary" onclick="exportReport()">
                         <i class="fas fa-file-export"></i>
                         Gửi báo cáo
                     </button>
-                    <button class="btn-primary">
+                    <button class="btn-primary" onclick="submitBudgetApproval()">
                         <i class="fas fa-check"></i>
                         Gửi phê duyệt ngân sách
                     </button>
@@ -114,43 +168,37 @@
                         <i class="fas fa-user-plus"></i>
                         <span class="stat-change positive">+12%</span>
                     </div>
-                    <div class="stat-number">48</div>
+                    <div class="stat-number" id="teamMembers">0</div>
                     <div class="stat-label">ĐỐI TÁC NHÂN TỔ CHỨC</div>
                     <div class="stat-description">thành viên</div>
-                    <div class="stat-avatars">
-                        <img src="https://ui-avatars.com/api/?name=A&background=0D5A9C&color=fff" alt="Avatar">
-                        <img src="https://ui-avatars.com/api/?name=B&background=1976D2&color=fff" alt="Avatar">
-                        <img src="https://ui-avatars.com/api/?name=C&background=10B981&color=fff" alt="Avatar">
-                        <span class="more-count">+45</span>
-                    </div>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-header">
                         <i class="fas fa-tasks"></i>
                     </div>
-                    <div class="stat-number">156<span class="stat-total">/182</span></div>
+                    <div class="stat-number"><span id="completedTasks">0</span><span class="stat-total">/<span id="totalTasks">0</span></span></div>
                     <div class="stat-label">TIẾN ĐỘ CÔNG VIỆC</div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 85.7%"></div>
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <div class="stat-card budget">
-                    <div class="stat-badge warning">85% hoàn thành</div>
+                    <div class="stat-badge warning" id="budgetProgress">0% hoàn thành</div>
                     <div class="stat-title">TỔNG NGÂN SÁCH DỰ ÁN</div>
-                    <div class="stat-budget">150,000,000 đ</div>
+                    <div class="stat-budget" id="totalBudget">0 đ</div>
                     <div class="budget-details">
                         <div class="budget-item">
                             <span>ĐÃ CHI</span>
-                            <span class="amount">92,450,000 đ</span>
+                            <span class="amount" id="spentBudget">0 đ</span>
                         </div>
                         <div class="budget-item">
                             <span>CÒN LẠI</span>
-                            <span class="amount">57,550,000 đ</span>
+                            <span class="amount" id="remainingBudget">0 đ</span>
                         </div>
                     </div>
-                    <a href="#" class="view-all-link">Xem tất cả</a>
+                    <a href="btc-budget.html" class="view-all-link">Xem tất cả</a>
                 </div>
             </div>
 
@@ -162,55 +210,10 @@
                     <div class="card">
                         <div class="card-header">
                             <h2>Phân công Nhiệm vụ</h2>
-                            <a href="#" class="view-all-link">Xem tất cả</a>
+                            <a href="btc-team-tasks.html" class="view-all-link">Xem tất cả</a>
                         </div>
-                        <div class="task-table-header">
-                            <div class="header-col col-task">NHIỆM VỤ</div>
-                            <div class="header-col col-assignee">PHỤ TRÁCH</div>
-                            <div class="header-col col-date">HẠN CHÓT</div>
-                            <div class="header-col col-status">TRẠNG THÁI</div>
-                            <div class="header-col col-action">HÀNH ĐỘNG</div>
-                        </div>
-                        <div class="task-list">
-                            <div class="task-item">
-                                <div class="task-info">
-                                    <h4>Thiết kế thanh âm trang</h4>
-                                    <p>Ban hậu cần</p>
-                                </div>
-                                <div class="task-assignee">
-                                    <img src="https://ui-avatars.com/api/?name=Tran+Hoang+M&background=0D5A9C&color=fff" alt="Avatar">
-                                    <span>Trần Hoàng M.</span>
-                                </div>
-                                <div class="task-date">24/10/2024</div>
-                                <span class="task-status pending">ĐANG LÀM</span>
-                                <button class="btn-more"><i class="fas fa-ellipsis-h"></i></button>
-                            </div>
-                            <div class="task-item">
-                                <div class="task-info">
-                                    <h4>Thiết kế Backdrop</h4>
-                                    <p>Ban truyền thông</p>
-                                </div>
-                                <div class="task-assignee">
-                                    <img src="https://ui-avatars.com/api/?name=Le+Thi+B&background=10B981&color=fff" alt="Avatar">
-                                    <span>Lê Thị B.</span>
-                                </div>
-                                <div class="task-date">20/10/2024</div>
-                                <span class="task-status completed">HOÀN THÀNH</span>
-                                <button class="btn-more"><i class="fas fa-ellipsis-h"></i></button>
-                            </div>
-                            <div class="task-item">
-                                <div class="task-info">
-                                    <h4>Gửi thư mời Đại biểu</h4>
-                                    <p>Ban đối ngoại</p>
-                                </div>
-                                <div class="task-assignee">
-                                    <img src="https://ui-avatars.com/api/?name=Pham+Hai+Y&background=EF4444&color=fff" alt="Avatar">
-                                    <span>Phạm Hải Y.</span>
-                                </div>
-                                <div class="task-date danger">15/10/2024</div>
-                                <span class="task-status overdue">QUÁ HẠN</span>
-                                <button class="btn-more"><i class="fas fa-ellipsis-h"></i></button>
-                            </div>
+                        <div class="task-list" id="taskList">
+                            <div class="loading">Đang tải nhiệm vụ...</div>
                         </div>
                     </div>
 
@@ -219,37 +222,12 @@
                         <div class="card-header">
                             <h2>Chi tiết Ngân sách</h2>
                             <div class="card-actions">
-                                <button class="btn-icon"><i class="fas fa-filter"></i></button>
-                                <button class="btn-icon"><i class="fas fa-download"></i></button>
+                                <button class="btn-icon" onclick="filterBudget()"><i class="fas fa-filter"></i></button>
+                                <button class="btn-icon" onclick="downloadBudget()"><i class="fas fa-download"></i></button>
                             </div>
                         </div>
-                        <div class="budget-list">
-                            <div class="budget-item-card">
-                                <div class="budget-icon blue">
-                                    <i class="fas fa-bullhorn"></i>
-                                </div>
-                                <div class="budget-info">
-                                    <h4>Truyền thông & Marketing</h4>
-                                    <p>In ấn, quảng cáo Facebook, Zalo</p>
-                                </div>
-                                <div class="budget-amount">
-                                    <div class="amount-value">25,000,000 đ</div>
-                                    <div class="amount-status success">Đã gửi ngân sách</div>
-                                </div>
-                            </div>
-                            <div class="budget-item-card">
-                                <div class="budget-icon purple">
-                                    <i class="fas fa-utensils"></i>
-                                </div>
-                                <div class="budget-info">
-                                    <h4>Teabreak & Hậu cần</h4>
-                                    <p>Trà, nước uống, Nước uống BTC</p>
-                                </div>
-                                <div class="budget-amount">
-                                    <div class="amount-value">45,000,000 đ</div>
-                                    <div class="amount-status pending">Chờ duyệt từ 10/10/2024</div>
-                                </div>
-                            </div>
+                        <div class="budget-list" id="budgetList">
+                            <div class="loading">Đang tải ngân sách...</div>
                         </div>
                     </div>
                 </div>
@@ -261,45 +239,8 @@
                         <div class="card-header">
                             <h3>Yêu cầu cần Phê duyệt</h3>
                         </div>
-                        <div class="approval-item">
-                            <div class="approval-badge">1 MỚI</div>
-                            <h4>Yêu cầu mua thêm vật phòng phẩm</h4>
-                            <p>Gửi bởi Nguyễn Văn L (Ban Thu ký)</p>
-                            <div class="approval-amount">2,450,000 đ</div>
-                            <div class="approval-actions">
-                                <button class="btn-approve">Duyệt</button>
-                                <button class="btn-reject">Từ chối</button>
-                            </div>
-                        </div>
-                        <div class="approval-item">
-                            <div class="approval-badge">1 MỚI</div>
-                            <h4>Thay đổi nhà cung cấp in ấn</h4>
-                            <p>Gửi bởi Đặng Việt L (Ban Truyền thông)</p>
-                            <p class="approval-note">Nhà cung cấp cũ không đảm bảo chất lượng và tiến độ giao hàng...</p>
-                            <button class="btn-view-detail">Xem chi tiết</button>
-                        </div>
-                    </div>
-
-                    <!-- Status Update -->
-                    <div class="card status-card">
-                        <div class="status-header">
-                            <h3>Trạng thái Cấp trên</h3>
-                        </div>
-                        <div class="status-info">
-                            <p>Theo dõi các yêu cầu bạn đã gửi lên Ban Giám hiệu / Hội sinh viên.</p>
-                        </div>
-                        <div class="status-item">
-                            <div class="status-badge pending">ĐANG XÉT</div>
-                            <h4>Phê duyệt kế hoạch tổ chức 9/4</h4>
-                            <p>Thời hạn: Chủ nhật, 20/10/2024</p>
-                            <div class="progress-bar small">
-                                <div class="progress-fill" style="width: 60%"></div>
-                            </div>
-                        </div>
-                        <div class="status-item">
-                            <div class="status-badge approved">ĐÃ DUYỆT</div>
-                            <h4>Đề xuất công tác viên đợt 2</h4>
-                            <p>Thời hạn: Chủ nhật, 20/10/2024</p>
+                        <div class="approval-list" id="approvalList">
+                            <div class="loading">Đang tải yêu cầu...</div>
                         </div>
                     </div>
 
@@ -308,28 +249,8 @@
                         <div class="card-header">
                             <h3>Hoạt động gần đây</h3>
                         </div>
-                        <div class="activity-list">
-                            <div class="activity-item">
-                                <div class="activity-dot"></div>
-                                <div class="activity-content">
-                                    <p><strong>Hoài Nguyễn</strong> đã cập nhật trạng thái nhiệm vụ "Thiết kế map nội"</p>
-                                    <span class="activity-time">2 giờ trước</span>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-dot"></div>
-                                <div class="activity-content">
-                                    <p><strong>Minh Tú</strong> đã hoàn thành báo cáo ngân sách tháng 9</p>
-                                    <span class="activity-time">5 giờ trước</span>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-dot"></div>
-                                <div class="activity-content">
-                                    <p><strong>Trọng Anh</strong> đã gửi yêu cầu phê duyệt mới</p>
-                                    <span class="activity-time">1 ngày trước</span>
-                                </div>
-                            </div>
+                        <div class="activity-list" id="activityList">
+                            <div class="loading">Đang tải hoạt động...</div>
                         </div>
                     </div>
                 </div>
@@ -351,7 +272,6 @@
                     </div>
                     <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
                 </div>
-
                 <div class="footer-col">
                     <h4>Thông tin liên lạc</h4>
                     <ul class="footer-links">
@@ -360,14 +280,12 @@
                         <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
                     </ul>
                 </div>
-
                 <div class="footer-col">
                     <h4>Bản đồ chỉ dẫn</h4>
                     <div class="map-placeholder">
                         <img src="../images/map.png" alt="Bản đồ">
                     </div>
                 </div>
-
                 <div class="footer-col">
                     <h4>Kết nối</h4>
                     <div class="social-links">
@@ -385,7 +303,7 @@
         </div>
     </footer>
 
-    <script src="../js/btc-auth.js"></script>
     <script src="../js/btc-dashboard.js"></script>
+    <script src="../js/btc-logout.js"></script>
 </body>
 </html>

@@ -1,82 +1,161 @@
-// Profile Page JavaScript
+// js/calender.js
+const API_BASE = "https://localhost:7160/api";
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Calendar navigation
-    const calendarNavBtns = document.querySelectorAll('.btn-nav');
-    calendarNavBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            console.log('Calendar navigation clicked');
-            // Add calendar navigation logic here
-        });
-    });
-    
-    // Calendar date selection
-    const calendarDates = document.querySelectorAll('.calendar-date:not(.inactive)');
-    calendarDates.forEach(date => {
-        date.addEventListener('click', function() {
-            // Remove active class from all dates
-            calendarDates.forEach(d => d.classList.remove('active'));
-            // Add active class to clicked date
-            this.classList.add('active');
-            console.log('Selected date:', this.textContent);
-        });
-    });
-    
-    // View event buttons
-    const viewButtons = document.querySelectorAll('.btn-view');
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const eventItem = this.closest('.event-item');
-            const eventTitle = eventItem.querySelector('h4').textContent;
-            console.log('Viewing event:', eventTitle);
-            // Redirect to event detail page
-            window.location.href = 'event-detail.html';
-        });
-    });
-    
-    // Help button
-    const helpBtn = document.querySelector('.btn-help');
-    if (helpBtn) {
-        helpBtn.addEventListener('click', function() {
-            alert('Chức năng gửi yêu cầu hỗ trợ đang được phát triển.');
-        });
+document.addEventListener("DOMContentLoaded", async function () {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "login.html";
+        return;
     }
-    
-    // Download report button
-    const downloadBtn = document.querySelector('.btn-download');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', function() {
-            alert('Đang tải báo cáo hoạt động của bạn...');
-            // Add download logic here
-        });
-    }
-    
-    // Notification interactions
-    const notificationItems = document.querySelectorAll('.notification-item');
-    notificationItems.forEach(item => {
-        item.addEventListener('click', function() {
-            console.log('Notification clicked');
-            // Mark as read or show detail
-        });
-    });
-    
-    // View all notifications
-    const viewAllLink = document.querySelector('.view-all-link');
-    if (viewAllLink) {
-        viewAllLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('View all notifications');
-            // Navigate to notifications page
-        });
-    }
-    
-    // Animate progress bar on load
-    const progressFill = document.querySelector('.progress-fill');
-    if (progressFill) {
-        const targetWidth = progressFill.style.width;
-        progressFill.style.width = '0%';
-        setTimeout(() => {
-            progressFill.style.width = targetWidth;
-        }, 300);
-    }
+
+    loadWelcomeInfo();
+    await loadUpcomingEvents();
+    initializeCalendar();
+    initializeButtons();
+    animateProgressBar();
 });
+
+// ==========================
+// WELCOME — điền tên từ localStorage
+// ==========================
+function loadWelcomeInfo() {
+    const raw = localStorage.getItem("userData");
+    if (!raw) return;
+    try {
+        const user = JSON.parse(raw);
+        const nameEl = document.getElementById("welcomeName");
+        if (nameEl) nameEl.textContent = `Xin chào, ${user.hoTen || "bạn"}`;
+    } catch (e) { /* bỏ qua */ }
+}
+
+// ==========================
+// LOAD SỰ KIỆN SẮP TỚI
+// ==========================
+async function loadUpcomingEvents() {
+    const token = localStorage.getItem("token");
+    try {
+        // Lấy danh sách đăng ký của người dùng (trạng thái Đã xác nhận)
+        const res = await fetch(`${API_BASE}/DangKySuKien/my?trangThai=Đã xác nhận`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : (data.items || data.data || []);
+
+        // Cập nhật welcome message
+        const msgEl = document.getElementById("welcomeMsg");
+        if (msgEl) {
+            msgEl.textContent = items.length > 0
+                ? `Bạn có ${items.length} sự kiện sắp diễn ra.`
+                : "Bạn chưa có sự kiện nào sắp tới.";
+        }
+
+        // Cập nhật stat
+        const statValue = document.querySelector(".stat-value");
+        if (statValue) statValue.textContent = items.length;
+
+        renderUpcomingEvents(items);
+
+    } catch (e) {
+        console.warn("Không load được sự kiện sắp tới:", e.message);
+    }
+}
+
+function renderUpcomingEvents(items) {
+    const list = document.querySelector(".events-list");
+    if (!list) return;
+
+    if (!items || items.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:#999;font-size:14px;">
+            Chưa có sự kiện nào sắp tới.
+        </div>`;
+        return;
+    }
+
+    list.innerHTML = "";
+    items.slice(0, 3).forEach(item => {
+        const tenSuKien = item.tenSuKien || item.suKien?.tenSuKien || "Sự kiện";
+        const diaDiem = item.tenDiaDiem || item.suKien?.diaDiem?.tenDiaDiem || "Đang cập nhật";
+        const ngay = item.thoiGianBatDau || item.suKien?.thoiGianBatDau;
+        const date = ngay ? new Date(ngay) : null;
+        const month = date ? date.toLocaleString("vi-VN", { month: "short" }).toUpperCase() : "--";
+        const day = date ? date.getDate() : "--";
+        const idSuKien = item.idSuKien || item.suKien?.idSuKien || "";
+
+        list.innerHTML += `
+            <div class="event-item">
+                <div class="event-date-box">
+                    <div class="date-month">${month}</div>
+                    <div class="date-day">${day}</div>
+                </div>
+                <div class="event-info">
+                    <h4>${escapeHtml(tenSuKien)}</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</p>
+                </div>
+                <a href="event-detail.html?id=${idSuKien}" class="btn-view">Xem vé</a>
+            </div>`;
+    });
+}
+
+// ==========================
+// CALENDAR
+// ==========================
+function initializeCalendar() {
+    // Navigation tháng
+    document.querySelectorAll(".btn-nav").forEach(btn => {
+        btn.addEventListener("click", function () {
+            // Placeholder — có thể mở rộng sau
+            console.log("Calendar nav clicked");
+        });
+    });
+
+    // Click vào ngày
+    document.querySelectorAll(".calendar-date:not(.inactive)").forEach(date => {
+        date.addEventListener("click", function () {
+            document.querySelectorAll(".calendar-date").forEach(d => d.classList.remove("active"));
+            this.classList.add("active");
+        });
+    });
+}
+
+// ==========================
+// BUTTONS
+// ==========================
+function initializeButtons() {
+    // Nút "Gửi yêu cầu" hỗ trợ
+    document.querySelector(".btn-help")?.addEventListener("click", function () {
+        alert("Tính năng hỗ trợ đang được phát triển. Vui lòng liên hệ email: eventdhspkt@ute.udn.vn");
+    });
+
+    // Nút tải báo cáo
+    document.querySelector(".btn-download")?.addEventListener("click", function () {
+        const token = localStorage.getItem("token");
+        window.open(`${API_BASE}/NguoiDung/download-report?token=${token}`, "_blank");
+    });
+}
+
+// ==========================
+// PROGRESS BAR ANIMATION
+// ==========================
+function animateProgressBar() {
+    const fill = document.querySelector(".progress-fill");
+    if (!fill) return;
+    const target = fill.style.width || "0%";
+    fill.style.width = "0%";
+    setTimeout(() => {
+        fill.style.transition = "width 0.8s ease";
+        fill.style.width = target;
+    }, 300);
+}
+
+// ==========================
+// HELPERS
+// ==========================
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str).replace(/[&<>"']/g, m =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])
+    );
+}

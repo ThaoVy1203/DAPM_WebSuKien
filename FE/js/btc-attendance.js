@@ -1,50 +1,36 @@
 // Attendance Page JavaScript
 
-// Sample participants data
-const participantsData = [
-    {
-        id: 1,
-        name: 'Alex Henderson',
-        department: 'Khoa CNTT',
-        studentId: 'UTE2024001',
-        checkInTime: '09:12 SA',
-        status: 'present',
-        avatar: 'AH',
-        avatarColor: 'blue'
-    },
-    {
-        id: 2,
-        name: 'Bella Thompson',
-        department: 'Khoa Cơ khí',
-        studentId: 'UTE2024054',
-        checkInTime: '—',
-        status: 'absent',
-        avatar: 'BT',
-        avatarColor: 'gray'
-    },
-    {
-        id: 3,
-        name: 'Chris Rogers',
-        department: 'Khoa Quản trị kinh doanh',
-        studentId: 'UTE2024112',
-        checkInTime: '08:55 SA',
-        status: 'present',
-        avatar: 'CR',
-        avatarColor: 'orange'
-    },
-    {
-        id: 4,
-        name: 'Diana White',
-        department: 'Khoa Kiến trúc',
-        studentId: 'UTE2024099',
-        checkInTime: '—',
-        status: 'absent',
-        avatar: 'DW',
-        avatarColor: 'purple'
-    }
-];
+const API_BASE = "https://localhost:7160/api";
 
-// Render participants table
+let participantsData = [];
+
+// ==========================
+// LOAD DATA FROM API
+// ==========================
+async function loadAttendanceData() {
+    try {
+        const response = await fetch(`${API_BASE}/DiemDanh`);
+
+        if (!response.ok) {
+            throw new Error("Không thể tải dữ liệu điểm danh");
+        }
+
+        participantsData = await response.json();
+
+        renderParticipantsTable();
+        updateStats();
+
+        console.log("Attendance Data:", participantsData);
+
+    } catch (error) {
+        console.error("Lỗi load API:", error);
+        alert("Không kết nối được backend!");
+    }
+}
+
+// ==========================
+// RENDER TABLE
+// ==========================
 function renderParticipantsTable() {
     const tbody = document.getElementById('participantsTableBody');
     if (!tbody) return;
@@ -53,14 +39,20 @@ function renderParticipantsTable() {
 
     participantsData.forEach(participant => {
         const row = document.createElement('tr');
-        
+
         const statusClass = participant.status === 'present' ? 'present' : 'absent';
-        const statusText = participant.status === 'present' ? 'Đã có mặt' : 'Vắng mặt';
-        
+        const statusText = participant.status === 'present'
+            ? 'Đã có mặt'
+            : 'Vắng mặt';
+
+        const avatar = participant.name
+            ? participant.name.split(' ').map(n => n[0]).join('').substring(0, 2)
+            : 'NA';
+
         row.innerHTML = `
             <td>
                 <div class="participant-info">
-                    <div class="participant-avatar ${participant.avatarColor}">${participant.avatar}</div>
+                    <div class="participant-avatar blue">${avatar}</div>
                     <div class="participant-details">
                         <div class="participant-name">${participant.name}</div>
                         <div class="participant-department">${participant.department}</div>
@@ -68,9 +60,11 @@ function renderParticipantsTable() {
                 </div>
             </td>
             <td>${participant.studentId}</td>
-            <td>${participant.checkInTime}</td>
+            <td>${participant.checkInTime || '—'}</td>
             <td>
-                <span class="status-badge ${statusClass}">${statusText}</span>
+                <span class="status-badge ${statusClass}">
+                    ${statusText}
+                </span>
             </td>
             <td>
                 <button class="btn-more" onclick="showParticipantMenu(${participant.id})">
@@ -83,68 +77,112 @@ function renderParticipantsTable() {
     });
 }
 
-// Show participant menu
+// ==========================
+// PARTICIPANT MENU
+// ==========================
 function showParticipantMenu(participantId) {
     const participant = participantsData.find(p => p.id === participantId);
+
     if (participant) {
-        alert(`Tùy chọn cho ${participant.name}\n- Xem chi tiết\n- Chỉnh sửa\n- Gửi thông báo`);
+        alert(`Tùy chọn cho ${participant.name}`);
     }
 }
 
-// Search functionality
+// ==========================
+// SEARCH
+// ==========================
 function setupSearch() {
     const searchInput = document.querySelector('.search-box input');
     if (!searchInput) return;
 
-    searchInput.addEventListener('input', function(e) {
+    searchInput.addEventListener('input', function (e) {
         const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('.participants-table tbody tr');
 
-        rows.forEach(row => {
-            const name = row.querySelector('.participant-name').textContent.toLowerCase();
-            const studentId = row.querySelectorAll('td')[1].textContent.toLowerCase();
-            const department = row.querySelector('.participant-department').textContent.toLowerCase();
-            
-            if (name.includes(searchTerm) || studentId.includes(searchTerm) || department.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
+        const filtered = participantsData.filter(p =>
+            p.name.toLowerCase().includes(searchTerm) ||
+            p.studentId.toLowerCase().includes(searchTerm) ||
+            p.department.toLowerCase().includes(searchTerm)
+        );
+
+        renderFilteredTable(filtered);
     });
 }
 
-// Export to Excel
-function exportToExcel() {
-    alert('Đang xuất dữ liệu ra file Excel...');
-    console.log('Exporting attendance data to Excel');
+function renderFilteredTable(data) {
+    const tbody = document.getElementById('participantsTableBody');
+    tbody.innerHTML = '';
+
+    data.forEach(participant => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td>${participant.name}</td>
+            <td>${participant.studentId}</td>
+            <td>${participant.checkInTime || '—'}</td>
+            <td>${participant.status}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
 }
 
-// Manual check-in
-function manualCheckIn() {
-    const studentId = prompt('Nhập mã số sinh viên để điểm danh thủ công:');
-    if (studentId) {
-        alert(`Đã điểm danh thành công cho sinh viên: ${studentId}`);
-        // Here you would update the participant status
+// ==========================
+// MANUAL CHECK-IN
+// ==========================
+async function manualCheckIn() {
+    const studentId = prompt('Nhập mã số sinh viên:');
+
+    if (!studentId) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/DiemDanh/checkin`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ studentId })
+        });
+
+        if (!response.ok) {
+            throw new Error();
+        }
+
+        alert("Điểm danh thành công");
+
+        await loadAttendanceData();
+
+    } catch (error) {
+        console.error(error);
+        alert("Điểm danh thất bại");
     }
 }
 
-// Update attendance stats
+// ==========================
+// UPDATE STATS
+// ==========================
 function updateStats() {
-    const totalParticipants = 200;
-    const presentCount = 145;
-    const absentCount = totalParticipants - presentCount;
-    const percentage = ((presentCount / totalParticipants) * 100).toFixed(1);
+    const totalParticipants = participantsData.length;
 
-    // Update circle progress
-    const circumference = 2 * Math.PI * 90; // r = 90
-    const progress = (presentCount / totalParticipants) * circumference;
+    const presentCount = participantsData.filter(
+        p => p.status === 'present'
+    ).length;
+
+    const absentCount = totalParticipants - presentCount;
+
+    const percentage = totalParticipants > 0
+        ? ((presentCount / totalParticipants) * 100).toFixed(1)
+        : 0;
+
+    const circumference = 2 * Math.PI * 90;
+    const progress = totalParticipants > 0
+        ? (presentCount / totalParticipants) * circumference
+        : 0;
+
     const circleProgress = document.querySelector('.circle-progress');
     if (circleProgress) {
         circleProgress.style.strokeDasharray = `${progress}, ${circumference}`;
     }
 
-    // Update numbers
     const circleNumber = document.querySelector('.circle-number');
     if (circleNumber) {
         circleNumber.textContent = presentCount;
@@ -157,90 +195,56 @@ function updateStats() {
     }
 }
 
-// Auto refresh activity feed
+// ==========================
+// EXPORT
+// ==========================
+function exportToExcel() {
+    window.open(`${API_BASE}/DiemDanh/export`, '_blank');
+}
+
+// ==========================
+// AUTO REFRESH
+// ==========================
 function startActivityFeed() {
-    // Simulate real-time updates
-    setInterval(function() {
-        console.log('Checking for new check-ins...');
-        // Here you would fetch new check-ins from the API
-    }, 5000);
+    setInterval(async () => {
+        await loadAttendanceData();
+    }, 10000);
 }
 
-// Setup event listeners
+// ==========================
+// EVENT LISTENERS
+// ==========================
 function setupEventListeners() {
-    // Export button
-    const exportBtn = document.querySelector('.btn-export');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportToExcel);
-    }
+    document.querySelector('.btn-export')
+        ?.addEventListener('click', exportToExcel);
 
-    // Manual check-in button
-    const manualBtn = document.querySelector('.btn-manual-checkin');
-    if (manualBtn) {
-        manualBtn.addEventListener('click', manualCheckIn);
-    }
-
-    // Pagination buttons
-    document.querySelectorAll('.page-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (!this.disabled) {
-                console.log('Loading next page...');
-                // Here you would load the next page of data
-            }
-        });
-    });
-
-    // Header buttons
-    const notificationBtn = document.querySelector('.btn-notification');
-    if (notificationBtn) {
-        notificationBtn.addEventListener('click', function() {
-            alert('Thông báo đang được phát triển');
-        });
-    }
-
-    const helpBtn = document.querySelector('.btn-help');
-    if (helpBtn) {
-        helpBtn.addEventListener('click', function() {
-            alert('Trợ giúp đang được phát triển');
-        });
-    }
-
-    const settingsBtn = document.querySelector('.btn-settings');
-    if (settingsBtn) {
-        settingsBtn.addEventListener('click', function() {
-            alert('Cài đặt đang được phát triển');
-        });
-    }
-
-    // Sidebar navigation
-    document.querySelectorAll('.sidebar .nav-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            if (this.getAttribute('href') === '#') {
-                e.preventDefault();
-                alert('Chức năng đang được phát triển');
-            }
-        });
-    });
+    document.querySelector('.btn-manual-checkin')
+        ?.addEventListener('click', manualCheckIn);
 }
 
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    renderParticipantsTable();
-    setupSearch();
-    updateStats();
-    startActivityFeed();
-    setupEventListeners();
+// ==========================
+// INITIALIZE
+// ==========================
+document.addEventListener('DOMContentLoaded', async function () {
 
-    // Check authentication
+    await loadAttendanceData();
+
+    setupSearch();
+    setupEventListeners();
+    startActivityFeed();
+
     const token = localStorage.getItem('token');
+
     if (!token) {
-        // Uncomment to enforce authentication
-        // window.location.href = 'login.html';
+        console.warn("Chưa đăng nhập");
     }
 });
 
-// Export functions
+// ==========================
+// EXPORT MODULE
+// ==========================
 window.attendanceModule = {
+    loadAttendanceData,
     renderParticipantsTable,
     updateStats,
     exportToExcel,

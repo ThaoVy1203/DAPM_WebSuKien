@@ -1,122 +1,210 @@
-// Profile Page JavaScript
+// js/profile.js
+const API_BASE = "https://localhost:7160/api";
 
-// Edit Personal Info
-document.getElementById('editPersonalInfo')?.addEventListener('click', function() {
-    alert('Chức năng chỉnh sửa thông tin cá nhân đang được phát triển');
-});
-
-// Edit Interests
-document.getElementById('editInterests')?.addEventListener('click', function() {
-    const activeInterests = document.querySelectorAll('.interest-tag.active');
-    const interests = Array.from(activeInterests).map(tag => tag.textContent.trim());
-    
-    console.log('Sở thích đã chọn:', interests);
-    alert(`Đã lưu ${interests.length} sở thích của bạn!`);
-});
-
-// Toggle Interest Tags
-document.querySelectorAll('.interest-tag').forEach(tag => {
-    tag.addEventListener('click', function() {
-        this.classList.toggle('active');
-    });
-});
-
-// Settings Items Click
-document.querySelectorAll('.setting-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-        // Skip if clicking on toggle switch
-        if (e.target.closest('.toggle')) {
-            return;
-        }
-
-        const settingTitle = this.querySelector('h4').textContent;
-        
-        if (settingTitle === 'Đăng xuất') {
-            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = 'login.html';
-            }
-        } else if (settingTitle === 'Thay đổi mật khẩu') {
-            alert('Chức năng thay đổi mật khẩu đang được phát triển');
-        } else if (settingTitle === 'Quyền riêng tư') {
-            alert('Chức năng cài đặt quyền riêng tư đang được phát triển');
-        }
-    });
-});
-
-// View Details Button
-document.querySelector('.btn-view-details')?.addEventListener('click', function() {
-    alert('Chức năng xem chi tiết điểm rèn luyện đang được phát triển');
-});
-
-// Edit Avatar
-document.querySelector('.edit-avatar-btn')?.addEventListener('click', function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                document.querySelector('.profile-avatar').src = event.target.result;
-                alert('Ảnh đại diện đã được cập nhật!');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-    
-    input.click();
-});
-
-// User Menu Dropdown
-document.querySelector('.user-menu')?.addEventListener('click', function() {
-    alert('Menu người dùng đang được phát triển');
-});
-
-// Notification Button
-document.querySelector('.btn-notification')?.addEventListener('click', function() {
-    window.location.href = 'notifications.html';
-});
-
-// Load user data from localStorage
-function loadUserData() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    
-    if (user.name) {
-        document.querySelector('.profile-name').textContent = user.name;
+// ==========================
+// INIT
+// ==========================
+document.addEventListener("DOMContentLoaded", async function () {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "login.html";
+        return;
     }
-    
-    if (user.email) {
-        const emailElement = document.querySelector('.info-item p');
-        if (emailElement) {
-            emailElement.textContent = user.email;
-        }
-    }
-    
-    if (user.studentId) {
-        const idElement = document.querySelector('.profile-meta span:first-child');
-        if (idElement) {
-            idElement.innerHTML = `<i class="fas fa-id-card"></i> ID: ${user.studentId}`;
-        }
+
+    // Điền ngay từ localStorage để tránh màn hình trống
+    prefillFromLocalStorage();
+
+    // Sau đó load từ API để cập nhật mới nhất
+    await loadUserProfile();
+    setupEventListeners();
+});
+
+// ==========================
+// ĐIỀN TỪ LOCALSTORAGE (nhanh)
+// ==========================
+function prefillFromLocalStorage() {
+    const raw = localStorage.getItem("userData");
+    if (!raw) return;
+    try {
+        const user = JSON.parse(raw);
+        fillProfileUI(user);
+    } catch (e) { /* bỏ qua */ }
+}
+
+// ==========================
+// LOAD PROFILE TỪ API
+// ==========================
+async function loadUserProfile() {
+    const token = localStorage.getItem("token");
+    try {
+        // Thử endpoint profile trước
+        const res = await fetch(`${API_BASE}/NguoiDung/profile`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const user = await res.json();
+        fillProfileUI(user);
+
+        // Cập nhật lại localStorage
+        const existing = JSON.parse(localStorage.getItem("userData") || "{}");
+        localStorage.setItem("userData", JSON.stringify({ ...existing, ...user }));
+
+    } catch (e) {
+        console.warn("Không load được profile từ API, dùng localStorage:", e.message);
+        // Đã prefill từ localStorage rồi, không cần làm gì thêm
     }
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserData();
-    
-    // Check authentication
-    const token = localStorage.getItem('token');
-    if (!token) {
-        // Uncomment to enforce authentication
-        // window.location.href = 'login.html';
-    }
-});
+// ==========================
+// ĐIỀN DỮ LIỆU VÀO UI
+// ==========================
+function fillProfileUI(user) {
+    if (!user) return;
 
-// Export functions
-window.profileModule = {
-    loadUserData
-};
+    // Header
+    setText("profileName", user.hoTen || "Người dùng");
+    setText("profileSSO", user.maSoSSO || user.maSinhVien || "-");
+    const vaiTros = user.vaiTros || [];
+    setText("profileRole", vaiTros[0] || "Thành viên");
+
+    // Thông tin cá nhân
+    setText("profileEmail", user.email || "-");
+    setText("profilePhone", user.SDT || user.sdt || user.phone || "-");
+    setText("profileSSOInfo", user.maSoSSO || "-");
+    setText("profileRoleInfo", vaiTros.join(", ") || "-");
+
+    // Avatar
+    const avatarEl = document.querySelector(".profile-avatar");
+    if (avatarEl) {
+        const name = encodeURIComponent(user.hoTen || "User");
+        avatarEl.src = user.anhDaiDien
+            || `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff&size=150`;
+        avatarEl.onerror = function () {
+            this.src = `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff&size=150`;
+        };
+    }
+}
+
+// ==========================
+// CẬP NHẬT PROFILE
+// ==========================
+async function updateProfile(data) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`${API_BASE}/NguoiDung/profile`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        showToast("Cập nhật thành công!", "success");
+        await loadUserProfile();
+
+    } catch (e) {
+        console.error("Lỗi cập nhật profile:", e);
+        showToast("Không thể cập nhật hồ sơ. Vui lòng thử lại.", "error");
+    }
+}
+
+// ==========================
+// UPLOAD AVATAR
+// ==========================
+async function uploadAvatar(file) {
+    const token = localStorage.getItem("token");
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch(`${API_BASE}/NguoiDung/upload-avatar`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        showToast("Cập nhật ảnh thành công!", "success");
+        await loadUserProfile();
+
+    } catch (e) {
+        console.error("Lỗi upload avatar:", e);
+        showToast("Không thể upload ảnh.", "error");
+    }
+}
+
+// ==========================
+// EVENT LISTENERS
+// ==========================
+function setupEventListeners() {
+    // Sửa thông tin cá nhân
+    document.getElementById("editPersonalInfo")?.addEventListener("click", () => {
+        const raw = localStorage.getItem("userData");
+        const user = raw ? JSON.parse(raw) : {};
+        const newName = prompt("Nhập họ tên mới:", user.hoTen || "");
+        if (newName && newName.trim()) {
+            updateProfile({ hoTen: newName.trim() });
+        }
+    });
+
+    // Upload avatar
+    document.querySelector(".edit-avatar-btn")?.addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (file) uploadAvatar(file);
+        };
+        input.click();
+    });
+
+    // Toggle sở thích
+    document.querySelectorAll(".interest-tag").forEach(tag => {
+        tag.addEventListener("click", function () {
+            this.classList.toggle("active");
+        });
+    });
+
+    // Đăng xuất (trong setting-item)
+    document.querySelectorAll(".setting-item").forEach(item => {
+        item.addEventListener("click", function () {
+            const title = this.querySelector("h4")?.textContent?.trim();
+            if (title === "Đăng xuất") {
+                if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("userData");
+                    window.location.href = "login.html";
+                }
+            }
+        });
+    });
+}
+
+// ==========================
+// HELPERS
+// ==========================
+function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+
+function showToast(msg, type = "success") {
+    const toast = document.createElement("div");
+    toast.style.cssText = `
+        position:fixed;bottom:24px;right:24px;z-index:99999;
+        padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;
+        background:${type === "success" ? "#276749" : "#c53030"};
+        color:white;box-shadow:0 4px 12px rgba(0,0,0,0.2);
+        animation:fadeIn 0.3s ease;
+    `;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}

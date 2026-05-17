@@ -1,154 +1,284 @@
-// Admin Users JavaScript
+const API_URL = "https://localhost:7160/api/NguoiDung";
 
-// Filter functionality
+let allUsers = [];
+let editingId = null;
+
+// ==========================
+// INIT
+// ==========================
+document.addEventListener('DOMContentLoaded', async function () {
+    await loadUsers();
+
+    initTabs();
+    initSearch();
+    initSelectAll();
+});
+
+// ==========================
+// LOAD USERS
+// ==========================
+async function loadUsers() {
+    try {
+        const response = await fetch(API_URL);
+        allUsers = await response.json();
+
+        renderUsers(allUsers);
+
+    } catch (error) {
+        console.error("Lỗi load users:", error);
+        alert("Không tải được dữ liệu người dùng");
+    }
+}
+
+// ==========================
+// RENDER TABLE
+// ==========================
+function renderUsers(users) {
+    const tbody = document.querySelector('.admin-table tbody');
+
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    users.forEach(user => {
+        tbody.innerHTML += `
+            <tr>
+                <td><input type="checkbox" class="row-checkbox"></td>
+                <td>${user.id}</td>
+                <td>${user.hoTen || ""}</td>
+                <td>${user.email || ""}</td>
+                <td>${user.vaiTro || ""}</td>
+                <td>${user.trangThai ? "Hoạt động" : "Khóa"}</td>
+                <td>
+                    <button onclick="editUser(${user.id})">Sửa</button>
+                    <button onclick="deleteUser(${user.id})">Xóa</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// ==========================
+// FILTERS
+// ==========================
 function applyFilters() {
     const roleFilter = document.getElementById('roleFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
-    
-    console.log('Applying filters:', { roleFilter, statusFilter });
-    // TODO: Implement filter logic with API
+
+    let filtered = [...allUsers];
+
+    if (roleFilter) {
+        filtered = filtered.filter(user => user.vaiTro === roleFilter);
+    }
+
+    if (statusFilter !== "") {
+        filtered = filtered.filter(user =>
+            String(user.trangThai) === statusFilter
+        );
+    }
+
+    renderUsers(filtered);
 }
 
-// Tab filtering
-document.addEventListener('DOMContentLoaded', function() {
+// ==========================
+// TABS
+// ==========================
+function initTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
-    
+
     tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             tabBtns.forEach(tab => tab.classList.remove('active'));
             this.classList.add('active');
-            
+
             const filter = this.getAttribute('data-filter');
-            console.log('Filter by:', filter);
-            // TODO: Implement filter logic
+
+            if (filter === "all") {
+                renderUsers(allUsers);
+            } else {
+                const filtered = allUsers.filter(user =>
+                    user.vaiTro === filter
+                );
+
+                renderUsers(filtered);
+            }
         });
     });
+}
 
-    // Select all checkbox
+// ==========================
+// SELECT ALL
+// ==========================
+function initSelectAll() {
     const selectAll = document.getElementById('selectAll');
-    if (selectAll) {
-        selectAll.addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.row-checkbox');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-        });
-    }
-});
 
-// Export users
+    if (!selectAll) return;
+
+    selectAll.addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+}
+
+// ==========================
+// EXPORT
+// ==========================
 function exportUsers() {
-    console.log('Exporting users...');
     alert('Đang xuất danh sách người dùng...');
-    // TODO: Implement export functionality
 }
 
-// Open add user modal
+// ==========================
+// MODAL
+// ==========================
 function openAddUserModal() {
+    editingId = null;
+
     const modal = document.getElementById('userModal');
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('userForm');
-    
-    if (modal && modalTitle && form) {
-        modalTitle.textContent = 'Thêm người dùng mới';
-        form.reset();
-        modal.style.display = 'flex';
-    }
+
+    modalTitle.textContent = 'Thêm người dùng mới';
+    form.reset();
+    modal.style.display = 'flex';
 }
 
-// Close user modal
 function closeUserModal() {
-    const modal = document.getElementById('userModal');
-    if (modal) {
-        modal.style.display = 'none';
+    document.getElementById('userModal').style.display = 'none';
+}
+
+// ==========================
+// EDIT
+// ==========================
+async function editUser(id) {
+    try {
+        const response = await fetch(`${API_URL}/${id}`);
+        const user = await response.json();
+
+        editingId = id;
+
+        document.getElementById('modalTitle').textContent = 'Chỉnh sửa người dùng';
+
+        document.getElementById('userName').value = user.hoTen || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userRole').value = user.vaiTro || '';
+        document.getElementById('userStatus').value = user.trangThai;
+
+        document.getElementById('userModal').style.display = 'flex';
+
+    } catch (error) {
+        console.error(error);
+        alert("Không tải được dữ liệu");
     }
 }
 
-// Edit user
-function editUser(id) {
-    console.log('Editing user:', id);
-    const modal = document.getElementById('userModal');
-    const modalTitle = document.getElementById('modalTitle');
-    
-    if (modal && modalTitle) {
-        modalTitle.textContent = 'Chỉnh sửa người dùng';
-        modal.style.display = 'flex';
-        // TODO: Load user data and populate form
-    }
-}
+// ==========================
+// DELETE
+// ==========================
+async function deleteUser(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa?')) return;
 
-// Delete user
-function deleteUser(id) {
-    console.log('Deleting user:', id);
-    if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-        // TODO: Implement API call to delete user
-        alert('Đã xóa người dùng!');
-        location.reload();
-    }
-}
-
-// Save user
-function saveUser() {
-    const form = document.getElementById('userForm');
-    if (form && form.checkValidity()) {
-        const userName = document.getElementById('userName').value;
-        const userEmail = document.getElementById('userEmail').value;
-        const userPassword = document.getElementById('userPassword').value;
-        const userPasswordConfirm = document.getElementById('userPasswordConfirm').value;
-        const userRole = document.getElementById('userRole').value;
-        const userStatus = document.getElementById('userStatus').value;
-        
-        if (userPassword !== userPasswordConfirm) {
-            alert('Mật khẩu xác nhận không khớp!');
-            return;
-        }
-        
-        console.log('Saving user:', {
-            userName,
-            userEmail,
-            userRole,
-            userStatus
+    try {
+        await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE'
         });
-        
-        // TODO: Implement API call to save user
-        alert('Đã lưu người dùng thành công!');
-        closeUserModal();
-        location.reload();
-    } else {
-        form.reportValidity();
+
+        alert('Đã xóa người dùng');
+        loadUsers();
+
+    } catch (error) {
+        console.error(error);
+        alert('Xóa thất bại');
     }
 }
 
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
+// ==========================
+// SAVE
+// ==========================
+async function saveUser() {
+    const form = document.getElementById('userForm');
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const password = document.getElementById('userPassword').value;
+    const passwordConfirm = document.getElementById('userPasswordConfirm').value;
+
+    if (password !== passwordConfirm) {
+        alert('Mật khẩu xác nhận không khớp!');
+        return;
+    }
+
+    const data = {
+        hoTen: document.getElementById('userName').value,
+        email: document.getElementById('userEmail').value,
+        matKhau: password,
+        vaiTro: document.getElementById('userRole').value,
+        trangThai: document.getElementById('userStatus').value === "true"
+    };
+
+    try {
+        if (editingId) {
+            await fetch(`${API_URL}/${editingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+        } else {
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+        }
+
+        alert('Lưu thành công');
+        closeUserModal();
+        loadUsers();
+
+    } catch (error) {
+        console.error(error);
+        alert('Lưu thất bại');
+    }
+}
+
+// ==========================
+// SEARCH
+// ==========================
+function initSearch() {
+    const searchInput = document.querySelector('.search-bar input');
+
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function (e) {
+        const searchTerm = e.target.value.toLowerCase();
+
+        const filtered = allUsers.filter(user =>
+            JSON.stringify(user).toLowerCase().includes(searchTerm)
+        );
+
+        renderUsers(filtered);
+    });
+}
+
+// ==========================
+// CLOSE EVENTS
+// ==========================
+window.addEventListener('click', function (event) {
     const modal = document.getElementById('userModal');
+
     if (event.target === modal) {
         closeUserModal();
     }
 });
 
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
         closeUserModal();
-    }
-});
-
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.querySelector('.search-bar input');
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('.admin-table tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
     }
 });

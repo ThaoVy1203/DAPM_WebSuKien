@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phê duyệt Cấp 2 - Ban Giám Hiệu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/ctsv-approval.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Badge cấp duyệt */
+        .badge-cap1 { background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+        .badge-cap2-wait { background:#fef3c7; color:#92400e; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+        .badge-rejected { background:#fee2e2; color:#991b1b; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+        .badge-pending-cap1 { background:#e0e7ff; color:#3730a3; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+
+        /* Thông báo không thể duyệt */
+        .notice-cap1 {
+            background:#fffbeb; border:1px solid #fcd34d; border-radius:8px;
+            padding:10px 14px; margin-top:10px; font-size:13px; color:#92400e;
+            display:flex; align-items:center; gap:8px;
+        }
+
+        /* Phân cấp rõ ràng */
+        .approval-item.cap2-ready { border-left:4px solid #059669; }
+        .approval-item.cap1-only  { border-left:4px solid #6366f1; opacity:0.85; }
+        .approval-item.rejected   { border-left:4px solid #ef4444; }
+
+        /* Tabs */
+        .filter-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .tab-btn { padding:8px 18px; border:1px solid #e5e7eb; border-radius:20px; background:white; cursor:pointer; font-size:14px; font-weight:500; transition:all .2s; }
+        .tab-btn.active { background:#0D5A9C; color:white; border-color:#0D5A9C; }
+
+        /* Modal */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; }
+        .modal.active { display:flex; }
+        .modal-content { background:white; border-radius:16px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; }
+        .modal-header { padding:20px 24px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+        .modal-header h2 { font-size:18px; font-weight:700; }
+        .modal-body { padding:24px; }
+        .modal-footer { padding:16px 24px; border-top:1px solid #eee; display:flex; justify-content:flex-end; gap:12px; }
+        .btn-close { background:none; border:none; font-size:20px; cursor:pointer; color:#666; }
+        .btn-cancel-modal { padding:10px 20px; border:1px solid #e5e7eb; border-radius:8px; background:white; cursor:pointer; font-weight:500; }
+        .btn-submit.success { background:#059669; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+        .btn-submit.danger  { background:#dc2626; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+        .form-group { margin-bottom:16px; }
+        .form-group label { display:block; font-weight:600; margin-bottom:6px; font-size:14px; }
+        .form-group textarea { width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:8px; font-family:inherit; font-size:14px; resize:vertical; }
+        .success-icon { font-size:40px; color:#059669; display:block; text-align:center; margin-bottom:12px; }
+        .error-icon   { font-size:40px; color:#dc2626; display:block; text-align:center; margin-bottom:12px; }
+        .approval-confirm-info { text-align:center; margin-bottom:20px; }
+        .approval-confirm-info h3 { font-size:16px; font-weight:700; margin-bottom:6px; }
+        .approval-confirm-info p { color:#666; font-size:14px; }
+        .required { color:#dc2626; }
+
+        /* Thống kê */
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:24px; }
+        .stat-card { background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        .stat-card .stat-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+        .stat-card .stat-header i { font-size:20px; color:#0D5A9C; }
+        .stat-card .stat-number { font-size:28px; font-weight:800; color:#1a1a2e; }
+        .stat-card .stat-label { font-size:11px; font-weight:700; color:#888; letter-spacing:.5px; margin-top:2px; }
+        .stat-card .stat-description { font-size:12px; color:#aaa; margin-top:4px; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events" onerror="this.src='https://via.placeholder.com/150x45/0D5A9C/FFFFFF?text=UTE'">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Tìm kiếm hồ sơ, sự kiện...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification" onclick="window.location.href='notifications.html'" title="Thông báo">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Đang tải...</span>
+                    <span class="user-role">Cán bộ phê duyệt cấp 2</span>
+                </div>
+                <img id="userAvatar"
+                     src="https://ui-avatars.com/api/?name=BGH&background=dc2626&color=fff"
+                     alt="User" class="user-avatar"
+                     onerror="this.src='https://ui-avatars.com/api/?name=BGH&background=dc2626&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="bgh-approval.html" class="nav-item active">
+                    <i class="fas fa-clock"></i>
+                    <span>Phê duyệt</span>
+                </a>
+                <a href="bgh-pending-approval.html" class="nav-item">
+                    <i class="fas fa-hourglass-half"></i>
+                    <span>Chờ duyệt cấp cao</span>
+                </a>
+                <a href="bgh-approval-history.html" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Lịch sử duyệt</span>
+                </a>
+                <a href="bgh-reports.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo tổng thể</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Quản lý Phê duyệt Cấp 2</h1>
+                    <p>Xem toàn bộ hồ sơ và phê duyệt các sự kiện đã qua cấp 1</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="exportList()">
+                        <i class="fas fa-file-export"></i>
+                        Xuất danh sách
+                    </button>
+                    <button class="btn-primary" onclick="bulkApprove()">
+                        <i class="fas fa-check-double"></i>
+                        Duyệt hàng loạt
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chú thích phân cấp -->
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:14px 18px; margin-bottom:20px; font-size:13px; color:#0369a1;">
+                <i class="fas fa-info-circle" style="margin-right:8px;"></i>
+                <strong>Quy trình phê duyệt 2 cấp:</strong>
+                Hồ sơ phải được <strong>Cấp 1 (CTSV/Khoa/Đoàn)</strong> duyệt trước.
+                Sau đó <strong>Cấp 2 (BGH/P.CTSV)</strong> mới có thể phê duyệt chính thức.
+                Hồ sơ chưa qua cấp 1 chỉ được xem, không thể duyệt.
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header"><i class="fas fa-inbox"></i></div>
+                    <div class="stat-number" id="statTotal">0</div>
+                    <div class="stat-label">TỔNG HỒ SƠ</div>
+                    <div class="stat-description">Tất cả hồ sơ</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #6366f1;">
+                    <div class="stat-header"><i class="fas fa-clock" style="color:#6366f1;"></i></div>
+                    <div class="stat-number" id="statPendingCap1" style="color:#6366f1;">0</div>
+                    <div class="stat-label">CHỜ DUYỆT CẤP 1</div>
+                    <div class="stat-description">Chưa qua CTSV</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #f59e0b;">
+                    <div class="stat-header"><i class="fas fa-hourglass-half" style="color:#f59e0b;"></i></div>
+                    <div class="stat-number" id="statWaitingCap2" style="color:#f59e0b;">0</div>
+                    <div class="stat-label">CHỜ DUYỆT CẤP 2</div>
+                    <div class="stat-description">Đã qua cấp 1, chờ BGH</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #059669;">
+                    <div class="stat-header"><i class="fas fa-check-circle" style="color:#059669;"></i></div>
+                    <div class="stat-number" id="statApproved" style="color:#059669;">0</div>
+                    <div class="stat-label">ĐÃ DUYỆT CẤP 2</div>
+                    <div class="stat-description">Phê duyệt chính thức</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #ef4444;">
+                    <div class="stat-header"><i class="fas fa-times-circle" style="color:#ef4444;"></i></div>
+                    <div class="stat-number" id="statRejected" style="color:#ef4444;">0</div>
+                    <div class="stat-label">TỪ CHỐI</div>
+                    <div class="stat-description">Bị từ chối</div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="tab-btn active" data-filter="all">Tất cả</button>
+                <button class="tab-btn" data-filter="cap2-ready">
+                    <i class="fas fa-check" style="color:#059669;"></i> Chờ duyệt cấp 2
+                </button>
+                <button class="tab-btn" data-filter="cap1-only">
+                    <i class="fas fa-clock" style="color:#6366f1;"></i> Chờ duyệt cấp 1
+                </button>
+                <button class="tab-btn" data-filter="approved">
+                    <i class="fas fa-check-double" style="color:#059669;"></i> Đã duyệt
+                </button>
+                <button class="tab-btn" data-filter="rejected">
+                    <i class="fas fa-times" style="color:#ef4444;"></i> Từ chối
+                </button>
+            </div>
+
+            <!-- Approval List -->
+            <div id="approvalList">
+                <div style="text-align:center; padding:40px; color:#666;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:24px; margin-bottom:12px; display:block;"></i>
+                    Đang tải dữ liệu...
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" style="margin-top:24px;">
+                <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===== MODAL PHÊ DUYỆT ===== -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Phê duyệt Hồ sơ Cấp 2</h2>
+                <button class="btn-close" onclick="closeApproveModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="approval-confirm-info">
+                    <i class="fas fa-check-circle success-icon"></i>
+                    <h3>Xác nhận phê duyệt chính thức</h3>
+                    <p id="approveEventName">Tên sự kiện</p>
+                </div>
+                <div class="form-group">
+                    <label>Ý kiến phê duyệt BGH</label>
+                    <textarea id="approveComment" rows="4" placeholder="Nhập ý kiến của Ban Giám Hiệu (không bắt buộc)..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="notifyOrganizer" checked>
+                        Gửi thông báo cho Ban Tổ chức
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel-modal" onclick="closeApproveModal()">Hủy</button>
+                <button class="btn-submit success" onclick="confirmApprove()">
+                    <i class="fas fa-check"></i> Xác nhận phê duyệt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL TỪ CHỐI ===== -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Từ chối Hồ sơ</h2>
+                <button class="btn-close" onclick="closeRejectModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="approval-confirm-info reject">
+                    <i class="fas fa-times-circle error-icon"></i>
+                    <h3>Xác nhận từ chối hồ sơ</h3>
+                    <p id="rejectEventName">Tên sự kiện</p>
+                </div>
+                <div class="form-group">
+                    <label>Lý do từ chối <span class="required">*</span></label>
+                    <textarea id="rejectReason" rows="4" placeholder="Nhập lý do từ chối (bắt buộc)..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Yêu cầu chỉnh sửa</label>
+                    <textarea id="rejectSuggestion" rows="3" placeholder="Gợi ý những điểm cần chỉnh sửa..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="allowResubmit" checked>
+                        Cho phép gửi lại hồ sơ sau khi chỉnh sửa
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel-modal" onclick="closeRejectModal()">Hủy</button>
+                <button class="btn-submit danger" onclick="confirmReject()">
+                    <i class="fas fa-times"></i> Xác nhận từ chối
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/bgh-approval.js"></script>
+    <script src="../js/btc-logout.js"></script>
+</body>
+</html>

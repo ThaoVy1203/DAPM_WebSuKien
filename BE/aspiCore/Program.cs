@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using aspiCore.Data;
 using aspiCore.Services;
 using aspiCore.Middlewares;
@@ -19,6 +22,32 @@ builder.Services.AddScoped<ISuKienService, SuKienService>();
 builder.Services.AddScoped<INguoiDungService, NguoiDungService>();
 builder.Services.AddScoped<IDangKyService, DangKyService>();
 builder.Services.AddScoped<IDiaDiemService, DiaDiemService>();
+builder.Services.AddScoped<ICongViecService, CongViecService>();
+builder.Services.AddScoped<IThongBaoService, ThongBaoService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+
+// ========== JWT AUTHENTICATION (đọc từ appsettings.json) ==========
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "UTE-Events-SecretKey-2026-For-JWT-Token-VeryLongAndSecure!!!";
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -41,8 +70,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
+app.UseAuthentication();  // ✅ Quan trọng
 app.UseAuthorization();
 app.MapControllers();
 
