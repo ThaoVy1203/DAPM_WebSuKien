@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://localhost:7160/api';
 
 // Toggle Password Visibility
 function togglePassword() {
@@ -116,9 +116,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 localStorage.removeItem('savedEmail');
             }
             
-            // Redirect to dashboard after 1.5 seconds
+            // Redirect to home-user page after 1.5 seconds
             setTimeout(() => {
-                window.location.href = '../index.html';
+                window.location.href = 'home-user.html';
             }, 1500);
             
         } else {
@@ -165,13 +165,11 @@ document.getElementById('email').addEventListener('keypress', function(e) {
 document.getElementById('email').addEventListener('input', hideAlerts);
 document.getElementById('password').addEventListener('input', hideAlerts);
 
-// Google Login (Placeholder)
-document.querySelector('.btn-google').addEventListener('click', function() {
-    showAlert('error', 'Chức năng đăng nhập bằng Google đang được phát triển');
-});
-
 // Forgot Password (Placeholder)
-document.querySelector('.forgot-password').addEventListener('click', function(e) {
-    e.preventDefault();
-    showAlert('error', 'Vui lòng liên hệ Phòng Đào tạo để được hỗ trợ khôi phục mật khẩu');
-});
+const forgotPasswordLink = document.querySelector('.forgot-password');
+if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        showAlert('error', 'Vui lòng liên hệ Phòng Đào tạo để được hỗ trợ khôi phục mật khẩu');
+    });
+}

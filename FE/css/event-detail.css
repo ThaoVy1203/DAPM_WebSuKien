@@ -735,3 +735,54 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Success Modal Styles */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.success-modal {
+    animation: fadeIn 0.3s ease;
+}
+
+.success-modal .modal-content {
+    animation: slideUp 0.3s ease;
+}
+
+/* Button disabled state */
+.btn-register:disabled,
+.btn-register.registered {
+    background-color: var(--text-light);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-register:disabled:hover,
+.btn-register.registered:hover {
+    background-color: var(--text-light);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Event status badges */
+.btn-disabled {
+    background-color: var(--text-light);
+    color: var(--white);
+    cursor: not-allowed;
+}

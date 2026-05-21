@@ -1,154 +1,214 @@
-// Admin Users JavaScript
+// Admin Users Page - API Integration
+let users = [];
+let editingUserId = null;
 
-// Filter functionality
-function applyFilters() {
-    const roleFilter = document.getElementById('roleFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    console.log('Applying filters:', { roleFilter, statusFilter });
-    // TODO: Implement filter logic with API
-}
-
-// Tab filtering
-document.addEventListener('DOMContentLoaded', function() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            tabBtns.forEach(tab => tab.classList.remove('active'));
-            this.classList.add('active');
-            
-            const filter = this.getAttribute('data-filter');
-            console.log('Filter by:', filter);
-            // TODO: Implement filter logic
-        });
-    });
-
-    // Select all checkbox
-    const selectAll = document.getElementById('selectAll');
-    if (selectAll) {
-        selectAll.addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.row-checkbox');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-        });
-    }
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Admin users page loaded');
+    await loadUsers();
+    initializeEventHandlers();
 });
 
-// Export users
-function exportUsers() {
-    console.log('Exporting users...');
-    alert('Đang xuất danh sách người dùng...');
-    // TODO: Implement export functionality
+async function loadUsers() {
+    try {
+        users = await API.get(API_CONFIG.ENDPOINTS.NGUOIDUNG);
+        console.log('Users loaded:', users);
+        renderUsersTable(users);
+        updateStats(users);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showError('Không thể tải danh sách người dùng.');
+    }
 }
 
-// Open add user modal
+function renderUsersTable(users) {
+    const tbody = document.querySelector('.admin-table tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        const roleClass = user.vaiTros && user.vaiTros.length > 0 ? 'badge-info' : 'badge-default';
+        const roleName = user.vaiTros && user.vaiTros.length > 0 ? user.vaiTros[0] : 'Người dùng';
+        
+        row.innerHTML = `
+            <td><input type="checkbox" class="row-checkbox"></td>
+            <td>
+                <div class="user-cell">
+                    <img src="${user.anhDaiDien || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.hoTen)}&background=3b82f6&color=fff`}" 
+                         alt="User" class="user-avatar-small">
+                    <div>
+                        <div class="user-name-cell">${user.hoTen}</div>
+                        <div class="user-id-cell">${user.idNguoiDung}</div>
+                    </div>
+                </div>
+            </td>
+            <td>${user.email}</td>
+            <td><span class="badge ${roleClass}">${roleName}</span></td>
+            <td><span class="status-badge active">Hoạt động</span></td>
+            <td>-</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-action edit" onclick="editUser('${user.idNguoiDung}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action delete" onclick="deleteUser('${user.idNguoiDung}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateStats(users) {
+    const totalElement = document.querySelector('.stat-card:nth-child(1) .stat-number');
+    if (totalElement) totalElement.textContent = users.length;
+    
+    const activeElement = document.querySelector('.stat-card:nth-child(2) .stat-number');
+    if (activeElement) activeElement.textContent = users.length;
+}
+
 function openAddUserModal() {
+    editingUserId = null;
     const modal = document.getElementById('userModal');
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('userForm');
     
-    if (modal && modalTitle && form) {
-        modalTitle.textContent = 'Thêm người dùng mới';
-        form.reset();
-        modal.style.display = 'flex';
+    if (modalTitle) modalTitle.textContent = 'Thêm người dùng mới';
+    if (form) form.reset();
+    if (modal) modal.style.display = 'flex';
+}
+
+async function editUser(userId) {
+    editingUserId = userId;
+    try {
+        const user = await API.get(API_CONFIG.ENDPOINTS.NGUOIDUNG_BY_ID(userId));
+        const modal = document.getElementById('userModal');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        if (modalTitle) modalTitle.textContent = 'Chỉnh sửa người dùng';
+        
+        document.getElementById('userName').value = user.hoTen;
+        document.getElementById('userEmail').value = user.email;
+        document.getElementById('userId').value = user.maSoSSO;
+        document.getElementById('userPhone').value = user.sdt || '';
+        
+        if (modal) modal.style.display = 'flex';
+    } catch (error) {
+        console.error('Error loading user:', error);
+        alert('Không thể tải thông tin người dùng');
     }
 }
 
-// Close user modal
 function closeUserModal() {
     const modal = document.getElementById('userModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    if (modal) modal.style.display = 'none';
+    editingUserId = null;
 }
 
-// Edit user
-function editUser(id) {
-    console.log('Editing user:', id);
-    const modal = document.getElementById('userModal');
-    const modalTitle = document.getElementById('modalTitle');
+async function saveUser() {
+    const name = document.getElementById('userName').value.trim();
+    const email = document.getElementById('userEmail').value.trim();
+    const phone = document.getElementById('userPhone').value.trim();
     
-    if (modal && modalTitle) {
-        modalTitle.textContent = 'Chỉnh sửa người dùng';
-        modal.style.display = 'flex';
-        // TODO: Load user data and populate form
+    if (!name || !email) {
+        alert('Vui lòng nhập đầy đủ thông tin');
+        return;
     }
-}
-
-// Delete user
-function deleteUser(id) {
-    console.log('Deleting user:', id);
-    if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-        // TODO: Implement API call to delete user
-        alert('Đã xóa người dùng!');
-        location.reload();
-    }
-}
-
-// Save user
-function saveUser() {
-    const form = document.getElementById('userForm');
-    if (form && form.checkValidity()) {
-        const userName = document.getElementById('userName').value;
-        const userEmail = document.getElementById('userEmail').value;
-        const userPassword = document.getElementById('userPassword').value;
-        const userPasswordConfirm = document.getElementById('userPasswordConfirm').value;
-        const userRole = document.getElementById('userRole').value;
-        const userStatus = document.getElementById('userStatus').value;
-        
-        if (userPassword !== userPasswordConfirm) {
-            alert('Mật khẩu xác nhận không khớp!');
-            return;
+    
+    const userData = {
+        hoTen: name,
+        email: email,
+        sdt: phone
+    };
+    
+    try {
+        if (editingUserId) {
+            await API.put(API_CONFIG.ENDPOINTS.NGUOIDUNG_BY_ID(editingUserId), userData);
+            alert('Cập nhật người dùng thành công!');
+        } else {
+            const createData = {
+                ...userData,
+                idNguoiDung: document.getElementById('userId').value.trim(),
+                maSoSSO: document.getElementById('userId').value.trim(),
+                matKhauSSO: document.getElementById('userPassword').value
+            };
+            await API.post(API_CONFIG.ENDPOINTS.NGUOIDUNG, createData);
+            alert('Thêm người dùng mới thành công!');
         }
         
-        console.log('Saving user:', {
-            userName,
-            userEmail,
-            userRole,
-            userStatus
-        });
-        
-        // TODO: Implement API call to save user
-        alert('Đã lưu người dùng thành công!');
+        await loadUsers();
         closeUserModal();
-        location.reload();
-    } else {
-        form.reportValidity();
+    } catch (error) {
+        console.error('Error saving user:', error);
+        alert('Không thể lưu người dùng. Vui lòng thử lại.');
     }
 }
 
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('userModal');
-    if (event.target === modal) {
-        closeUserModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeUserModal();
-    }
-});
-
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.querySelector('.search-bar input');
+async function deleteUser(userId) {
+    const confirmed = confirm('Bạn có chắc chắn muốn xóa người dùng này?');
+    if (!confirmed) return;
     
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('.admin-table tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+    try {
+        await API.delete(API_CONFIG.ENDPOINTS.NGUOIDUNG_BY_ID(userId));
+        alert('Xóa người dùng thành công!');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Không thể xóa người dùng.');
+    }
+}
+
+function exportUsers() {
+    alert('Tính năng xuất danh sách đang được phát triển');
+}
+
+function applyFilters() {
+    alert('Tính năng lọc đang được phát triển');
+}
+
+function initializeEventHandlers() {
+    const addBtn = document.querySelector('.btn-primary');
+    if (addBtn) addBtn.addEventListener('click', openAddUserModal);
+    
+    const closeBtn = document.querySelector('.btn-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeUserModal);
+    
+    const cancelBtn = document.querySelector('.btn-cancel-modal');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeUserModal);
+    
+    const saveBtn = document.querySelector('.btn-submit');
+    if (saveBtn) saveBtn.addEventListener('click', saveUser);
+    
+    const modal = document.getElementById('userModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeUserModal();
         });
     }
-});
+}
+
+function showError(message) {
+    const container = document.querySelector('.main-content');
+    if (container) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'text-align: center; padding: 40px; color: #dc2626; background: #fee2e2; border-radius: 8px; margin: 20px 0;';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
+            <h3>Có lỗi xảy ra</h3>
+            <p>${message}</p>
+            <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">Thử lại</button>
+        `;
+        container.insertBefore(errorDiv, container.firstChild);
+    }
+}
+
+window.openAddUserModal = openAddUserModal;
+window.editUser = editUser;
+window.closeUserModal = closeUserModal;
+window.saveUser = saveUser;
+window.deleteUser = deleteUser;
+window.exportUsers = exportUsers;
+window.applyFilters = applyFilters;

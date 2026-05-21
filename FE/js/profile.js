@@ -1,122 +1,249 @@
-// Profile Page JavaScript
+// Profile Page - API Integration
+let currentUserId = 'ND001'; // Mock user ID - should come from session/auth
+let currentUser = null;
 
-// Edit Personal Info
-document.getElementById('editPersonalInfo')?.addEventListener('click', function() {
-    alert('Chức năng chỉnh sửa thông tin cá nhân đang được phát triển');
-});
-
-// Edit Interests
-document.getElementById('editInterests')?.addEventListener('click', function() {
-    const activeInterests = document.querySelectorAll('.interest-tag.active');
-    const interests = Array.from(activeInterests).map(tag => tag.textContent.trim());
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Profile page loaded');
     
-    console.log('Sở thích đã chọn:', interests);
-    alert(`Đã lưu ${interests.length} sở thích của bạn!`);
+    // Load user profile
+    await loadUserProfile();
+    
+    // Initialize event handlers
+    initializeEventHandlers();
 });
 
-// Toggle Interest Tags
-document.querySelectorAll('.interest-tag').forEach(tag => {
-    tag.addEventListener('click', function() {
-        this.classList.toggle('active');
-    });
-});
-
-// Settings Items Click
-document.querySelectorAll('.setting-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-        // Skip if clicking on toggle switch
-        if (e.target.closest('.toggle')) {
-            return;
-        }
-
-        const settingTitle = this.querySelector('h4').textContent;
+// Load user profile from API
+async function loadUserProfile() {
+    try {
+        console.log('Loading user profile for ID:', currentUserId);
         
-        if (settingTitle === 'Đăng xuất') {
-            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = 'login.html';
-            }
-        } else if (settingTitle === 'Thay đổi mật khẩu') {
-            alert('Chức năng thay đổi mật khẩu đang được phát triển');
-        } else if (settingTitle === 'Quyền riêng tư') {
-            alert('Chức năng cài đặt quyền riêng tư đang được phát triển');
+        // Fetch user detail
+        currentUser = await API.get(API_CONFIG.ENDPOINTS.NGUOIDUNG_BY_ID(currentUserId));
+        console.log('User loaded:', currentUser);
+        
+        // Render user profile
+        renderUserProfile(currentUser);
+        
+        // Load user statistics
+        await loadUserStatistics();
+        
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        showError('Không thể tải thông tin hồ sơ. Vui lòng thử lại sau.');
+    }
+}
+
+// Render user profile
+function renderUserProfile(user) {
+    // Update profile name
+    const nameElements = document.querySelectorAll('.profile-name');
+    nameElements.forEach(el => {
+        el.textContent = user.hoTen || 'Người dùng';
+    });
+    
+    // Update user ID
+    const idElement = document.querySelector('.profile-meta span:first-child');
+    if (idElement) {
+        idElement.innerHTML = `<i class="fas fa-id-card"></i> ID: ${user.idNguoiDung}`;
+    }
+    
+    // Update email
+    const emailElement = document.querySelector('.info-item:nth-child(1) p');
+    if (emailElement) {
+        emailElement.textContent = user.email || 'Chưa cập nhật';
+    }
+    
+    // Update phone
+    const phoneElement = document.querySelector('.info-item:nth-child(2) p');
+    if (phoneElement) {
+        phoneElement.textContent = user.sdt || 'Chưa cập nhật';
+    }
+    
+    // Update avatar
+    const avatarElements = document.querySelectorAll('.profile-avatar, .user-avatar');
+    avatarElements.forEach(el => {
+        if (user.anhDaiDien) {
+            el.src = user.anhDaiDien;
+        } else {
+            el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.hoTen)}&background=0D5A9C&color=fff&size=150`;
         }
     });
-});
+}
 
-// View Details Button
-document.querySelector('.btn-view-details')?.addEventListener('click', function() {
-    alert('Chức năng xem chi tiết điểm rèn luyện đang được phát triển');
-});
+// Load user statistics
+async function loadUserStatistics() {
+    try {
+        // Fetch user's registrations
+        const registrations = await API.get(API_CONFIG.ENDPOINTS.DANGKY);
+        
+        // Filter by current user
+        const myRegistrations = registrations.filter(r => r.idNguoiDung === currentUserId);
+        
+        // Count attended events
+        const attendedCount = myRegistrations.filter(r => r.trangThai === 'Đã tham gia').length;
+        
+        // Count upcoming events
+        const upcomingCount = myRegistrations.filter(r => 
+            r.trangThai === 'Đã xác nhận' || r.trangThai === 'Chờ xác nhận'
+        ).length;
+        
+        // Update stats
+        updateStatistics(attendedCount, upcomingCount);
+        
+        // Load recent events
+        await loadRecentEvents(myRegistrations);
+        
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
 
-// Edit Avatar
-document.querySelector('.edit-avatar-btn')?.addEventListener('click', function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                document.querySelector('.profile-avatar').src = event.target.result;
-                alert('Ảnh đại diện đã được cập nhật!');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-    
-    input.click();
-});
-
-// User Menu Dropdown
-document.querySelector('.user-menu')?.addEventListener('click', function() {
-    alert('Menu người dùng đang được phát triển');
-});
-
-// Notification Button
-document.querySelector('.btn-notification')?.addEventListener('click', function() {
-    window.location.href = 'notifications.html';
-});
-
-// Load user data from localStorage
-function loadUserData() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    
-    if (user.name) {
-        document.querySelector('.profile-name').textContent = user.name;
+// Update statistics display
+function updateStatistics(attended, upcoming) {
+    // Update attended events count
+    const attendedElement = document.querySelector('.activity-stat-item:nth-child(1) .stat-number');
+    if (attendedElement) {
+        attendedElement.textContent = attended;
     }
     
-    if (user.email) {
-        const emailElement = document.querySelector('.info-item p');
-        if (emailElement) {
-            emailElement.textContent = user.email;
-        }
+    // Update upcoming events count
+    const upcomingElement = document.querySelector('.activity-stat-item:nth-child(2) .stat-number');
+    if (upcomingElement) {
+        upcomingElement.textContent = upcoming;
     }
+}
+
+// Load recent events
+async function loadRecentEvents(registrations) {
+    const container = document.querySelector('.recent-events');
+    if (!container) return;
     
-    if (user.studentId) {
-        const idElement = document.querySelector('.profile-meta span:first-child');
-        if (idElement) {
-            idElement.innerHTML = `<i class="fas fa-id-card"></i> ID: ${user.studentId}`;
+    // Get first 2 upcoming events
+    const upcoming = registrations
+        .filter(r => r.trangThai === 'Đã xác nhận' || r.trangThai === 'Chờ xác nhận')
+        .slice(0, 2);
+    
+    // Clear existing events (keep title)
+    const title = container.querySelector('h3');
+    container.innerHTML = '';
+    if (title) container.appendChild(title);
+    
+    // Load event details
+    for (const reg of upcoming) {
+        try {
+            const event = await API.get(API_CONFIG.ENDPOINTS.SUKIEN_BY_ID(reg.idSuKien));
+            const eventItem = createRecentEventItem(event);
+            container.appendChild(eventItem);
+        } catch (error) {
+            console.error('Error loading event:', error);
         }
     }
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserData();
+// Create recent event item
+function createRecentEventItem(event) {
+    const item = document.createElement('div');
+    item.className = 'recent-event-item';
     
-    // Check authentication
-    const token = localStorage.getItem('token');
-    if (!token) {
-        // Uncomment to enforce authentication
-        // window.location.href = 'login.html';
-    }
-});
+    const startDate = new Date(event.thoiGianBatDau);
+    const day = startDate.getDate();
+    const month = `T${startDate.getMonth() + 1}`;
+    
+    item.innerHTML = `
+        <div class="event-date">
+            <span class="date-day">${day}</span>
+            <span class="date-month">${month}</span>
+        </div>
+        <div class="event-info">
+            <h4>${event.tenSuKien}</h4>
+            <p><i class="fas fa-map-marker-alt"></i> ${event.tenDiaDiem || 'Chưa xác định'}</p>
+        </div>
+    `;
+    
+    return item;
+}
 
-// Export functions
-window.profileModule = {
-    loadUserData
-};
+// Initialize event handlers
+function initializeEventHandlers() {
+    // Edit personal info button
+    const editPersonalBtn = document.getElementById('editPersonalInfo');
+    if (editPersonalBtn) {
+        editPersonalBtn.addEventListener('click', () => {
+            alert('Tính năng chỉnh sửa thông tin đang được phát triển');
+        });
+    }
+    
+    // Edit interests button
+    const editInterestsBtn = document.getElementById('editInterests');
+    if (editInterestsBtn) {
+        editInterestsBtn.addEventListener('click', saveInterests);
+    }
+    
+    // Interest tags
+    const interestTags = document.querySelectorAll('.interest-tag');
+    interestTags.forEach(tag => {
+        tag.addEventListener('click', () => {
+            tag.classList.toggle('active');
+        });
+    });
+    
+    // Setting items
+    const settingItems = document.querySelectorAll('.setting-item');
+    settingItems.forEach(item => {
+        if (item.classList.contains('danger')) {
+            item.addEventListener('click', logout);
+        } else {
+            item.addEventListener('click', () => {
+                alert('Tính năng này đang được phát triển');
+            });
+        }
+    });
+    
+    // View details button
+    const viewDetailsBtn = document.querySelector('.btn-view-details');
+    if (viewDetailsBtn) {
+        viewDetailsBtn.addEventListener('click', () => {
+            window.location.href = 'history.html';
+        });
+    }
+}
+
+// Save interests
+function saveInterests() {
+    const activeInterests = document.querySelectorAll('.interest-tag.active');
+    const interests = Array.from(activeInterests).map(tag => 
+        tag.querySelector('span').textContent
+    );
+    
+    console.log('Saving interests:', interests);
+    alert(`Đã lưu ${interests.length} sở thích: ${interests.join(', ')}`);
+}
+
+// Logout
+function logout() {
+    const confirmed = confirm('Bạn có chắc chắn muốn đăng xuất?');
+    if (confirmed) {
+        // Clear session/auth data
+        localStorage.removeItem('currentUser');
+        sessionStorage.clear();
+        
+        // Redirect to login
+        window.location.href = 'login.html';
+    }
+}
+
+// Show error message
+function showError(message) {
+    const container = document.querySelector('.profile-content');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc2626;"></i>
+                <h3 style="margin-top: 20px; color: #333;">${message}</h3>
+                <button onclick="location.reload()" class="btn-primary" style="margin-top: 20px;">
+                    Thử lại
+                </button>
+            </div>
+        `;
+    }
+}

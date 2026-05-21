@@ -1,11 +1,51 @@
 // Home User Page JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
+    checkAuthentication();
+    loadUserInfo();
     initializeUserMenu();
     initializeNotifications();
     initializeEventCards();
     initializeScrollAnimations();
 });
+
+// Check if user is logged in
+function checkAuthentication() {
+    const user = localStorage.getItem('user');
+    if (!user) {
+        // Redirect to login if not authenticated
+        window.location.href = 'login.html';
+        return;
+    }
+}
+
+// Load user info
+function loadUserInfo() {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    
+    try {
+        const user = JSON.parse(userStr);
+        
+        // Update user avatar
+        const userAvatar = document.querySelector('.user-avatar');
+        if (userAvatar) {
+            if (user.anhDaiDien) {
+                userAvatar.src = user.anhDaiDien;
+            } else {
+                // Use UI Avatars with user name
+                const name = user.hoTen || 'User';
+                userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D5A9C&color=fff`;
+            }
+            userAvatar.alt = user.hoTen || 'User';
+        }
+        
+        // You can also update other user info in the page
+        console.log('User logged in:', user.hoTen);
+    } catch (error) {
+        console.error('Error loading user info:', error);
+    }
+}
 
 // User Menu Functionality
 function initializeUserMenu() {
@@ -208,8 +248,10 @@ function handleLogout(event) {
     
     if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
         // Clear user session
-        localStorage.removeItem('userToken');
-        localStorage.removeItem('userData');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('savedEmail');
         sessionStorage.clear();
         
         // Redirect to login page
@@ -281,19 +323,3 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
-
-// Load user info
-function loadUserInfo() {
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    
-    if (userData.name) {
-        // Update user avatar if available
-        const userAvatar = document.querySelector('.user-avatar');
-        if (userAvatar && userData.avatar) {
-            userAvatar.src = userData.avatar;
-        }
-    }
-}
-
-// Initialize user info on page load
-loadUserInfo();

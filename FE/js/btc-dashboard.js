@@ -1,235 +1,169 @@
-// Admin Dashboard JavaScript
+// BTC Dashboard - API Integration (với mock data cho tasks/budget)
+let currentUserId = 'ND004'; // Mock BTC user ID
+let myEvents = [];
 
-// Sample data
-const dashboardData = {
-    stats: {
-        teamMembers: 48,
-        tasksCompleted: 156,
-        tasksTotal: 182,
-        totalBudget: 150000000,
-        spentBudget: 92450000,
-        remainingBudget: 57550000
-    },
-    tasks: [
-        {
-            id: 1,
-            name: 'Thiết kế thanh âm trang',
-            project: 'Sơn Thuyên Hương',
-            assignee: 'Trần Hoàng M.',
-            dueDate: '24/10/2024',
-            status: 'pending'
-        },
-        {
-            id: 2,
-            name: 'Thiết kế Backdrop',
-            project: 'Sơn Thuyên Hương',
-            assignee: 'Lê Thị B.',
-            dueDate: '20/10/2024',
-            status: 'completed'
-        },
-        {
-            id: 3,
-            name: 'Gửi thư mời Đại biểu',
-            project: 'Sơn Thuyên Hương',
-            assignee: 'Phạm Hải Y.',
-            dueDate: '15/10/2024',
-            status: 'overdue'
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('BTC Dashboard loaded');
+    
+    // Load user data
+    await loadUserData();
+    
+    // Load events managed by this BTC
+    await loadMyEvents();
+    
+    // Initialize event handlers
+    initializeEventHandlers();
+});
+
+// Load user data
+async function loadUserData() {
+    try {
+        const user = await API.get(API_CONFIG.ENDPOINTS.NGUOIDUNG_BY_ID(currentUserId));
+        
+        // Update user name in header
+        const userNameElement = document.querySelector('.user-name');
+        if (userNameElement) {
+            userNameElement.textContent = user.hoTen;
         }
-    ]
-};
+        
+        // Update user role
+        const userRoleElement = document.querySelector('.user-role');
+        if (userRoleElement && user.vaiTros && user.vaiTros.length > 0) {
+            userRoleElement.textContent = user.vaiTros[0];
+        }
+        
+    } catch (error) {
+        console.error('Error loading user data:', error);
+    }
+}
 
-// Initialize dashboard
-function initDashboard() {
-    updateStats();
-    setupEventListeners();
-    startAutoRefresh();
+// Load events managed by this BTC
+async function loadMyEvents() {
+    try {
+        // Load all events (in real app, filter by BTC user)
+        const allEvents = await API.get(API_CONFIG.ENDPOINTS.SUKIEN);
+        
+        // For demo, take first 3 events
+        myEvents = allEvents.slice(0, 3);
+        
+        console.log('My events:', myEvents);
+        
+        // Update statistics with real data
+        updateStatistics();
+        
+    } catch (error) {
+        console.error('Error loading events:', error);
+        // Use mock data if API fails
+        updateStatistics();
+    }
 }
 
 // Update statistics
-function updateStats() {
-    const stats = dashboardData.stats;
+function updateStatistics() {
+    // Team members count (mock)
+    const teamCount = 48;
+    const teamElement = document.querySelector('.stat-card:nth-child(1) .stat-number');
+    if (teamElement) {
+        teamElement.textContent = teamCount;
+    }
     
-    // Update progress percentage
-    const progressPercentage = (stats.tasksCompleted / stats.tasksTotal * 100).toFixed(1);
+    // Task progress (mock)
+    const completedTasks = 156;
+    const totalTasks = 182;
+    const taskElement = document.querySelector('.stat-card:nth-child(2) .stat-number');
+    if (taskElement) {
+        taskElement.innerHTML = `${completedTasks}<span class="stat-total">/${totalTasks}</span>`;
+    }
+    
     const progressBar = document.querySelector('.progress-fill');
     if (progressBar) {
-        progressBar.style.width = progressPercentage + '%';
+        const percentage = (completedTasks / totalTasks) * 100;
+        progressBar.style.width = percentage + '%';
+    }
+    
+    // Budget (mock)
+    const totalBudget = 150000000;
+    const spent = 92450000;
+    const remaining = totalBudget - spent;
+    
+    const budgetElement = document.querySelector('.stat-budget');
+    if (budgetElement) {
+        budgetElement.textContent = totalBudget.toLocaleString('vi-VN') + ' đ';
+    }
+    
+    const spentElement = document.querySelector('.budget-item:nth-child(1) .amount');
+    if (spentElement) {
+        spentElement.textContent = spent.toLocaleString('vi-VN') + ' đ';
+    }
+    
+    const remainingElement = document.querySelector('.budget-item:nth-child(2) .amount');
+    if (remainingElement) {
+        remainingElement.textContent = remaining.toLocaleString('vi-VN') + ' đ';
     }
 }
 
-// Setup event listeners
-function setupEventListeners() {
+// Initialize event handlers
+function initializeEventHandlers() {
     // Create event button
     const createBtn = document.querySelector('.btn-create');
     if (createBtn) {
-        createBtn.addEventListener('click', function() {
-            alert('Chức năng tạo sự kiện mới đang được phát triển');
+        createBtn.addEventListener('click', () => {
+            alert('Tính năng tạo sự kiện mới đang được phát triển');
         });
     }
-
+    
+    // Send report button
+    const reportBtn = document.querySelector('.btn-secondary');
+    if (reportBtn) {
+        reportBtn.addEventListener('click', () => {
+            alert('Tính năng gửi báo cáo đang được phát triển');
+        });
+    }
+    
+    // Send budget approval button
+    const budgetBtn = document.querySelector('.btn-primary');
+    if (budgetBtn) {
+        budgetBtn.addEventListener('click', () => {
+            alert('Tính năng gửi phê duyệt ngân sách đang được phát triển');
+        });
+    }
+    
+    // Task more buttons
+    const moreButtons = document.querySelectorAll('.btn-more');
+    moreButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            alert('Tính năng quản lý task đang được phát triển');
+        });
+    });
+    
     // Approval buttons
-    document.querySelectorAll('.btn-approve').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (confirm('Bạn có chắc chắn muốn phê duyệt yêu cầu này?')) {
-                alert('Đã phê duyệt thành công!');
-                this.closest('.approval-item').style.opacity = '0.5';
-            }
+    const approveButtons = document.querySelectorAll('.btn-approve');
+    approveButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            alert('Đã phê duyệt yêu cầu');
         });
     });
-
-    document.querySelectorAll('.btn-reject').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (confirm('Bạn có chắc chắn muốn từ chối yêu cầu này?')) {
-                alert('Đã từ chối yêu cầu!');
-                this.closest('.approval-item').style.opacity = '0.5';
-            }
-        });
-    });
-
-    // View detail button
-    document.querySelectorAll('.btn-view-detail').forEach(btn => {
-        btn.addEventListener('click', function() {
-            alert('Chức năng xem chi tiết đang được phát triển');
-        });
-    });
-
-    // Task more button
-    document.querySelectorAll('.btn-more').forEach(btn => {
-        btn.addEventListener('click', function() {
-            alert('Chức năng quản lý nhiệm vụ đang được phát triển');
-        });
-    });
-
-    // Navigation items
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            if (this.getAttribute('href') === '#') {
-                e.preventDefault();
-                alert('Chức năng đang được phát triển');
-            }
-        });
-    });
-
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-
-    // Export report button
-    const exportBtn = document.querySelector('.btn-secondary');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function() {
-            alert('Đang xuất báo cáo...');
-        });
-    }
-
-    // Submit budget button
-    const submitBudgetBtn = document.querySelector('.btn-primary');
-    if (submitBudgetBtn) {
-        submitBudgetBtn.addEventListener('click', function() {
-            if (confirm('Bạn có chắc chắn muốn gửi phê duyệt ngân sách?')) {
-                alert('Đã gửi yêu cầu phê duyệt ngân sách thành công!');
-            }
-        });
-    }
-
-    // Notification button
-    const notificationBtn = document.querySelector('.btn-notification');
-    if (notificationBtn) {
-        notificationBtn.addEventListener('click', function() {
-            alert('Bạn có 3 thông báo mới');
-        });
-    }
-
-    // User profile
-    const userProfile = document.querySelector('.user-profile');
-    if (userProfile) {
-        userProfile.addEventListener('click', function() {
-            alert('Menu người dùng đang được phát triển');
-        });
-    }
-}
-
-// Auto refresh data
-function startAutoRefresh() {
-    // Refresh every 30 seconds
-    setInterval(function() {
-        console.log('Refreshing dashboard data...');
-        // Here you would fetch new data from the API
-        updateStats();
-    }, 30000);
-}
-
-// Format currency
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-    }).format(amount);
-}
-
-// Calculate budget percentage
-function calculateBudgetPercentage() {
-    const stats = dashboardData.stats;
-    return (stats.spentBudget / stats.totalBudget * 100).toFixed(1);
-}
-
-// Add new task
-function addTask(task) {
-    dashboardData.tasks.push(task);
-    // Re-render task list
-    console.log('Task added:', task);
-}
-
-// Update task status
-function updateTaskStatus(taskId, newStatus) {
-    const task = dashboardData.tasks.find(t => t.id === taskId);
-    if (task) {
-        task.status = newStatus;
-        console.log('Task status updated:', task);
-    }
-}
-
-// Load user data
-function loadUserData() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
     
-    if (user.name) {
-        const userName = document.querySelector('.user-name');
-        if (userName) {
-            userName.textContent = user.name;
-        }
-    }
+    const rejectButtons = document.querySelectorAll('.btn-reject');
+    rejectButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            alert('Đã từ chối yêu cầu');
+        });
+    });
     
-    if (user.role) {
-        const userRole = document.querySelector('.user-role');
-        if (userRole) {
-            userRole.textContent = user.role;
-        }
-    }
+    // View detail buttons
+    const detailButtons = document.querySelectorAll('.btn-view-detail');
+    detailButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            alert('Tính năng xem chi tiết đang được phát triển');
+        });
+    });
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    initDashboard();
-    loadUserData();
-
-    // Check authentication
-    const token = localStorage.getItem('token');
-    if (!token) {
-        // Uncomment to enforce authentication
-        // window.location.href = 'login.html';
-    }
-});
-
-// Export functions
-window.dashboardModule = {
-    updateStats,
-    addTask,
-    updateTaskStatus,
-    formatCurrency,
-    calculateBudgetPercentage
-};
+// Note: Tasks, Budget, Approvals sẽ cần API riêng trong tương lai
+// Hiện tại sử dụng mock data để demo giao diện
+console.log('BTC Dashboard: Sử dụng mock data cho Tasks, Budget, Approvals');
+console.log('Cần tạo API endpoints:');
+console.log('- GET /api/CongViec (Tasks)');
+console.log('- GET /api/NganSach (Budget)');
+console.log('- GET /api/PheDuyet (Approvals)');

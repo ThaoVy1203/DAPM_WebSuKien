@@ -1,154 +1,323 @@
-// Admin Locations JavaScript
+// Admin Locations Page - API Integration
+let locations = [];
+let editingLocationId = null;
 
-// Filter functionality
-function applyFilters() {
-    const capacityFilter = document.getElementById('capacityFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Admin locations page loaded');
     
-    console.log('Applying filters:', { capacityFilter, statusFilter });
-    // TODO: Implement filter logic with API
-}
-
-// Tab filtering
-document.addEventListener('DOMContentLoaded', function() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
+    // Load locations from API
+    await loadLocations();
     
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            tabBtns.forEach(tab => tab.classList.remove('active'));
-            this.classList.add('active');
-            
-            const filter = this.getAttribute('data-filter');
-            console.log('Filter by:', filter);
-            // TODO: Implement filter logic
-        });
-    });
+    // Initialize event handlers
+    initializeEventHandlers();
 });
 
-// Export locations
-function exportLocations() {
-    console.log('Exporting locations...');
-    alert('Đang xuất danh sách địa điểm...');
-    // TODO: Implement export functionality
+// Load all locations from API
+async function loadLocations() {
+    try {
+        console.log('Loading locations from API...');
+        
+        locations = await API.get(API_CONFIG.ENDPOINTS.DIADIEM);
+        console.log('Locations loaded:', locations);
+        
+        // Render locations
+        renderLocationCards(locations);
+        renderLocationTable(locations);
+        updateStats(locations);
+        
+    } catch (error) {
+        console.error('Error loading locations:', error);
+        showError('Không thể tải danh sách địa điểm. Vui lòng kiểm tra Backend đã chạy chưa.');
+    }
+}
+
+// Render location cards
+function renderLocationCards(locations) {
+    const container = document.querySelector('.locations-grid');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    locations.slice(0, 6).forEach(location => {
+        const card = createLocationCard(location);
+        container.appendChild(card);
+    });
+}
+
+// Create location card
+function createLocationCard(location) {
+    const card = document.createElement('div');
+    card.className = 'location-card';
+    
+    const statusClass = location.trangThaiSuDung === 'Hoạt động' ? 'available' : 'maintenance';
+    const statusText = location.trangThaiSuDung || 'Hoạt động';
+    
+    card.innerHTML = `
+        <div class="location-image">
+            <img src="../images/location${location.idDiaDiem}.jpg" alt="${location.tenDiaDiem}" 
+                 onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=${encodeURIComponent(location.tenDiaDiem)}'">
+            <span class="location-status ${statusClass}">${statusText}</span>
+        </div>
+        <div class="location-info">
+            <h3>${location.tenDiaDiem}</h3>
+            <p><i class="fas fa-map-marker-alt"></i> ${location.viTri || 'Chưa xác định'}</p>
+            <div class="location-stats">
+                <div class="stat">
+                    <i class="fas fa-users"></i>
+                    <span>${location.sucChua || 0} người</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>0 sự kiện</span>
+                </div>
+            </div>
+            <div class="location-actions">
+                <button class="btn-action edit" onclick="openEditModal(${location.idDiaDiem})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-action delete" onclick="deleteLocation(${location.idDiaDiem})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Render location table
+function renderLocationTable(locations) {
+    const tbody = document.querySelector('.admin-table tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    locations.forEach((location, index) => {
+        const row = document.createElement('tr');
+        
+        const statusClass = location.trangThaiSuDung === 'Hoạt động' ? 'active' : 'inactive';
+        const statusText = location.trangThaiSuDung || 'Hoạt động';
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${location.tenDiaDiem}</strong></td>
+            <td>${location.viTri || 'Chưa xác định'}</td>
+            <td>${location.sucChua || 0}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>0</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-action edit" onclick="openEditModal(${location.idDiaDiem})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action delete" onclick="deleteLocation(${location.idDiaDiem})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Update statistics
+function updateStats(locations) {
+    // Total locations
+    const totalElement = document.querySelector('.stat-card:nth-child(1) .stat-number');
+    if (totalElement) {
+        totalElement.textContent = locations.length;
+    }
+    
+    // Available locations
+    const availableCount = locations.filter(l => l.trangThaiSuDung === 'Hoạt động').length;
+    const availableElement = document.querySelector('.stat-card:nth-child(2) .stat-number');
+    if (availableElement) {
+        availableElement.textContent = availableCount;
+    }
+    
+    // Total capacity
+    const totalCapacity = locations.reduce((sum, l) => sum + (l.sucChua || 0), 0);
+    const capacityElement = document.querySelector('.stat-card:nth-child(3) .stat-number');
+    if (capacityElement) {
+        capacityElement.textContent = totalCapacity.toLocaleString();
+    }
 }
 
 // Open add location modal
-function openAddLocationModal() {
+function openAddModal() {
+    editingLocationId = null;
+    
     const modal = document.getElementById('locationModal');
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('locationForm');
     
-    if (modal && modalTitle && form) {
-        modalTitle.textContent = 'Thêm địa điểm mới';
-        form.reset();
-        modal.style.display = 'flex';
-    }
+    if (modalTitle) modalTitle.textContent = 'Thêm địa điểm mới';
+    if (form) form.reset();
+    if (modal) modal.style.display = 'flex';
 }
 
-// Close location modal
-function closeLocationModal() {
-    const modal = document.getElementById('locationModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// View location
-function viewLocation(id) {
-    console.log('Viewing location:', id);
-    // TODO: Open detail modal or navigate to detail page
-    alert('Xem chi tiết địa điểm #' + id);
-}
-
-// Edit location
-function editLocation(id) {
-    console.log('Editing location:', id);
-    const modal = document.getElementById('locationModal');
-    const modalTitle = document.getElementById('modalTitle');
+// Open edit location modal
+async function openEditModal(locationId) {
+    editingLocationId = locationId;
     
-    if (modal && modalTitle) {
-        modalTitle.textContent = 'Chỉnh sửa địa điểm';
-        modal.style.display = 'flex';
-        // TODO: Load location data and populate form
+    try {
+        const location = await API.get(API_CONFIG.ENDPOINTS.DIADIEM_BY_ID(locationId));
+        
+        const modal = document.getElementById('locationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        if (modalTitle) modalTitle.textContent = 'Chỉnh sửa địa điểm';
+        
+        // Fill form with location data
+        document.getElementById('locationName').value = location.tenDiaDiem;
+        document.getElementById('locationAddress').value = location.viTri || '';
+        document.getElementById('locationCapacity').value = location.sucChua || '';
+        document.getElementById('locationStatus').value = location.trangThaiSuDung || 'Hoạt động';
+        
+        if (modal) modal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Error loading location:', error);
+        alert('Không thể tải thông tin địa điểm');
+    }
+}
+
+// Close modal
+function closeModal() {
+    const modal = document.getElementById('locationModal');
+    if (modal) modal.style.display = 'none';
+    editingLocationId = null;
+}
+
+// Save location (create or update)
+async function saveLocation() {
+    const name = document.getElementById('locationName').value.trim();
+    const address = document.getElementById('locationAddress').value.trim();
+    const capacity = parseInt(document.getElementById('locationCapacity').value) || 0;
+    const status = document.getElementById('locationStatus').value;
+    
+    if (!name) {
+        alert('Vui lòng nhập tên địa điểm');
+        return;
+    }
+    
+    const locationData = {
+        tenDiaDiem: name,
+        viTri: address,
+        sucChua: capacity,
+        trangThaiSuDung: status
+    };
+    
+    try {
+        const submitBtn = document.querySelector('.btn-submit');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        }
+        
+        if (editingLocationId) {
+            // Update existing location
+            await API.put(API_CONFIG.ENDPOINTS.DIADIEM_BY_ID(editingLocationId), locationData);
+            alert('Cập nhật địa điểm thành công!');
+        } else {
+            // Create new location
+            await API.post(API_CONFIG.ENDPOINTS.DIADIEM, locationData);
+            alert('Thêm địa điểm mới thành công!');
+        }
+        
+        // Reload locations
+        await loadLocations();
+        
+        // Close modal
+        closeModal();
+        
+    } catch (error) {
+        console.error('Error saving location:', error);
+        alert('Không thể lưu địa điểm. Vui lòng thử lại.');
+    } finally {
+        const submitBtn = document.querySelector('.btn-submit');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu';
+        }
     }
 }
 
 // Delete location
-function deleteLocation(id) {
-    console.log('Deleting location:', id);
-    if (confirm('Bạn có chắc chắn muốn xóa địa điểm này?')) {
-        // TODO: Implement API call to delete location
-        alert('Đã xóa địa điểm!');
-        location.reload();
-    }
-}
-
-// Save location
-function saveLocation() {
-    const form = document.getElementById('locationForm');
-    if (form && form.checkValidity()) {
-        const locationName = document.getElementById('locationName').value;
-        const locationType = document.getElementById('locationType').value;
-        const locationCapacity = document.getElementById('locationCapacity').value;
-        const locationPosition = document.getElementById('locationPosition').value;
-        const locationDescription = document.getElementById('locationDescription').value;
-        const locationStatus = document.getElementById('locationStatus').value;
-        
-        // Get selected facilities
-        const facilityCheckboxes = document.querySelectorAll('.role-checkboxes input[type="checkbox"]:checked');
-        const facilities = Array.from(facilityCheckboxes).map(cb => cb.value);
-        
-        console.log('Saving location:', {
-            locationName,
-            locationType,
-            locationCapacity,
-            locationPosition,
-            locationDescription,
-            locationStatus,
-            facilities
-        });
-        
-        // TODO: Implement API call to save location
-        alert('Đã lưu địa điểm thành công!');
-        closeLocationModal();
-        location.reload();
-    } else {
-        form.reportValidity();
-    }
-}
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('locationModal');
-    if (event.target === modal) {
-        closeLocationModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeLocationModal();
-    }
-});
-
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.querySelector('.search-bar input');
+async function deleteLocation(locationId) {
+    const confirmed = confirm('Bạn có chắc chắn muốn xóa địa điểm này?');
+    if (!confirmed) return;
     
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.location-card');
-            
-            cards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+    try {
+        await API.delete(API_CONFIG.ENDPOINTS.DIADIEM_BY_ID(locationId));
+        alert('Xóa địa điểm thành công!');
+        
+        // Reload locations
+        await loadLocations();
+        
+    } catch (error) {
+        console.error('Error deleting location:', error);
+        alert('Không thể xóa địa điểm. Có thể địa điểm đang được sử dụng.');
+    }
+}
+
+// Initialize event handlers
+function initializeEventHandlers() {
+    // Add location button
+    const addBtn = document.querySelector('.btn-primary');
+    if (addBtn) {
+        addBtn.addEventListener('click', openAddModal);
+    }
+    
+    // Close modal button
+    const closeBtn = document.querySelector('.btn-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    // Cancel button
+    const cancelBtn = document.querySelector('.btn-cancel-modal');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+    }
+    
+    // Save button
+    const saveBtn = document.querySelector('.btn-submit');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveLocation);
+    }
+    
+    // Close modal when clicking outside
+    const modal = document.getElementById('locationModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
         });
     }
-});
+}
+
+// Show error message
+function showError(message) {
+    const container = document.querySelector('.main-content');
+    if (container) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'text-align: center; padding: 40px; color: #dc2626; background: #fee2e2; border-radius: 8px; margin: 20px 0;';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
+            <h3>Có lỗi xảy ra</h3>
+            <p>${message}</p>
+            <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">Thử lại</button>
+        `;
+        container.insertBefore(errorDiv, container.firstChild);
+    }
+}
+
+// Make functions global for onclick handlers
+window.openAddModal = openAddModal;
+window.openEditModal = openEditModal;
+window.closeModal = closeModal;
+window.saveLocation = saveLocation;
+window.deleteLocation = deleteLocation;

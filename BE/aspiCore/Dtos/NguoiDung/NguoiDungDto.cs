@@ -11,6 +11,24 @@ namespace aspiCore.Dtos.NguoiDung
         public List<string> VaiTros { get; set; } = new();
     }
 
+    public class CreateNguoiDungDto
+    {
+        public string IdNguoiDung { get; set; } = string.Empty;
+        public string MaSoSSO { get; set; } = string.Empty;
+        public string HoTen { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? SDT { get; set; }
+        public string MatKhauSSO { get; set; } = string.Empty;
+    }
+
+    public class UpdateNguoiDungDto
+    {
+        public string HoTen { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? SDT { get; set; }
+        public string? AnhDaiDien { get; set; }
+    }
+
     public class LoginDto
     {
         public string MaSoSSO { get; set; } = string.Empty;

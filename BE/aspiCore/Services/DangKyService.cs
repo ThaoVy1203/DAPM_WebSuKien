@@ -15,6 +15,26 @@ namespace aspiCore.Services
             _context = context;
         }
 
+        public async Task<IEnumerable<DangKySuKienDto>> GetAllAsync()
+        {
+            return await _context.DangKySuKiens
+                .Include(dk => dk.NguoiDung)
+                .Include(dk => dk.SuKien)
+                .Select(dk => new DangKySuKienDto
+                {
+                    IdDangKy = dk.IdDangKy,
+                    IdSuKien = dk.IdSuKien,
+                    TenSuKien = dk.SuKien != null ? dk.SuKien.TenSuKien : "",
+                    IdNguoiDung = dk.IdNguoiDung,
+                    HoTenNguoiDung = dk.NguoiDung != null ? dk.NguoiDung.HoTen : "",
+                    TrangThai = dk.TrangThai,
+                    ThoiGianDangKy = dk.ThoiGianDangKy,
+                    ThoiGianCheckin = dk.ThoiGianCheckin,
+                    ThoiGianCheckout = dk.ThoiGianCheckout
+                })
+                .ToListAsync();
+        }
+
         public async Task<ApiResponse> DangKySuKienAsync(DangKyDto dto)
         {
             var suKien = await _context.SuKiens.FindAsync(dto.IdSuKien);

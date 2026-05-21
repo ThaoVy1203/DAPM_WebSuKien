@@ -43,5 +43,34 @@ namespace aspiCore.Controllers
             }
             return Ok(result);
         }
+
+        [HttpPost]
+        public async Task<ActionResult<NguoiDungDto>> Create([FromBody] CreateNguoiDungDto dto)
+        {
+            var result = await _nguoiDungService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = result.IdNguoiDung }, result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<NguoiDungDto>> Update(string id, [FromBody] UpdateNguoiDungDto dto)
+        {
+            var result = await _nguoiDungService.UpdateAsync(id, dto);
+            if (result == null)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng" });
+            }
+            return Ok(result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(string id)
+        {
+            var result = await _nguoiDungService.DeleteAsync(id);
+            if (!result)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng" });
+            }
+            return Ok(new { message = "Xóa người dùng thành công" });
+        }
     }
 }

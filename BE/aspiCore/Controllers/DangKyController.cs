@@ -16,6 +16,13 @@ namespace aspiCore.Controllers
             _dangKyService = dangKyService;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<DangKySuKienDto>>> GetAll()
+        {
+            var result = await _dangKyService.GetAllAsync();
+            return Ok(result);
+        }
+
         [HttpPost("dang-ky")]
         public async Task<ActionResult<ApiResponse>> DangKy([FromBody] DangKyDto dto)
         {

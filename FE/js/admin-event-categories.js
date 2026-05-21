@@ -1,118 +1,335 @@
-// Admin Event Categories JavaScript
+// Admin Event Categories Page - API Integration
+let categories = [];
+let editingCategoryId = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Admin event categories page loaded');
+    
+    // Load categories from API
+    await loadCategories();
+    
+    // Initialize event handlers
+    initializeEventHandlers();
+});
+
+// Load all categories from API
+async function loadCategories() {
+    try {
+        console.log('Loading categories from API...');
+        
+        categories = await API.get(API_CONFIG.ENDPOINTS.DANHMUC);
+        console.log('Categories loaded:', categories);
+        
+        // Render categories
+        renderCategoryCards(categories);
+        renderCategoryTable(categories);
+        updateStats(categories);
+        
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        showError('Không thể tải danh sách danh mục. Vui lòng kiểm tra Backend đã chạy chưa.');
+    }
+}
+
+// Render category cards
+function renderCategoryCards(categories) {
+    const container = document.querySelector('.categories-grid');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const icons = ['fa-chalkboard-teacher', 'fa-hands-helping', 'fa-music', 'fa-laptop-code', 'fa-flag'];
+    const gradients = [
+        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+    ];
+    
+    categories.forEach((category, index) => {
+        const card = createCategoryCard(category, icons[index % icons.length], gradients[index % gradients.length]);
+        container.appendChild(card);
+    });
+}
+
+// Create category card
+function createCategoryCard(category, icon, gradient) {
+    const card = document.createElement('div');
+    card.className = 'category-card';
+    
+    card.innerHTML = `
+        <div class="category-icon" style="background: ${gradient};">
+            <i class="fas ${icon}"></i>
+        </div>
+        <div class="category-info">
+            <h3>${category.tenDanhMuc}</h3>
+            <p>${category.moTa || 'Không có mô tả'}</p>
+            <div class="category-stats">
+                <span><i class="fas fa-calendar"></i> ${category.soSuKien || 0} sự kiện</span>
+                <span><i class="fas fa-users"></i> 0 người tham gia</span>
+            </div>
+        </div>
+        <div class="category-actions">
+            <button class="btn-action edit" onclick="editCategory(${category.idDanhMuc})">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-action delete" onclick="deleteCategory(${category.idDanhMuc})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Render category table
+function renderCategoryTable(categories) {
+    const tbody = document.querySelector('.admin-table tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    const icons = ['fa-chalkboard-teacher', 'fa-hands-helping', 'fa-music', 'fa-laptop-code', 'fa-flag'];
+    const gradients = [
+        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+    ];
+    
+    categories.forEach((category, index) => {
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="category-icon-small" style="background: ${gradients[index % gradients.length]};">
+                        <i class="fas ${icons[index % icons.length]}"></i>
+                    </div>
+                    <strong>${category.tenDanhMuc}</strong>
+                </div>
+            </td>
+            <td>${category.moTa || 'Không có mô tả'}</td>
+            <td>${category.soSuKien || 0}</td>
+            <td><span class="status-badge active">Đang sử dụng</span></td>
+            <td>01/01/2024</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-action edit" onclick="editCategory(${category.idDanhMuc})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action delete" onclick="deleteCategory(${category.idDanhMuc})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Update statistics
+function updateStats(categories) {
+    // Total categories
+    const totalElement = document.querySelector('.stat-card:nth-child(1) .stat-number');
+    if (totalElement) {
+        totalElement.textContent = categories.length;
+    }
+    
+    // Active categories
+    const activeElement = document.querySelector('.stat-card:nth-child(2) .stat-number');
+    if (activeElement) {
+        activeElement.textContent = categories.length;
+    }
+    
+    // Total events
+    const totalEvents = categories.reduce((sum, c) => sum + (c.soSuKien || 0), 0);
+    const eventsElement = document.querySelector('.stat-card:nth-child(3) .stat-number');
+    if (eventsElement) {
+        eventsElement.textContent = totalEvents;
+    }
+    
+    // Most popular
+    const mostPopular = categories.reduce((max, c) => 
+        (c.soSuKien || 0) > (max.soSuKien || 0) ? c : max, categories[0] || {});
+    const popularElement = document.querySelector('.stat-card:nth-child(4) .stat-number');
+    if (popularElement && mostPopular.tenDanhMuc) {
+        popularElement.textContent = mostPopular.tenDanhMuc;
+    }
+}
 
 // Open add category modal
 function openAddCategoryModal() {
+    editingCategoryId = null;
+    
     const modal = document.getElementById('categoryModal');
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('categoryForm');
     
-    if (modal && modalTitle && form) {
-        modalTitle.textContent = 'Thêm danh mục mới';
-        form.reset();
-        modal.style.display = 'flex';
-    }
-}
-
-// Close category modal
-function closeCategoryModal() {
-    const modal = document.getElementById('categoryModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    if (modalTitle) modalTitle.textContent = 'Thêm danh mục mới';
+    if (form) form.reset();
+    if (modal) modal.style.display = 'flex';
 }
 
 // Edit category
-function editCategory(id) {
-    console.log('Editing category:', id);
-    const modal = document.getElementById('categoryModal');
-    const modalTitle = document.getElementById('modalTitle');
+async function editCategory(categoryId) {
+    editingCategoryId = categoryId;
     
-    if (modal && modalTitle) {
-        modalTitle.textContent = 'Chỉnh sửa danh mục';
-        modal.style.display = 'flex';
-        // TODO: Load category data and populate form
+    try {
+        const category = await API.get(API_CONFIG.ENDPOINTS.DANHMUC_BY_ID(categoryId));
+        
+        const modal = document.getElementById('categoryModal');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        if (modalTitle) modalTitle.textContent = 'Chỉnh sửa danh mục';
+        
+        // Fill form with category data
+        document.getElementById('categoryName').value = category.tenDanhMuc;
+        document.getElementById('categoryDescription').value = category.moTa || '';
+        
+        if (modal) modal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Error loading category:', error);
+        alert('Không thể tải thông tin danh mục');
+    }
+}
+
+// Close modal
+function closeCategoryModal() {
+    const modal = document.getElementById('categoryModal');
+    if (modal) modal.style.display = 'none';
+    editingCategoryId = null;
+}
+
+// Save category (create or update)
+async function saveCategory() {
+    const name = document.getElementById('categoryName').value.trim();
+    const description = document.getElementById('categoryDescription').value.trim();
+    
+    if (!name) {
+        alert('Vui lòng nhập tên danh mục');
+        return;
+    }
+    
+    const categoryData = {
+        tenDanhMuc: name,
+        moTa: description
+    };
+    
+    try {
+        const submitBtn = document.querySelector('.btn-submit');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        }
+        
+        if (editingCategoryId) {
+            // Update existing category
+            await API.put(API_CONFIG.ENDPOINTS.DANHMUC_BY_ID(editingCategoryId), categoryData);
+            alert('Cập nhật danh mục thành công!');
+        } else {
+            // Create new category
+            await API.post(API_CONFIG.ENDPOINTS.DANHMUC, categoryData);
+            alert('Thêm danh mục mới thành công!');
+        }
+        
+        // Reload categories
+        await loadCategories();
+        
+        // Close modal
+        closeCategoryModal();
+        
+    } catch (error) {
+        console.error('Error saving category:', error);
+        alert('Không thể lưu danh mục. Vui lòng thử lại.');
+    } finally {
+        const submitBtn = document.querySelector('.btn-submit');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu';
+        }
     }
 }
 
 // Delete category
-function deleteCategory(id) {
-    console.log('Deleting category:', id);
-    if (confirm('Bạn có chắc chắn muốn xóa danh mục này? Các sự kiện thuộc danh mục này sẽ không bị xóa.')) {
-        // TODO: Implement API call to delete category
-        alert('Đã xóa danh mục!');
-        location.reload();
-    }
-}
-
-// Save category
-function saveCategory() {
-    const form = document.getElementById('categoryForm');
-    if (form && form.checkValidity()) {
-        const categoryName = document.getElementById('categoryName').value;
-        const categoryDescription = document.getElementById('categoryDescription').value;
-        const categoryIcon = document.getElementById('categoryIcon').value;
-        const categoryStatus = document.getElementById('categoryStatus').value;
-        
-        console.log('Saving category:', {
-            categoryName,
-            categoryDescription,
-            categoryIcon,
-            categoryStatus
-        });
-        
-        // TODO: Implement API call to save category
-        alert('Đã lưu danh mục thành công!');
-        closeCategoryModal();
-        location.reload();
-    } else {
-        form.reportValidity();
-    }
-}
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('categoryModal');
-    if (event.target === modal) {
-        closeCategoryModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeCategoryModal();
-    }
-});
-
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.querySelector('.search-bar input');
+async function deleteCategory(categoryId) {
+    const confirmed = confirm('Bạn có chắc chắn muốn xóa danh mục này?');
+    if (!confirmed) return;
     
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.category-card');
-            const rows = document.querySelectorAll('.admin-table tbody tr');
-            
-            // Filter cards
-            cards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-            
-            // Filter table rows
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+    try {
+        await API.delete(API_CONFIG.ENDPOINTS.DANHMUC_BY_ID(categoryId));
+        alert('Xóa danh mục thành công!');
+        
+        // Reload categories
+        await loadCategories();
+        
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        alert('Không thể xóa danh mục. Có thể danh mục đang được sử dụng.');
+    }
+}
+
+// Initialize event handlers
+function initializeEventHandlers() {
+    // Add category button
+    const addBtn = document.querySelector('.btn-primary');
+    if (addBtn) {
+        addBtn.addEventListener('click', openAddCategoryModal);
+    }
+    
+    // Close modal button
+    const closeBtn = document.querySelector('.btn-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeCategoryModal);
+    }
+    
+    // Cancel button
+    const cancelBtn = document.querySelector('.btn-cancel-modal');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeCategoryModal);
+    }
+    
+    // Save button
+    const saveBtn = document.querySelector('.btn-submit');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveCategory);
+    }
+    
+    // Close modal when clicking outside
+    const modal = document.getElementById('categoryModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeCategoryModal();
+            }
         });
     }
-});
+}
+
+// Show error message
+function showError(message) {
+    const container = document.querySelector('.main-content');
+    if (container) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'text-align: center; padding: 40px; color: #dc2626; background: #fee2e2; border-radius: 8px; margin: 20px 0;';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
+            <h3>Có lỗi xảy ra</h3>
+            <p>${message}</p>
+            <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">Thử lại</button>
+        `;
+        container.insertBefore(errorDiv, container.firstChild);
+    }
+}
+
+// Make functions global for onclick handlers
+window.openAddCategoryModal = openAddCategoryModal;
+window.editCategory = editCategory;
+window.closeCategoryModal = closeCategoryModal;
+window.saveCategory = saveCategory;
+window.deleteCategory = deleteCategory;
