@@ -344,13 +344,14 @@ INSERT INTO VaiTro (tenVaiTro, moTa) VALUES
 GO
 
 -- 2. Người dùng
+-- Mật khẩu test: admin123, btc123, sv123, cb123 (lưu plaintext cho môi trường dev)
 INSERT INTO NguoiDung (idNguoiDung, maSoSSO, hoTen, email, SDT, matKhauSSO) VALUES
-('ND001', '23115053001', N'Nguyễn Văn An', 'an.nguyen@ute.udn.vn', '0901234567', 'hashed_pw_1'),
-('ND002', '23115053002', N'Trần Thị Bích', 'bich.tran@ute.udn.vn', '0902345678', 'hashed_pw_2'),
-('ND003', '23115053003', N'Lê Văn Cường', 'cuong.le@ute.udn.vn', '0903456789', 'hashed_pw_3'),
-('ND004', 'CB001', N'ThS. Nguyễn Thị Hà', 'ha.nguyen.cb@ute.udn.vn', '0911234567', 'hashed_pw_4'),
-('ND005', 'CB002', N'TS. Phạm Minh Tuấn', 'tuan.pham.cb@ute.udn.vn', '0922345678', 'hashed_pw_5'),
-('AD001', 'ADMIN001', N'Admin Hệ thống', 'admin@ute.udn.vn', '0900000001', 'hashed_pw_admin');
+('ND001', '23115053001', N'Nguyễn Văn An',      'an.nguyen@ute.udn.vn',      '0901234567', 'sv123'),
+('ND002', '23115053002', N'Trần Thị Bích',       'bich.tran@ute.udn.vn',      '0902345678', 'btc123'),
+('ND003', '23115053003', N'Lê Văn Cường',        'cuong.le@ute.udn.vn',       '0903456789', 'btc123'),
+('ND004', 'CB001',       N'ThS. Nguyễn Thị Hà',  'ha.nguyen.cb@ute.udn.vn',   '0911234567', 'cb123'),
+('ND005', 'CB002',       N'TS. Phạm Minh Tuấn',  'tuan.pham.cb@ute.udn.vn',   '0922345678', 'cb123'),
+('AD001', 'ADMIN001',    N'Admin Hệ thống',       'admin@ute.udn.vn',          '0900000001', 'admin123');
 GO
 
 -- 3. Phân quyền
