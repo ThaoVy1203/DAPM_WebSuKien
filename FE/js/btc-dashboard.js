@@ -1,5 +1,6 @@
 // BTC Dashboard - API Integration (với mock data cho tasks/budget)
-let currentUserId = 'ND004'; // Mock BTC user ID
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+let currentUserId = currentUser.idNguoiDung || 'ND004';
 let myEvents = [];
 
 document.addEventListener('DOMContentLoaded', async function() {

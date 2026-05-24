@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'https://localhost:7160/api';
+const API_BASE_URL = 'http://localhost:5103/api';
 
 // Toggle Password Visibility
 function togglePassword() {
@@ -118,7 +118,22 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             
             // Redirect to home-user page after 1.5 seconds
             setTimeout(() => {
-                window.location.href = 'home-user.html';
+                const user = data.nguoiDung;
+                const vaiTros = user.vaiTros || [];
+
+                if (vaiTros.includes('TruongBanToChuc')) {
+                    window.location.href = 'btc-dashboard.html';
+                } else if (vaiTros.includes('ThanhVienBanToChuc')) {
+                    window.location.href = 'btc-dashboard.html';
+                } else if (vaiTros.includes('CanBoPheDuyetCap1')) {
+                    window.location.href = 'ctsv-pending-approval.html';
+                } else if (vaiTros.includes('CanBoPheDuyetCap2')) {
+                    window.location.href = 'bgh-pending-approval.html';
+                } else if (vaiTros.includes('Admin')) {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'home-user.html';
+                }
             }, 1500);
             
         } else {

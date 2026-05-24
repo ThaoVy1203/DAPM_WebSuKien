@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-    BASE_URL: 'https://localhost:7160/api',
+    BASE_URL: 'http://localhost:5103/api',
     ENDPOINTS: {
         // Sự kiện
         SUKIEN: '/SuKien',

@@ -42,15 +42,13 @@ const PERMISSIONS = {
 
 // Get current user role from localStorage or session
 function getCurrentUserRole() {
-    // Lấy thông tin user từ localStorage
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const vaiTros = user.vaiTros || [];
     
-    // Mock data for testing - Remove this in production
-    // Uncomment one of these lines to test different roles:
-    // return BTC_ROLES.LEADER;  // Test as Leader
-    // return BTC_ROLES.MEMBER;  // Test as Member
+    if (vaiTros.includes('TruongBanToChuc')) return BTC_ROLES.LEADER;
+    if (vaiTros.includes('ThanhVienBanToChuc')) return BTC_ROLES.MEMBER;
     
-    return userInfo.role || BTC_ROLES.MEMBER; // Default to member if not set
+    return BTC_ROLES.MEMBER;
 }
 
 // Check if user has specific permission
