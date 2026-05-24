@@ -1,95 +1,466 @@
-// Reports Management JavaScript
+// btc-reports.js - Kết nối API thật + Xuất Excel
 
-// Global variables
+const API_BASE_URL = 'http://localhost:5103/api';
+
+// ==================== STATE ====================
+let currentUser = null;
+let allEvents = [];        // Tất cả sự kiện của BTC hiện tại
 let currentReportId = null;
 let uploadedFiles = [];
+let currentEventIdForReport = null; // Sự kiện đang xem báo cáo
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
+// ==================== KHỞI TẠO ====================
+document.addEventListener('DOMContentLoaded', async function () {
+    // Lấy user từ localStorage
+    currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!currentUser || !currentUser.idNguoiDung) {
+        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Cập nhật tên user trên header
+    const userNameEl = document.querySelector('.user-name');
+    const userRoleEl = document.querySelector('.user-role');
+    if (userNameEl) userNameEl.textContent = currentUser.hoTen || 'Người dùng';
+    if (userRoleEl && currentUser.vaiTros?.length > 0) {
+        const roleMap = {
+            'TruongBanToChuc': 'Trưởng Ban Tổ chức',
+            'ThanhVienBanToChuc': 'Thành viên Ban Tổ chức'
+        };
+        userRoleEl.textContent = roleMap[currentUser.vaiTros[0]] || currentUser.vaiTros[0];
+    }
+
+    await loadEvents();
     initializeFilterTabs();
     initializeFilterControls();
     initializeFileUpload();
+    setupLogout();
 });
 
-// Filter Tabs
-function initializeFilterTabs() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const reportCards = document.querySelectorAll('.report-card');
+// ==================== GỌI API ====================
+async function apiFetch(endpoint) {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`);
+    if (!res.ok) throw new Error(`API lỗi: ${res.status}`);
+    return res.json();
+}
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
+// ==================== LOAD SỰ KIỆN ====================
+async function loadEvents() {
+    try {
+        const allEventsData = await apiFetch('/SuKien');
 
-            const filterType = this.getAttribute('data-type');
+        // Lọc sự kiện do BTC hiện tại tạo
+        allEvents = allEventsData.filter(e => e.idNguoiTao === currentUser.idNguoiDung);
 
-            reportCards.forEach(card => {
-                if (filterType === 'all') {
-                    card.style.display = 'block';
-                } else {
-                    const cardType = card.getAttribute('data-type');
-                    card.style.display = cardType === filterType ? 'block' : 'none';
-                }
-            });
+        updateStats();
+        renderEventList();
+        populateEventDropdown();
+    } catch (err) {
+        console.error('Lỗi load sự kiện:', err);
+        showError('Không thể tải danh sách sự kiện. Vui lòng kiểm tra kết nối server.');
+    }
+}
+
+// ==================== CẬP NHẬT THỐNG KÊ ====================
+function updateStats() {
+    const total = allEvents.length;
+    const daDuyet = allEvents.filter(e => e.trangThai === 'Đã duyệt').length;
+    const choXet = allEvents.filter(e => e.trangThai === 'Chờ duyệt').length;
+    const nhap = allEvents.filter(e => e.trangThai === 'Nháp').length;
+
+    setStatNumber('.total-reports .stat-number', total);
+    setStatNumber('.completed-reports .stat-number', daDuyet);
+    setStatNumber('.pending-reports .stat-number', choXet);
+    setStatNumber('.draft-reports .stat-number', nhap);
+}
+
+function setStatNumber(selector, value) {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value;
+}
+
+// ==================== RENDER DANH SÁCH SỰ KIỆN ====================
+function renderEventList(filterStatus = 'all') {
+    const grid = document.querySelector('.reports-grid');
+    if (!grid) return;
+
+    let filtered = allEvents;
+    if (filterStatus !== 'all') {
+        const statusMap = {
+            'completed': 'Đã duyệt',
+            'pending': 'Chờ duyệt',
+            'draft': 'Nháp'
+        };
+        filtered = allEvents.filter(e => e.trangThai === statusMap[filterStatus]);
+    }
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align:center; padding: 60px 20px; color: #6B7280;">
+                <i class="fas fa-folder-open" style="font-size:48px; margin-bottom:16px; display:block; opacity:0.4;"></i>
+                <p>Không có sự kiện nào phù hợp</p>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(event => {
+        const statusInfo = getStatusInfo(event.trangThai);
+        const ngay = new Date(event.thoiGianBatDau).toLocaleDateString('vi-VN');
+        return `
+        <div class="report-card" data-id="${event.idSuKien}" data-status="${statusInfo.key}">
+            <div class="report-header">
+                <div class="report-type event">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Báo cáo sự kiện</span>
+                </div>
+                <span class="status-badge ${statusInfo.key}">${event.trangThai}</span>
+            </div>
+            <div class="report-body">
+                <h3>${event.tenSuKien}</h3>
+                <p class="report-description">${event.moTa || 'Không có mô tả'}</p>
+                <div class="report-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Ngày tổ chức: ${ngay}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${event.tenDiaDiem || 'Chưa xác định'}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-users"></i>
+                        <span>Đăng ký: ${event.soDaDangKy}${event.soLuongToiDa ? '/' + event.soLuongToiDa : ''} người</span>
+                    </div>
+                </div>
+            </div>
+            <div class="report-footer">
+                <button class="btn-action-secondary" onclick="viewEventReport(${event.idSuKien})">
+                    <i class="fas fa-eye"></i> Xem
+                </button>
+                <button class="btn-action-secondary" onclick="exportExcel(${event.idSuKien}, '${escapeQuote(event.tenSuKien)}')">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function escapeQuote(str) {
+    return str.replace(/'/g, "\\'");
+}
+
+function getStatusInfo(trangThai) {
+    const map = {
+        'Đã duyệt': { key: 'completed' },
+        'Chờ duyệt': { key: 'pending' },
+        'Nháp': { key: 'draft' },
+        'Từ chối': { key: 'rejected' }
+    };
+    return map[trangThai] || { key: 'draft' };
+}
+
+// ==================== DROPDOWN SỰ KIỆN TRONG MODAL ====================
+function populateEventDropdown() {
+    const selects = document.querySelectorAll('#eventFilter, #relatedEvent');
+    selects.forEach(sel => {
+        // Giữ option đầu tiên, xóa phần còn lại
+        while (sel.options.length > 1) sel.remove(1);
+        allEvents.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.idSuKien;
+            opt.textContent = e.tenSuKien;
+            sel.appendChild(opt);
         });
     });
 }
 
-// Filter Controls
+// ==================== XEM BÁO CÁO CHI TIẾT ====================
+async function viewEventReport(idSuKien) {
+    const event = allEvents.find(e => e.idSuKien === idSuKien);
+    if (!event) return;
+
+    currentEventIdForReport = idSuKien;
+
+    // Cập nhật tiêu đề và thông tin cơ bản
+    document.getElementById('viewReportTitle').textContent = event.tenSuKien;
+    document.getElementById('viewReportDate').textContent =
+        new Date(event.thoiGianBatDau).toLocaleDateString('vi-VN');
+    document.getElementById('viewReportCreator').textContent = event.tenNguoiTao || currentUser.hoTen;
+    document.getElementById('viewReportEvent').textContent = event.tenSuKien;
+    document.getElementById('viewReportUpdated').textContent =
+        new Date(event.thoiGianTao).toLocaleString('vi-VN');
+    document.getElementById('viewReportDescription').textContent = event.moTa || 'Không có mô tả';
+
+    // Cập nhật type/status badge
+    const typeEl = document.getElementById('viewReportType');
+    typeEl.className = 'report-type event';
+    typeEl.innerHTML = '<i class="fas fa-calendar-check"></i><span>Báo cáo sự kiện</span>';
+
+    const statusEl = document.getElementById('viewReportStatus');
+    const si = getStatusInfo(event.trangThai);
+    statusEl.className = `status-badge ${si.key}`;
+    statusEl.textContent = event.trangThai;
+
+    // Load danh sách người tham gia
+    const contentEl = document.getElementById('viewReportContent');
+    contentEl.innerHTML = '<p style="color:#6B7280; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</p>';
+
+    try {
+        const dangKyList = await apiFetch(`/DangKy/su-kien/${idSuKien}`);
+        renderReportContent(event, dangKyList, contentEl);
+        renderReportAttachments(dangKyList);
+    } catch (err) {
+        contentEl.innerHTML = '<p style="color:#EF4444;">Không thể tải danh sách người tham gia.</p>';
+    }
+
+    // Mở modal
+    document.getElementById('viewReportModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function renderReportContent(event, dangKyList, container) {
+    const tongDangKy = dangKyList.length;
+    const daCheckin = dangKyList.filter(d => d.thoiGianCheckin).length;
+    const noShow = dangKyList.filter(d => !d.thoiGianCheckin && d.trangThai !== 'Đã hủy').length;
+    const daHuy = dangKyList.filter(d => d.trangThai === 'Đã hủy').length;
+    const tiLe = tongDangKy > 0 ? Math.round((daCheckin / tongDangKy) * 100) : 0;
+
+    container.innerHTML = `
+        <div class="stats-grid-view" style="margin-bottom:24px;">
+            <div class="stat-box">
+                <div class="stat-icon blue"><i class="fas fa-user-plus"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number">${tongDangKy}</span>
+                    <span class="stat-label">Tổng đăng ký</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number">${daCheckin}</span>
+                    <span class="stat-label">Đã tham dự</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon orange"><i class="fas fa-user-times"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number">${noShow}</span>
+                    <span class="stat-label">Vắng mặt</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon purple"><i class="fas fa-percentage"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number">${tiLe}%</span>
+                    <span class="stat-label">Tỷ lệ tham dự</span>
+                </div>
+            </div>
+        </div>
+
+        <h4 style="margin-bottom:12px; font-size:14px; color:#374151;">
+            <i class="fas fa-list"></i> Danh sách người tham gia (${tongDangKy} người)
+        </h4>
+        ${renderParticipantTable(dangKyList)}
+    `;
+}
+
+function renderParticipantTable(list) {
+    if (list.length === 0) {
+        return '<p style="color:#6B7280; font-style:italic;">Chưa có người đăng ký</p>';
+    }
+
+    const rows = list.map((d, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${d.hoTenNguoiDung || d.idNguoiDung}</td>
+            <td>${d.idNguoiDung}</td>
+            <td>${new Date(d.thoiGianDangKy).toLocaleDateString('vi-VN')}</td>
+            <td>${d.thoiGianCheckin ? new Date(d.thoiGianCheckin).toLocaleString('vi-VN') : '—'}</td>
+            <td>${d.thoiGianCheckout ? new Date(d.thoiGianCheckout).toLocaleString('vi-VN') : '—'}</td>
+            <td>
+                <span class="status-badge ${d.thoiGianCheckin ? 'completed' : (d.trangThai === 'Đã hủy' ? 'rejected' : 'pending')}">
+                    ${d.thoiGianCheckin ? 'Đã tham dự' : (d.trangThai === 'Đã hủy' ? 'Đã hủy' : 'Vắng mặt')}
+                </span>
+            </td>
+        </tr>
+    `).join('');
+
+    return `
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                    <tr style="background:#F3F4F6;">
+                        <th style="padding:10px 8px; text-align:left; border-bottom:1px solid #E5E7EB;">STT</th>
+                        <th style="padding:10px 8px; text-align:left; border-bottom:1px solid #E5E7EB;">Họ tên</th>
+                        <th style="padding:10px 8px; text-align:left; border-bottom:1px solid #E5E7EB;">Mã số</th>
+                        <th style="padding:10px 8px; text-align:left; border-bottom:1px solid #E5E7EB;">Ngày đăng ký</th>
+                        <th style="padding:10px 8px; text-align:left; border-bottom:1px solid #E5E7EB;">Check-in</th>
+                        <th style="padding:10px 8px; text-align:left; border-bottom:1px solid #E5E7EB;">Check-out</th>
+                        <th style="padding:10px 8px; text-align:left; border-bottom:1px solid #E5E7EB;">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderReportAttachments(dangKyList) {
+    const container = document.getElementById('viewReportAttachments');
+    if (!container) return;
+    // Không có file đính kèm thật, hiển thị thông tin hướng dẫn xuất
+    container.innerHTML = `
+        <p style="color:#6B7280; font-style:italic;">
+            <i class="fas fa-info-circle"></i> 
+            Nhấn "Xuất Excel" để tải danh sách người tham gia về máy.
+        </p>`;
+}
+
+// ==================== XUẤT EXCEL ====================
+async function exportExcel(idSuKien, tenSuKien) {
+    try {
+        const url = `${API_BASE_URL}/BaoCao/xuat-excel/${idSuKien}`;
+        console.log('Đang gọi API:', url);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            },
+            // credentials: 'include'   // Bỏ comment nếu dùng authentication sau này
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => '');
+            throw new Error(`Lỗi server (${response.status}): ${errorText}`);
+        }
+
+        const blob = await response.blob();
+        
+        if (blob.size === 0) {
+            throw new Error('File trả về rỗng');
+        }
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `BaoCao_${tenSuKien.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        alert('✅ Xuất Excel thành công!');
+    } catch (err) {
+        console.error('Export error:', err);
+        alert('❌ Không thể xuất Excel: ' + err.message);
+    }
+}
+
+// Hàm xuất Excel từ modal xem báo cáo
+async function downloadReportFromView(format) {
+    if (!currentEventIdForReport) return;
+    const event = allEvents.find(e => e.idSuKien === currentEventIdForReport);
+    if (!event) return;
+
+    if (format === 'excel') {
+        await exportExcel(currentEventIdForReport, event.tenSuKien);
+    } else {
+        alert('Xuất PDF đang được phát triển. Vui lòng dùng chức năng Xuất Excel.');
+    }
+}
+
+// Tải thư viện JS động
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+// ==================== ĐÓNG MODAL ====================
+function closeViewReportModal() {
+    document.getElementById('viewReportModal').classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal')?.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function closeUploadReportModal() {
+    document.getElementById('uploadReportModal')?.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function openCreateReportModal() {
+    document.getElementById('reportModal')?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function openUploadReportModal() {
+    document.getElementById('uploadReportModal')?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function editReportFromView() {
+    closeViewReportModal();
+}
+
+// ==================== BỘ LỌC ====================
+function initializeFilterTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            applyFilters();
+        });
+    });
+}
+
 function initializeFilterControls() {
-    const eventFilter = document.getElementById('eventFilter');
-    const statusFilter = document.getElementById('statusFilter');
-
-    if (eventFilter) {
-        eventFilter.addEventListener('change', applyFilters);
-    }
-
-    if (statusFilter) {
-        statusFilter.addEventListener('change', applyFilters);
-    }
+    document.getElementById('eventFilter')?.addEventListener('change', applyFilters);
+    document.getElementById('statusFilter')?.addEventListener('change', applyFilters);
 }
 
 function applyFilters() {
-    const eventValue = document.getElementById('eventFilter').value;
-    const statusValue = document.getElementById('statusFilter').value;
-    const reportCards = document.querySelectorAll('.report-card');
+    const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-type') || 'all';
+    const statusValue = document.getElementById('statusFilter')?.value || 'all';
+    const eventValue = document.getElementById('eventFilter')?.value || 'all';
 
-    reportCards.forEach(card => {
-        let showCard = true;
+    const cards = document.querySelectorAll('.report-card');
+    cards.forEach(card => {
+        const cardStatus = card.getAttribute('data-status');
+        const cardId = card.getAttribute('data-id');
 
-        if (statusValue !== 'all') {
-            const cardStatus = card.getAttribute('data-status');
-            if (cardStatus !== statusValue) {
-                showCard = false;
-            }
-        }
+        let show = true;
+        if (statusValue !== 'all' && cardStatus !== statusValue) show = false;
+        if (eventValue !== 'all' && cardId !== eventValue) show = false;
 
-        card.style.display = showCard ? 'block' : 'none';
+        card.style.display = show ? 'block' : 'none';
     });
 }
 
-// File Upload Handler
+// ==================== UPLOAD FILE ====================
 function initializeFileUpload() {
-    const reportFileInput = document.getElementById('reportFileInput');
-    const uploadFileInput = document.getElementById('uploadFileInput');
-
-    if (reportFileInput) {
-        reportFileInput.addEventListener('change', function(e) {
-            handleFileSelection(e.target.files, 'reportFileList');
-        });
-    }
-
-    if (uploadFileInput) {
-        uploadFileInput.addEventListener('change', function(e) {
-            handleSingleFileSelection(e.target.files[0], 'uploadFileDisplay');
-        });
-    }
+    document.getElementById('reportFileInput')?.addEventListener('change', function (e) {
+        handleFileSelection(e.target.files, 'reportFileList');
+    });
+    document.getElementById('uploadFileInput')?.addEventListener('change', function (e) {
+        handleSingleFileSelection(e.target.files[0], 'uploadFileDisplay');
+    });
 }
 
 function handleFileSelection(files, listId) {
     const fileList = document.getElementById(listId);
     Array.from(files).forEach(file => {
-        if (file.size <= 20 * 1024 * 1024) { // 20MB limit
+        if (file.size <= 20 * 1024 * 1024) {
             uploadedFiles.push(file);
             addFileToList(file, listId);
         } else {
@@ -99,19 +470,16 @@ function handleFileSelection(files, listId) {
 }
 
 function handleSingleFileSelection(file, displayId) {
-    const fileDisplay = document.getElementById(displayId);
     if (!file) return;
-
+    const fileDisplay = document.getElementById(displayId);
     if (file.size <= 20 * 1024 * 1024) {
-        const fileIcon = getFileIcon(file.name);
         fileDisplay.innerHTML = `
             <div class="file-item">
                 <div class="file-item-info">
-                    <i class="${fileIcon}"></i>
+                    <i class="${getFileIcon(file.name)}"></i>
                     <span>${file.name}</span>
                 </div>
-            </div>
-        `;
+            </div>`;
     } else {
         alert(`File ${file.name} vượt quá 20MB`);
         document.getElementById('uploadFileInput').value = '';
@@ -120,486 +488,67 @@ function handleSingleFileSelection(file, displayId) {
 
 function addFileToList(file, listId) {
     const fileList = document.getElementById(listId);
-    const fileItem = document.createElement('div');
-    fileItem.className = 'file-item';
-    
-    const fileIcon = getFileIcon(file.name);
-    
-    fileItem.innerHTML = `
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.innerHTML = `
         <div class="file-item-info">
-            <i class="${fileIcon}"></i>
+            <i class="${getFileIcon(file.name)}"></i>
             <span>${file.name}</span>
         </div>
         <button class="btn-remove-file" onclick="removeFile('${file.name}', '${listId}')">
             <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    fileList.appendChild(fileItem);
+        </button>`;
+    fileList.appendChild(item);
+}
+
+function removeFile(filename, listId) {
+    uploadedFiles = uploadedFiles.filter(f => f.name !== filename);
+    document.querySelectorAll(`#${listId} .file-item`).forEach(item => {
+        if (item.textContent.includes(filename)) item.remove();
+    });
 }
 
 function getFileIcon(filename) {
     const ext = filename.split('.').pop().toLowerCase();
-    const iconMap = {
-        'pdf': 'fas fa-file-pdf',
-        'doc': 'fas fa-file-word',
-        'docx': 'fas fa-file-word',
-        'xls': 'fas fa-file-excel',
-        'xlsx': 'fas fa-file-excel',
-        'ppt': 'fas fa-file-powerpoint',
-        'pptx': 'fas fa-file-powerpoint',
-        'default': 'fas fa-file'
-    };
-    return iconMap[ext] || iconMap['default'];
+    return ({ pdf: 'fas fa-file-pdf', doc: 'fas fa-file-word', docx: 'fas fa-file-word', xls: 'fas fa-file-excel', xlsx: 'fas fa-file-excel', ppt: 'fas fa-file-powerpoint', pptx: 'fas fa-file-powerpoint' })[ext] || 'fas fa-file';
 }
 
-function removeFile(filename, listId) {
-    uploadedFiles = uploadedFiles.filter(file => file.name !== filename);
-    
-    const fileList = document.getElementById(listId);
-    const fileItems = fileList.querySelectorAll('.file-item');
-    fileItems.forEach(item => {
-        if (item.textContent.includes(filename)) {
-            item.remove();
-        }
+// ==================== ĐĂNG XUẤT ====================
+function setupLogout() {
+    document.querySelectorAll('.nav-item.danger').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
     });
 }
 
-// Modal Functions
-function openCreateReportModal() {
-    const modal = document.getElementById('reportModal');
-    const modalTitle = document.getElementById('reportModalTitle');
-    
-    modalTitle.textContent = 'Tạo báo cáo mới';
-    document.getElementById('reportForm').reset();
-    currentReportId = null;
-    uploadedFiles = [];
-    document.getElementById('reportFileList').innerHTML = '';
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+// ==================== HIỂN THỊ LỖI ====================
+function showError(msg) {
+    const grid = document.querySelector('.reports-grid');
+    if (grid) {
+        grid.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#EF4444;">
+                <i class="fas fa-exclamation-triangle" style="font-size:48px; margin-bottom:16px; display:block;"></i>
+                <p>${msg}</p>
+            </div>`;
+    }
 }
 
-function closeReportModal() {
-    const modal = document.getElementById('reportModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-}
-
-function openUploadReportModal() {
-    const modal = document.getElementById('uploadReportModal');
-    document.getElementById('uploadReportForm').reset();
-    document.getElementById('uploadFileDisplay').innerHTML = '';
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeUploadReportModal() {
-    const modal = document.getElementById('uploadReportModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-}
-
-function editReport(reportId) {
-    const modal = document.getElementById('reportModal');
-    const modalTitle = document.getElementById('reportModalTitle');
-    
-    modalTitle.textContent = 'Chỉnh sửa báo cáo';
-    currentReportId = reportId;
-    
-    // Load report data (mock data for now)
-    loadReportData(reportId);
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function loadReportData(reportId) {
-    // Mock data - replace with actual API call
-    const mockData = {
-        1: {
-            type: 'event',
-            title: 'Báo cáo Hội thảo Công nghệ 2024',
-            event: '1',
-            date: '2024-12-20',
-            description: 'Báo cáo tổng kết sự kiện Hội thảo Công nghệ Thường niên 2024',
-            content: 'Nội dung chi tiết báo cáo...'
+// ==================== ĐÓNG MODAL KHI CLICK NGOÀI ====================
+window.addEventListener('click', function (e) {
+    ['reportModal', 'uploadReportModal', 'viewReportModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (e.target === modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
-    };
-
-    const data = mockData[reportId];
-    if (data) {
-        document.querySelector(`input[name="reportType"][value="${data.type}"]`).checked = true;
-        document.getElementById('reportTitle').value = data.title;
-        document.getElementById('relatedEvent').value = data.event;
-        document.getElementById('reportDate').value = data.date;
-        document.getElementById('reportDescription').value = data.description;
-        document.getElementById('reportContent').value = data.content;
-    }
-}
-
-function viewReport(reportId) {
-    const modal = document.getElementById('viewReportModal');
-    
-    // Load report data (mock data for now)
-    loadViewReportData(reportId);
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function loadViewReportData(reportId) {
-    // Mock data - replace with actual API call
-    const mockData = {
-        1: {
-            type: 'event',
-            typeLabel: 'Báo cáo sự kiện',
-            typeIcon: 'fas fa-calendar-check',
-            title: 'Báo cáo Hội thảo Công nghệ 2024',
-            status: 'completed',
-            statusLabel: 'Hoàn thành',
-            date: '20/12/2024',
-            creator: 'Nguyễn Văn A',
-            event: 'Hội thảo Công nghệ 2024',
-            updated: '20/12/2024 10:30',
-            description: 'Báo cáo tổng kết sự kiện Hội thảo Công nghệ Thường niên 2024 với 500 người tham dự, bao gồm các hoạt động chính, kết quả đạt được và đánh giá tổng thể.',
-            content: `
-                <p><strong>I. Tổng quan sự kiện</strong></p>
-                <p>Hội thảo Công nghệ Thường niên 2024 đã được tổ chức thành công vào ngày 15/12/2024 tại Hội trường A1 với sự tham gia của 500 người bao gồm sinh viên, giảng viên và các chuyên gia trong ngành.</p>
-                
-                <p><strong>II. Các hoạt động chính</strong></p>
-                <ul>
-                    <li>Phiên khai mạc và phát biểu của Ban Giám hiệu</li>
-                    <li>3 phiên thảo luận chuyên đề về AI, Blockchain và IoT</li>
-                    <li>Workshop thực hành với các công nghệ mới</li>
-                    <li>Triển lãm công nghệ từ các doanh nghiệp đối tác</li>
-                </ul>
-
-                <p><strong>III. Kết quả đạt được</strong></p>
-                <ul>
-                    <li>500 người tham dự (vượt 25% so với kế hoạch)</li>
-                    <li>15 diễn giả chuyên gia chia sẻ kinh nghiệm</li>
-                    <li>20 doanh nghiệp tham gia triển lãm</li>
-                    <li>Tỷ lệ hài lòng: 95%</li>
-                </ul>
-
-                <p><strong>IV. Đánh giá và kiến nghị</strong></p>
-                <p>Sự kiện đã đạt được mục tiêu đề ra, tạo được sự quan tâm lớn từ cộng đồng sinh viên. Đề xuất mở rộng quy mô và thời gian tổ chức cho các năm tiếp theo.</p>
-            `,
-            attachments: [
-                { name: 'Báo cáo chi tiết.pdf', size: '2.5 MB', type: 'pdf' },
-                { name: 'Thống kê tham dự.xlsx', size: '1.2 MB', type: 'excel' },
-                { name: 'Slide trình bày.pptx', size: '5.8 MB', type: 'ppt' }
-            ]
-        },
-        2: {
-            type: 'budget',
-            typeLabel: 'Báo cáo tài chính',
-            typeIcon: 'fas fa-money-bill-wave',
-            title: 'Báo cáo Tài chính Q4/2024',
-            status: 'completed',
-            statusLabel: 'Hoàn thành',
-            date: '28/12/2024',
-            creator: 'Trần Thị B',
-            event: 'Tất cả sự kiện Q4',
-            updated: '28/12/2024 14:20',
-            description: 'Báo cáo chi tiết về tình hình thu chi, ngân sách các sự kiện trong quý 4 năm 2024.',
-            content: `
-                <p><strong>I. Tổng quan tài chính Q4/2024</strong></p>
-                <p>Quý 4 năm 2024 đã tổ chức thành công 8 sự kiện với tổng ngân sách 450 triệu đồng.</p>
-                
-                <p><strong>II. Chi tiết thu chi</strong></p>
-                <ul>
-                    <li>Tổng thu: 480 triệu đồng</li>
-                    <li>Tổng chi: 420 triệu đồng</li>
-                    <li>Dư: 60 triệu đồng</li>
-                </ul>
-
-                <p><strong>III. Phân tích chi phí</strong></p>
-                <ul>
-                    <li>Chi phí tổ chức: 250 triệu (59.5%)</li>
-                    <li>Chi phí marketing: 80 triệu (19%)</li>
-                    <li>Chi phí nhân sự: 60 triệu (14.3%)</li>
-                    <li>Chi phí khác: 30 triệu (7.2%)</li>
-                </ul>
-
-                <p><strong>IV. Đánh giá và kiến nghị</strong></p>
-                <p>Tình hình tài chính ổn định, có lãi. Đề xuất tăng ngân sách cho các sự kiện lớn trong năm tới.</p>
-            `,
-            attachments: [
-                { name: 'Báo cáo tài chính Q4.pdf', size: '3.2 MB', type: 'pdf' },
-                { name: 'Bảng kê chi tiết.xlsx', size: '2.1 MB', type: 'excel' }
-            ]
-        },
-        3: {
-            type: 'attendance',
-            typeLabel: 'Báo cáo tham dự',
-            typeIcon: 'fas fa-users',
-            title: 'Báo cáo Người tham dự Workshop',
-            status: 'pending',
-            statusLabel: 'Đang xử lý',
-            date: '15/12/2024',
-            creator: 'Lê Văn C',
-            event: 'Workshop Khởi nghiệp',
-            updated: '15/12/2024 16:45',
-            description: 'Thống kê số lượng và thông tin người tham dự Workshop Khởi nghiệp.',
-            content: `
-                <p><strong>I. Tổng quan</strong></p>
-                <p>Workshop Khởi nghiệp đã thu hút 250 người đăng ký và 220 người tham dự thực tế.</p>
-                
-                <p><strong>II. Phân tích người tham dự</strong></p>
-                <ul>
-                    <li>Sinh viên năm 3-4: 180 người (82%)</li>
-                    <li>Sinh viên năm 1-2: 30 người (13%)</li>
-                    <li>Khách mời: 10 người (5%)</li>
-                </ul>
-
-                <p><strong>III. Đánh giá</strong></p>
-                <p>Tỷ lệ tham dự đạt 88%, cao hơn mức trung bình. Cần tiếp tục duy trì chất lượng nội dung.</p>
-            `,
-            attachments: [
-                { name: 'Danh sách tham dự.xlsx', size: '1.5 MB', type: 'excel' }
-            ]
-        },
-        4: {
-            type: 'summary',
-            typeLabel: 'Báo cáo tổng kết',
-            typeIcon: 'fas fa-chart-line',
-            title: 'Tổng kết hoạt động năm 2024',
-            status: 'draft',
-            statusLabel: 'Bản nháp',
-            date: '30/12/2024',
-            creator: 'Nguyễn Văn A',
-            event: 'Tất cả sự kiện 2024',
-            updated: '30/12/2024 09:15',
-            description: 'Báo cáo tổng kết toàn bộ hoạt động, sự kiện trong năm 2024.',
-            content: `
-                <p><strong>I. Tổng quan năm 2024</strong></p>
-                <p>Năm 2024 đã tổ chức thành công 24 sự kiện với tổng số 5,000 người tham dự.</p>
-                
-                <p><strong>II. Các sự kiện nổi bật</strong></p>
-                <ul>
-                    <li>Hội thảo Công nghệ Thường niên</li>
-                    <li>Ngày hội Việc làm</li>
-                    <li>Workshop Khởi nghiệp</li>
-                </ul>
-
-                <p><em>Nội dung đang được hoàn thiện...</em></p>
-            `,
-            attachments: []
-        }
-    };
-
-    const data = mockData[reportId];
-    if (data) {
-        // Update modal content
-        document.getElementById('viewReportTitle').textContent = data.title;
-        
-        // Update type badge
-        const typeElement = document.getElementById('viewReportType');
-        typeElement.className = `report-type ${data.type}`;
-        typeElement.innerHTML = `<i class="${data.typeIcon}"></i><span>${data.typeLabel}</span>`;
-        
-        // Update status badge
-        const statusElement = document.getElementById('viewReportStatus');
-        statusElement.className = `status-badge ${data.status}`;
-        statusElement.textContent = data.statusLabel;
-        
-        // Update meta information
-        document.getElementById('viewReportDate').textContent = data.date;
-        document.getElementById('viewReportCreator').textContent = data.creator;
-        document.getElementById('viewReportEvent').textContent = data.event;
-        document.getElementById('viewReportUpdated').textContent = data.updated;
-        
-        // Update description and content
-        document.getElementById('viewReportDescription').textContent = data.description;
-        document.getElementById('viewReportContent').innerHTML = data.content;
-        
-        // Update attachments
-        const attachmentsContainer = document.getElementById('viewReportAttachments');
-        if (data.attachments.length > 0) {
-            attachmentsContainer.innerHTML = data.attachments.map(file => {
-                const iconClass = getFileIconClass(file.type);
-                return `
-                    <div class="attachment-card">
-                        <div class="attachment-icon ${file.type}">
-                            <i class="${iconClass}"></i>
-                        </div>
-                        <div class="attachment-info">
-                            <span class="attachment-name">${file.name}</span>
-                            <span class="attachment-size">${file.size}</span>
-                        </div>
-                        <button class="btn-download-attachment" onclick="downloadAttachment('${file.name}')">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            attachmentsContainer.innerHTML = '<p style="color: var(--text-gray); font-style: italic;">Không có tài liệu đính kèm</p>';
-        }
-        
-        // Store current report ID for edit function
-        currentReportId = reportId;
-    }
-}
-
-function getFileIconClass(type) {
-    const iconMap = {
-        'pdf': 'fas fa-file-pdf',
-        'excel': 'fas fa-file-excel',
-        'ppt': 'fas fa-file-powerpoint',
-        'word': 'fas fa-file-word',
-        'default': 'fas fa-file'
-    };
-    return iconMap[type] || iconMap['default'];
-}
-
-function closeViewReportModal() {
-    const modal = document.getElementById('viewReportModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-}
-
-function downloadReportFromView(format) {
-    if (!currentReportId) return;
-    
-    console.log(`Downloading report ${currentReportId} as ${format}`);
-    alert(`Đang xuất báo cáo dưới định dạng ${format.toUpperCase()}...`);
-    
-    // Simulate download
-    // In real implementation, call API to generate and download file
-}
-
-function editReportFromView() {
-    if (!currentReportId) return;
-    
-    // Close view modal
-    closeViewReportModal();
-    
-    // Open edit modal
-    setTimeout(() => {
-        editReport(currentReportId);
-    }, 300);
-}
-
-function downloadAttachment(filename) {
-    console.log('Downloading attachment:', filename);
-    alert(`Đang tải file: ${filename}`);
-    
-    // Simulate download
-    // In real implementation, call API to download file
-}
-
-function downloadReport(reportId, format) {
-    console.log(`Downloading report ${reportId} as ${format}`);
-    alert(`Đang tải báo cáo dưới định dạng ${format.toUpperCase()}...`);
-    
-    // Simulate download
-    // In real implementation, call API to generate and download file
-}
-
-function deleteReport(reportId) {
-    if (confirm('Bạn có chắc chắn muốn xóa báo cáo này?')) {
-        console.log('Deleting report:', reportId);
-        alert('Đã xóa báo cáo');
-        
-        // Remove from UI
-        const reportCard = document.querySelector(`.report-card[data-status="draft"]`);
-        if (reportCard) {
-            reportCard.remove();
-        }
-    }
-}
-
-function saveReportDraft() {
-    const formData = collectReportFormData();
-    
-    console.log('Saving report draft:', formData);
-    
-    alert('Đã lưu bản nháp thành công');
-    closeReportModal();
-}
-
-function collectReportFormData() {
-    const reportType = document.querySelector('input[name="reportType"]:checked')?.value;
-    
-    return {
-        type: reportType,
-        title: document.getElementById('reportTitle').value,
-        event: document.getElementById('relatedEvent').value,
-        date: document.getElementById('reportDate').value,
-        description: document.getElementById('reportDescription').value,
-        content: document.getElementById('reportContent').value,
-        files: uploadedFiles
-    };
-}
-
-// Form Submissions
-document.getElementById('reportForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = collectReportFormData();
-    
-    // Validate required fields
-    if (!formData.type || !formData.title || !formData.description) {
-        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
-        return;
-    }
-
-    console.log('Submitting report:', formData);
-
-    // Call API to save report
-    if (currentReportId) {
-        alert('Đã cập nhật báo cáo thành công');
-    } else {
-        alert('Đã tạo báo cáo mới thành công');
-    }
-
-    closeReportModal();
+    });
 });
 
-document.getElementById('uploadReportForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const title = document.getElementById('uploadReportTitle').value;
-    const type = document.getElementById('uploadReportType').value;
-    const file = document.getElementById('uploadFileInput').files[0];
-    const notes = document.getElementById('uploadNotes').value;
-    
-    if (!title || !type || !file) {
-        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
-        return;
-    }
-
-    console.log('Uploading report:', { title, type, file, notes });
-
-    alert('Đã upload báo cáo thành công');
-    closeUploadReportModal();
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(e) {
-    const reportModal = document.getElementById('reportModal');
-    const uploadModal = document.getElementById('uploadReportModal');
-    const viewModal = document.getElementById('viewReportModal');
-    
-    if (e.target === reportModal) {
-        closeReportModal();
-    }
-    
-    if (e.target === uploadModal) {
-        closeUploadReportModal();
-    }
-    
-    if (e.target === viewModal) {
-        closeViewReportModal();
-    }
-});
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
         closeReportModal();
         closeUploadReportModal();
