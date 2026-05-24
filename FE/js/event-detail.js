@@ -1,24 +1,52 @@
 // js/event-detail.js
+// BE endpoints: POST /api/DangKy/dang-ky | POST /api/DangKy/huy-dang-ky
+//               POST /api/DangKy/check-in | POST /api/DangKy/check-out
+//               GET  /api/DangKy/nguoi-dung/{idNguoiDung}
 const API_BASE = "https://localhost:7160/api";
 
-// ── Lấy id sự kiện từ URL ──────────────────────────────────────────
+let currentEventId    = null;
+let currentDangKyId   = null;
+let currentIdNguoiDung = null;  // "ND001", "ND002"...
+
 function getEventId() {
     return new URLSearchParams(window.location.search).get("id");
 }
 
+// ── Lấy idNguoiDung từ userData (BE trả PascalCase: IdNguoiDung) ──
+function getIdNguoiDung() {
+    const raw = localStorage.getItem("userData");
+    if (!raw) return null;
+    try {
+        const u = JSON.parse(raw);
+        // Hỗ trợ cả PascalCase (từ BE) và camelCase
+        return u.IdNguoiDung || u.idNguoiDung || u.id || null;
+    } catch { return null; }
+}
+
 // ── INIT ───────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async function () {
-    const eventId = getEventId();
-    if (!eventId) {
+    currentEventId     = getEventId();
+    currentIdNguoiDung = getIdNguoiDung();
+
+    if (!currentEventId) {
         showError("Không tìm thấy sự kiện. Vui lòng quay lại danh sách sự kiện.");
         return;
     }
 
-    await loadEventDetail(eventId);
+    await loadEventDetail(currentEventId);
     prefillUserInfo();
-    initRegisterBtn(eventId);
-    initSubmitQuestion(eventId);
+
+    if (currentIdNguoiDung) {
+        await checkRegistrationStatus(currentEventId);
+    }
+
+    initRegisterBtn(currentEventId);
+    initCancelBtn(currentEventId);
+    initSubmitQuestion(currentEventId);
     initSmoothScroll();
+
+    const btnFull = document.getElementById("btnRegisterFull");
+    if (btnFull) btnFull.href = `register-event.html?id=${currentEventId}`;
 });
 
 // ── LOAD CHI TIẾT SỰ KIỆN ─────────────────────────────────────────
@@ -26,83 +54,137 @@ async function loadEventDetail(eventId) {
     const token = localStorage.getItem("token");
     try {
         const res = await fetch(`${API_BASE}/SuKien/${eventId}`, {
-            headers: { "Authorization": `Bearer ${token}` }
+            headers: token ? { "Authorization": `Bearer ${token}` } : {}
         });
-
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
         const event = await res.json();
         renderEventDetail(event);
-
     } catch (e) {
         console.error("Lỗi load chi tiết sự kiện:", e);
-        // Không xóa nội dung tĩnh — chỉ log lỗi
     }
 }
 
-function renderEventDetail(event) {
-    if (!event) return;
+function renderEventDetail(ev) {
+    if (!ev) return;
 
-    // Tiêu đề trang (tab trình duyệt)
-    const title = event.tenSuKien || "Chi tiết sự kiện";
+    // BE trả PascalCase — hỗ trợ cả hai
+    const get = (pascal, camel) => ev[pascal] ?? ev[camel];
+
+    const title = get("TenSuKien","tenSuKien") || "Chi tiết sự kiện";
     document.title = `${title} - UTE Events`;
     const pageTitleEl = document.getElementById("pageTitle");
     if (pageTitleEl) pageTitleEl.textContent = `${title} - UTE Events`;
 
-    // Hero title
-    setText("eventTitle", title);
+    setText("eventTitle",       title);
+    setText("eventDescription", get("MoTa","moTa") || "");
 
-    // Mô tả
-    setText("eventDescription", event.moTa || "");
-
-    // Ngày giờ
-    if (event.thoiGianBatDau) {
-        const start = new Date(event.thoiGianBatDau);
-        const end = event.thoiGianKetThuc ? new Date(event.thoiGianKetThuc) : null;
-
-        setText("eventDate", start.toLocaleDateString("vi-VN", {
-            weekday: "long", year: "numeric", month: "long", day: "numeric"
-        }));
-
-        const timeStr = end
-            ? `${formatTime(start)} - ${formatTime(end)}`
-            : formatTime(start);
-        setText("eventTime", timeStr);
+    const batDau  = get("ThoiGianBatDau","thoiGianBatDau");
+    const ketThuc = get("ThoiGianKetThuc","thoiGianKetThuc");
+    if (batDau) {
+        const s = new Date(batDau);
+        const e = ketThuc ? new Date(ketThuc) : null;
+        setText("eventDate", s.toLocaleDateString("vi-VN", { weekday:"long", year:"numeric", month:"long", day:"numeric" }));
+        setText("eventTime", e ? `${fmt(s)} - ${fmt(e)}` : fmt(s));
     }
 
-    // Địa điểm
-    const diaDiem = event.tenDiaDiem || event.diaDiem?.tenDiaDiem || "Đang cập nhật";
+    const diaDiem = get("TenDiaDiem","tenDiaDiem")
+        || ev.DiaDiem?.TenDiaDiem || ev.diaDiem?.tenDiaDiem || "Đang cập nhật";
     setText("eventLocation", diaDiem);
 
-    // Trạng thái badge
-    const trangThai = event.trangThai || "";
+    const trangThai = get("TrangThai","trangThai") || "";
     setText("eventStatus", trangThai || "SẮP DIỄN RA");
 
-    // Số đã đăng ký / sức chứa
-    const soDaDangKy = event.soDaDangKy ?? event.soLuongDaDangKy ?? "-";
-    const soLuongToiDa = event.soLuongToiDa ?? "-";
+    const soDaDK   = get("SoDaDangKy","soDaDangKy") ?? get("SoLuongDaDangKy","soLuongDaDangKy") ?? "-";
+    const soToiDa  = get("SoLuongToiDa","soLuongToiDa") ?? "-";
 
-    setText("registeredCount", `Đã có ${soDaDangKy} đăng ký`);
-    setText("statRegistered", soDaDangKy);
-    setText("statCapacity", soLuongToiDa !== "-" ? `${soDaDangKy}/${soLuongToiDa}` : "-");
-    setText("statStatus", trangThai || "-");
+    setText("registeredCount", `Đã có ${soDaDK} đăng ký`);
+    setText("statRegistered",  soDaDK);
+    setText("statCapacity",    soToiDa !== "-" ? `${soDaDK}/${soToiDa}` : "-");
+    setText("statStatus",      trangThai || "-");
 
-    // Slot còn trống
-    if (soLuongToiDa !== "-" && soDaDangKy !== "-") {
-        const con = soLuongToiDa - soDaDangKy;
+    if (soToiDa !== "-" && soDaDK !== "-") {
+        const con = Number(soToiDa) - Number(soDaDK);
         setText("eventSlot", con > 0 ? `CÒN ${con} CHỖ` : "HẾT CHỖ");
     }
 }
 
-// ── ĐIỀN THÔNG TIN NGƯỜI DÙNG VÀO FORM ───────────────────────────
+// ── KIỂM TRA ĐÃ ĐĂNG KÝ CHƯA ─────────────────────────────────────
+async function checkRegistrationStatus(eventId) {
+    const token = localStorage.getItem("token");
+    if (!token || !currentIdNguoiDung) return;
+
+    try {
+        // GET /api/DangKy/nguoi-dung/{idNguoiDung}
+        const res = await fetch(`${API_BASE}/DangKy/nguoi-dung/${currentIdNguoiDung}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : (data.Data || data.data || []);
+
+        // Response PascalCase: IdSuKien, TrangThai, IdDangKy
+        const myReg = items.find(item => {
+            const id = item.IdSuKien ?? item.idSuKien;
+            const ts = item.TrangThai ?? item.trangThai ?? "";
+            return String(id) === String(eventId) && ts !== "Đã hủy";
+        });
+
+        if (myReg) {
+            currentDangKyId = myReg.IdDangKy ?? myReg.idDangKy;
+            const ts = myReg.TrangThai ?? myReg.trangThai ?? "Đã xác nhận";
+            showRegisteredState(ts, currentDangKyId);
+        }
+    } catch (e) {
+        console.warn("Không kiểm tra được trạng thái đăng ký:", e.message);
+    }
+}
+
+// ── HIỂN THỊ TRẠNG THÁI ĐÃ ĐĂNG KÝ ──────────────────────────────
+function showRegisteredState(trangThai, idDangKy) {
+    const form = document.getElementById("registerForm");
+    if (form) form.style.display = "none";
+
+    const statusBox  = document.getElementById("registrationStatus");
+    const statusIcon = document.getElementById("statusIcon");
+    const statusText = document.getElementById("statusText");
+    const statusSub  = document.getElementById("statusSub");
+
+    if (statusBox) {
+        const cfgs = {
+            "Đã xác nhận":  { bg:"#f0fff4", bd:"#9ae6b4", icon:"✅", text:"Đã đăng ký thành công",  sub:"Vui lòng check-in đúng giờ bằng mã QR" },
+            "Chờ xác nhận": { bg:"#fffbeb", bd:"#fcd34d", icon:"⏳", text:"Đang chờ xác nhận",      sub:"Ban tổ chức sẽ xác nhận đăng ký của bạn" },
+            "Đã tham gia":  { bg:"#eff6ff", bd:"#93c5fd", icon:"🎉", text:"Đã tham gia sự kiện",    sub:"Cảm ơn bạn đã tham gia!" },
+            "Vắng mặt":     { bg:"#fff5f5", bd:"#feb2b2", icon:"😔", text:"Vắng mặt",               sub:"Bạn đã không tham gia sự kiện này" }
+        };
+        const c = cfgs[trangThai] || { bg:"#f0fff4", bd:"#9ae6b4", icon:"✅", text:`Trạng thái: ${trangThai}`, sub:"" };
+        statusBox.style.cssText = `display:block;margin-bottom:16px;padding:14px;border-radius:10px;text-align:center;background:${c.bg};border:1px solid ${c.bd};`;
+        if (statusIcon) statusIcon.textContent = c.icon;
+        if (statusText) statusText.textContent = c.text;
+        if (statusSub)  statusSub.textContent  = c.sub;
+    }
+
+    const actions = document.getElementById("registeredActions");
+    if (actions) {
+        actions.style.display = "block";
+        const btnView = document.getElementById("btnViewTicket");
+        if (btnView) btnView.href = `my-tickets.html?dangKyId=${idDangKy}`;
+        const btnCancel = document.getElementById("btnCancelReg");
+        if (btnCancel && (trangThai === "Đã tham gia" || trangThai === "Vắng mặt")) {
+            btnCancel.style.display = "none";
+        }
+    }
+}
+
+// ── ĐIỀN THÔNG TIN NGƯỜI DÙNG ─────────────────────────────────────
 function prefillUserInfo() {
     const raw = localStorage.getItem("userData");
     if (!raw) return;
     try {
-        const user = JSON.parse(raw);
-        setVal("regName", user.hoTen || "");
-        setVal("regMSSV", user.maSoSSO || "");
-        setVal("regEmail", user.email || "");
+        const u = JSON.parse(raw);
+        setVal("regName",  u.HoTen   || u.hoTen   || "");
+        setVal("regMSSV",  u.MaSoSSO || u.maSoSSO || "");
+        setVal("regEmail", u.Email   || u.email   || "");
     } catch (e) { /* bỏ qua */ }
 }
 
@@ -113,71 +195,133 @@ function initRegisterBtn(eventId) {
 
     btn.addEventListener("click", async function () {
         const token = localStorage.getItem("token");
-        if (!token) {
-            window.location.href = "login.html";
-            return;
-        }
+        if (!token) { window.location.href = "login.html"; return; }
 
-        // Lấy idNguoiDung từ userData
-        const raw = localStorage.getItem("userData");
-        if (!raw) {
-            showRegisterResult("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.", false);
-            return;
-        }
-        const user = JSON.parse(raw);
-        const idNguoiDung = user.idNguoiDung || user.id;
-
-        if (!idNguoiDung) {
+        // Lấy lại idNguoiDung mỗi lần click (phòng trường hợp chưa load xong)
+        currentIdNguoiDung = getIdNguoiDung();
+        if (!currentIdNguoiDung) {
             showRegisterResult("Không xác định được tài khoản. Vui lòng đăng nhập lại.", false);
             return;
         }
 
         btn.disabled = true;
-        btn.textContent = "Đang xử lý...";
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+        hideRegisterResult();
 
         try {
-            const res = await fetch(`${API_BASE}/DangKySuKien`, {
+            // POST /api/DangKy/dang-ky
+            // Body: { IdSuKien: int, IdNguoiDung: string }
+            const res = await fetch(`${API_BASE}/DangKy/dang-ky`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    idSuKien: parseInt(eventId),
-                    idNguoiDung: idNguoiDung
+                    IdSuKien:    parseInt(eventId),
+                    IdNguoiDung: currentIdNguoiDung
                 })
             });
 
             const data = await res.json();
+            // BE trả: { Success, Message }
+            const ok = data.Success ?? data.success;
+            const msg = data.Message || data.message || "";
 
-            if (res.ok && (data.success !== false)) {
-                showRegisterResult("Đăng ký thành công! Vui lòng check-in đúng giờ.", true);
-                btn.textContent = "ĐÃ ĐĂNG KÝ";
-                // Cập nhật lại số đăng ký
+            if (res.ok && ok !== false) {
+                currentDangKyId = data.IdDangKy || data.idDangKy || data.Data?.IdDangKy;
+                showRegisterResult("🎉 " + (msg || "Đăng ký thành công! Vui lòng check-in đúng giờ."), true);
+                showRegisteredState("Đã xác nhận", currentDangKyId);
                 await loadEventDetail(eventId);
             } else {
-                showRegisterResult(data.message || "Đăng ký thất bại. Vui lòng thử lại.", false);
+                showRegisterResult(msg || "Đăng ký thất bại. Vui lòng thử lại.", false);
                 btn.disabled = false;
-                btn.textContent = "ĐĂNG KÝ NGAY";
+                btn.innerHTML = "ĐĂNG KÝ NGAY";
             }
-
         } catch (e) {
             console.error("Lỗi đăng ký:", e);
-            showRegisterResult("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.", false);
+            showRegisterResult("Không thể kết nối đến máy chủ. Vui lòng kiểm tra Backend đã chạy chưa.", false);
             btn.disabled = false;
-            btn.textContent = "ĐĂNG KÝ NGAY";
+            btn.innerHTML = "ĐĂNG KÝ NGAY";
         }
     });
 }
 
-function showRegisterResult(msg, success) {
-    const el = document.getElementById("registerResult");
-    if (!el) return;
-    el.style.display = "block";
-    el.style.background = success ? "#f0fff4" : "#fff5f5";
-    el.style.color = success ? "#276749" : "#c53030";
-    el.style.border = `1px solid ${success ? "#9ae6b4" : "#feb2b2"}`;
-    el.textContent = msg;
+// ── HỦY ĐĂNG KÝ ──────────────────────────────────────────────────
+function initCancelBtn(eventId) {
+    const btn = document.getElementById("btnCancelReg");
+    if (!btn) return;
+
+    btn.addEventListener("click", async function () {
+        if (!confirm("Bạn có chắc chắn muốn hủy đăng ký sự kiện này không?")) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) { window.location.href = "login.html"; return; }
+
+        currentIdNguoiDung = getIdNguoiDung();
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang hủy...';
+
+        try {
+            // POST /api/DangKy/huy-dang-ky
+            // Body: { IdSuKien: int, IdNguoiDung: string }
+            const res = await fetch(`${API_BASE}/DangKy/huy-dang-ky`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    IdSuKien:    parseInt(eventId),
+                    IdNguoiDung: currentIdNguoiDung
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+            const ok  = data.Success ?? data.success;
+            const msg = data.Message || data.message || "";
+
+            if (res.ok && ok !== false) {
+                showCancelSuccess();
+                await loadEventDetail(eventId);
+            } else {
+                showToast(msg || "Hủy đăng ký thất bại.", "error");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-times-circle"></i> HỦY ĐĂNG KÝ';
+            }
+        } catch (e) {
+            console.error("Lỗi hủy:", e);
+            showToast("Không thể kết nối đến máy chủ.", "error");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-times-circle"></i> HỦY ĐĂNG KÝ';
+        }
+    });
+}
+
+function showCancelSuccess() {
+    const actions = document.getElementById("registeredActions");
+    if (actions) actions.style.display = "none";
+
+    const statusBox = document.getElementById("registrationStatus");
+    if (statusBox) {
+        statusBox.style.cssText = "display:block;margin-bottom:16px;padding:14px;border-radius:10px;text-align:center;background:#fff5f5;border:1px solid #feb2b2;";
+        const icon = document.getElementById("statusIcon");
+        const text = document.getElementById("statusText");
+        const sub  = document.getElementById("statusSub");
+        if (icon) icon.textContent = "❌";
+        if (text) text.textContent = "Đã hủy đăng ký";
+        if (sub)  sub.textContent  = "Bạn có thể đăng ký lại nếu còn chỗ trống";
+    }
+
+    const form = document.getElementById("registerForm");
+    if (form) {
+        form.style.display = "block";
+        const btn = document.getElementById("btnRegister");
+        if (btn) { btn.disabled = false; btn.innerHTML = "ĐĂNG KÝ NGAY"; }
+    }
+
+    currentDangKyId = null;
+    showToast("Đã hủy đăng ký thành công.", "success");
 }
 
 // ── GỬI CÂU HỎI ──────────────────────────────────────────────────
@@ -187,18 +331,11 @@ function initSubmitQuestion(eventId) {
 
     btn.addEventListener("click", async function () {
         const token = localStorage.getItem("token");
-        if (!token) {
-            window.location.href = "login.html";
-            return;
-        }
+        if (!token) { window.location.href = "login.html"; return; }
 
         const textarea = document.getElementById("qaTextarea");
         const question = textarea ? textarea.value.trim() : "";
-
-        if (!question) {
-            showQAResult("Vui lòng nhập câu hỏi trước khi gửi.", false);
-            return;
-        }
+        if (!question) { showQAResult("Vui lòng nhập câu hỏi trước khi gửi.", false); return; }
 
         btn.disabled = true;
         btn.textContent = "Đang gửi...";
@@ -206,23 +343,17 @@ function initSubmitQuestion(eventId) {
         try {
             const res = await fetch(`${API_BASE}/SuKien/${eventId}/CauHoi`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify({ noiDung: question })
             });
-
             if (res.ok) {
                 showQAResult("Câu hỏi đã được gửi thành công!", true);
                 if (textarea) textarea.value = "";
             } else {
                 const data = await res.json().catch(() => ({}));
-                showQAResult(data.message || "Gửi câu hỏi thất bại. Vui lòng thử lại.", false);
+                showQAResult(data.Message || data.message || "Gửi câu hỏi thất bại.", false);
             }
-
         } catch (e) {
-            console.error("Lỗi gửi câu hỏi:", e);
             showQAResult("Không thể kết nối đến máy chủ.", false);
         } finally {
             btn.disabled = false;
@@ -231,45 +362,53 @@ function initSubmitQuestion(eventId) {
     });
 }
 
-function showQAResult(msg, success) {
-    const el = document.getElementById("qaResult");
-    if (!el) return;
-    el.style.display = "block";
-    el.style.background = success ? "#f0fff4" : "#fff5f5";
-    el.style.color = success ? "#276749" : "#c53030";
-    el.style.border = `1px solid ${success ? "#9ae6b4" : "#feb2b2"}`;
-    el.textContent = msg;
-    setTimeout(() => { el.style.display = "none"; }, 4000);
-}
-
-// ── SMOOTH SCROLL ─────────────────────────────────────────────────
 function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(a => {
         a.addEventListener("click", function (e) {
             const target = document.querySelector(this.getAttribute("href"));
-            if (target) {
-                e.preventDefault();
-                target.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
+            if (target) { e.preventDefault(); target.scrollIntoView({ behavior: "smooth" }); }
         });
     });
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────
-function setText(id, text) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text;
-}
+function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+function setVal(id, val)   { const el = document.getElementById(id); if (el) el.value = val; }
+function fmt(date)         { return date.toLocaleTimeString("vi-VN", { hour:"2-digit", minute:"2-digit" }); }
 
-function setVal(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
+function showRegisterResult(msg, success) {
+    const el = document.getElementById("registerResult");
+    if (!el) return;
+    el.style.display = "block";
+    el.style.background = success ? "#f0fff4" : "#fff5f5";
+    el.style.color      = success ? "#276749" : "#c53030";
+    el.style.border     = `1px solid ${success ? "#9ae6b4" : "#feb2b2"}`;
+    el.textContent = msg;
 }
-
-function formatTime(date) {
-    return date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+function hideRegisterResult() {
+    const el = document.getElementById("registerResult");
+    if (el) el.style.display = "none";
 }
-
+function showQAResult(msg, success) {
+    const el = document.getElementById("qaResult");
+    if (!el) return;
+    el.style.display = "block";
+    el.style.background = success ? "#f0fff4" : "#fff5f5";
+    el.style.color      = success ? "#276749" : "#c53030";
+    el.style.border     = `1px solid ${success ? "#9ae6b4" : "#feb2b2"}`;
+    el.textContent = msg;
+    setTimeout(() => { el.style.display = "none"; }, 4000);
+}
+function showToast(msg, type = "success") {
+    const colors = { success:"#059669", error:"#dc2626", info:"#0D5A9C" };
+    const toast = document.createElement("div");
+    toast.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:99999;
+        padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;
+        background:${colors[type]};color:white;box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:360px;`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
 function showError(msg) {
     const main = document.querySelector(".main-content .container");
     if (main) {

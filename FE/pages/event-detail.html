@@ -187,24 +187,51 @@
                             <h4>Đăng ký tham gia</h4>
                             <span class="form-note" id="registeredCount">Đang tải...</span>
 
-                            <div class="form-group">
-                                <label>Họ và Tên</label>
-                                <input type="text" id="regName" placeholder="Nguyễn Văn Nam">
+                            <!-- Trạng thái đăng ký hiện tại (ẩn mặc định) -->
+                            <div id="registrationStatus" style="display:none; margin-bottom:16px; padding:14px; border-radius:10px; text-align:center;">
+                                <div id="statusIcon" style="font-size:28px; margin-bottom:6px;"></div>
+                                <div id="statusText" style="font-weight:700; font-size:15px;"></div>
+                                <div id="statusSub" style="font-size:13px; color:#666; margin-top:4px;"></div>
                             </div>
 
-                            <div class="form-group">
-                                <label>MSSV / Mã SSO</label>
-                                <input type="text" id="regMSSV" placeholder="23115053001">
+                            <!-- Form đăng ký (ẩn khi đã đăng ký) -->
+                            <div id="registerForm">
+                                <div class="form-group">
+                                    <label>Họ và Tên</label>
+                                    <input type="text" id="regName" placeholder="Nguyễn Văn Nam">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>MSSV / Mã SSO</label>
+                                    <input type="text" id="regMSSV" placeholder="23115053001">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="regEmail" placeholder="email@ute.udn.vn">
+                                </div>
+
+                                <div id="registerResult" style="display:none;padding:10px;border-radius:8px;margin-bottom:12px;font-size:14px;"></div>
+
+                                <!-- Nút đăng ký nhanh (inline) -->
+                                <button class="btn-register" id="btnRegister">ĐĂNG KÝ NGAY</button>
+
+                                <!-- Nút đăng ký trang riêng (đầy đủ hơn) -->
+                                <a id="btnRegisterFull" href="#"
+                                   style="display:block;text-align:center;margin-top:10px;padding:10px;border:1.5px solid #0D5A9C;border-radius:8px;color:#0D5A9C;text-decoration:none;font-size:13px;font-weight:600;">
+                                    <i class="fas fa-external-link-alt"></i> Đăng ký đầy đủ thông tin
+                                </a>
                             </div>
 
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="regEmail" placeholder="email@ute.udn.vn">
+                            <!-- Nút sau khi đã đăng ký (ẩn mặc định) -->
+                            <div id="registeredActions" style="display:none;">
+                                <a id="btnViewTicket" href="my-tickets.html" class="btn-register" style="display:block; text-align:center; text-decoration:none; background:#059669; margin-bottom:10px;">
+                                    <i class="fas fa-qrcode"></i> XEM VÉ & QR CHECK-IN
+                                </a>
+                                <button id="btnCancelReg" class="btn-register" style="background:#ef4444;">
+                                    <i class="fas fa-times-circle"></i> HỦY ĐĂNG KÝ
+                                </button>
                             </div>
-
-                            <div id="registerResult" style="display:none;padding:10px;border-radius:8px;margin-bottom:12px;font-size:14px;"></div>
-
-                            <button class="btn-register" id="btnRegister">ĐĂNG KÝ NGAY</button>
 
                             <div class="event-stats">
                                 <div class="stat-item">

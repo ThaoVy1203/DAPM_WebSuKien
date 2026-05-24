@@ -49,6 +49,17 @@ namespace aspiCore.Controllers
             return Ok(result);
         }
 
+        [HttpPost("check-out")]
+        public async Task<ActionResult<ApiResponse>> CheckOut([FromBody] CheckInDto dto)
+        {
+            var result = await _dangKyService.CheckOutAsync(dto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
         [HttpGet("su-kien/{idSuKien}")]
         public async Task<ActionResult<IEnumerable<DangKySuKienDto>>> GetBySuKien(int idSuKien)
         {

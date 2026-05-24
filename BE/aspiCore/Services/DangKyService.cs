@@ -147,6 +147,41 @@ namespace aspiCore.Services
             };
         }
 
+        public async Task<ApiResponse> CheckOutAsync(CheckInDto dto)
+        {
+            var dangKy = await _context.DangKySuKiens
+                .FirstOrDefaultAsync(dk => dk.IdSuKien == dto.IdSuKien
+                    && dk.IdNguoiDung == dto.IdNguoiDung
+                    && dk.TrangThai == "Đã tham gia");
+
+            if (dangKy == null)
+            {
+                return new ApiResponse
+                {
+                    Success = false,
+                    Message = "Không tìm thấy đăng ký hợp lệ hoặc chưa check-in."
+                };
+            }
+
+            if (dangKy.ThoiGianCheckout.HasValue)
+            {
+                return new ApiResponse
+                {
+                    Success = false,
+                    Message = "Bạn đã check-out rồi."
+                };
+            }
+
+            dangKy.ThoiGianCheckout = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return new ApiResponse
+            {
+                Success = true,
+                Message = "Check-out thành công. Cảm ơn bạn đã tham gia sự kiện!"
+            };
+        }
+
         public async Task<IEnumerable<DangKySuKienDto>> GetBySuKienAsync(int idSuKien)
         {
             return await _context.DangKySuKiens

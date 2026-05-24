@@ -9,6 +9,44 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/calender.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Ngày hôm nay */
+        .calendar-date.today {
+            background: #0D5A9C;
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+        }
+        /* Ngày có sự kiện */
+        .calendar-date.has-event {
+            position: relative;
+            font-weight: 700;
+            color: #0D5A9C;
+        }
+        .calendar-date.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background: #0D5A9C;
+            border-radius: 50%;
+        }
+        .calendar-date.today.has-event::after {
+            background: white;
+        }
+        /* Hover ngày */
+        .calendar-date:not(.inactive):hover {
+            background: #e8f0fe;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .calendar-date.today:hover {
+            background: #0A4A82;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->

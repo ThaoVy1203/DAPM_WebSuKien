@@ -166,7 +166,7 @@ function renderEvents(events) {
 
         const canRegister = trangThai === "Đã duyệt";
         const actionBtn = canRegister
-            ? `<button class="btn-primary" data-id="${event.idSuKien}">Đăng ký ngay</button>`
+            ? `<button class="btn-primary" data-id="${event.idSuKien}" onclick="window.location.href='register-event.html?id=${event.idSuKien}'">Đăng ký ngay</button>`
             : `<button class="btn-notify" data-id="${event.idSuKien}"><i class="fas fa-bell"></i> Nhận thông báo khi được duyệt</button>`;
 
         card.innerHTML = `
