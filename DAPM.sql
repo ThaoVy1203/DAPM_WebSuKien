@@ -1,4 +1,4 @@
-﻿USE master;
+USE master;
 GO
 
 -- Đóng tất cả kết nối đến database trước khi drop
@@ -104,13 +104,14 @@ GO
 
 CREATE TABLE SuKien (
     idSuKien INTEGER NOT NULL IDENTITY(1,1),
-    tenSuKien NVARCHAR(50) NOT NULL,
+    tenSuKien NVARCHAR(200) NOT NULL,
     moTa NVARCHAR(MAX) NULL,
     thoiGianBatDau DATETIME2 NOT NULL,
     thoiGianKetThuc DATETIME2 NOT NULL,
     idDiaDiem INTEGER NULL,
     idNguoiTao CHAR(5) NOT NULL,
     soLuongToiDa INTEGER NULL,
+    hinhAnh NVARCHAR(MAX) NULL,
     trangThai NVARCHAR(20) NOT NULL DEFAULT N'Nháp',
     capPheDuyet CHAR(5) NULL,
     thoiGianTao DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
@@ -382,24 +383,24 @@ INSERT INTO DanhMucSuKien (tenDanhMuc, moTa) VALUES
 GO
 
 -- 6. Sự kiện
-INSERT INTO SuKien (tenSuKien, moTa, thoiGianBatDau, thoiGianKetThuc, idDiaDiem, idNguoiTao, soLuongToiDa, trangThai, capPheDuyet) VALUES
+INSERT INTO SuKien (tenSuKien, moTa, thoiGianBatDau, thoiGianKetThuc, idDiaDiem, idNguoiTao, soLuongToiDa, hinhAnh, trangThai, capPheDuyet) VALUES
 (
     N'Hội thảo Chuyển đổi số 2025',
     N'Hội thảo về xu hướng chuyển đổi số trong giáo dục đại học',
     '2025-11-15 08:00:00', '2025-11-15 17:00:00',
-    1, 'ND002', 300, N'Đã duyệt', 'ND005'
+    1, 'ND002', 300, '../images/event1.png', N'Nháp', 'ND005'
 ),
 (
     N'Ngày hội Tình nguyện Mùa Hè Xanh',
     N'Chiến dịch tình nguyện hè hỗ trợ cộng đồng',
     '2025-07-20 06:00:00', '2025-07-25 18:00:00',
-    3, 'ND002', 500, N'Đã duyệt', 'ND005'
+    3, 'ND002', 500, '../images/event2.png', N'Đã duyệt', 'ND005'
 ),
 (
     N'Workshop Kỹ năng thuyết trình chuyên nghiệp',
     N'Rèn luyện kỹ năng thuyết trình và giao tiếp',
     '2025-12-05 13:30:00', '2025-12-05 17:00:00',
-    2, 'ND003', 80, N'Chờ duyệt', NULL
+    2, 'ND003', 80, '../images/event3.png', N'Chờ duyệt', NULL
 );
 GO
 
@@ -486,24 +487,24 @@ IF OBJECT_ID('vw_SuKienDayDu', 'V') IS NOT NULL
 GO
 
 CREATE VIEW vw_SuKienDayDu AS
-SELECT
-    sk.idSuKien, sk.tenSuKien, sk.moTa,
-    sk.thoiGianBatDau, sk.thoiGianKetThuc,
-    sk.soLuongToiDa, sk.trangThai, sk.thoiGianTao,
+SELECT 
+    s.idSuKien, s.tenSuKien, s.moTa, s.thoiGianBatDau, s.thoiGianKetThuc, 
+    s.soLuongToiDa, s.trangThai, s.thoiGianTao, s.hinhAnh,
     dd.tenDiaDiem, dd.viTri,
     nd.hoTen  AS tenNguoiTao,
     nd.email  AS emailNguoiTao,
     COUNT(DISTINCT dksk.idDangKy) AS soDaDangKy
-FROM SuKien sk
-LEFT JOIN DiaDiem dd ON sk.idDiaDiem  = dd.idDiaDiem
-LEFT JOIN NguoiDung nd ON sk.idNguoiTao = nd.idNguoiDung
-LEFT JOIN DangKySuKien dksk ON sk.idSuKien = dksk.idSuKien
+FROM SuKien s
+LEFT JOIN DiaDiem dd ON s.idDiaDiem  = dd.idDiaDiem
+LEFT JOIN NguoiDung nd ON s.idNguoiTao = nd.idNguoiDung
+LEFT JOIN DangKySuKien dksk ON s.idSuKien = dksk.idSuKien
     AND dksk.trangThai NOT IN (N'Đã hủy')
 GROUP BY
-    sk.idSuKien, sk.tenSuKien, sk.moTa,
-    sk.thoiGianBatDau, sk.thoiGianKetThuc,
-    sk.soLuongToiDa, sk.trangThai, sk.thoiGianTao,
-    dd.tenDiaDiem, dd.viTri, nd.hoTen, nd.email;
+    s.idSuKien, s.tenSuKien, s.moTa,
+    s.thoiGianBatDau, s.thoiGianKetThuc,
+    s.soLuongToiDa, s.trangThai, s.thoiGianTao, s.hinhAnh,
+    dd.tenDiaDiem, dd.viTri,
+    nd.hoTen, nd.email;
 GO
 
 IF OBJECT_ID('vw_ThongKeThamGia', 'V') IS NOT NULL

@@ -30,6 +30,8 @@ namespace aspiCore.Model
 
         public int? SoLuongToiDa { get; set; }
 
+        public string? HinhAnh { get; set; }
+
         [Required]
         [MaxLength(20)]
         public string TrangThai { get; set; } = "Nháp";

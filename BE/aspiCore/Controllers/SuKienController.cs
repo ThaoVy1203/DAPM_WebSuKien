@@ -40,6 +40,13 @@ namespace aspiCore.Controllers
             return Ok(result);
         }
 
+        [HttpGet("nguoi-tao/{idNguoiTao}")]
+        public async Task<ActionResult<IEnumerable<SuKienDto>>> GetByNguoiTao(string idNguoiTao)
+        {
+            var result = await _suKienService.GetByNguoiTaoAsync(idNguoiTao);
+            return Ok(result);
+        }
+
         [HttpPost]
         public async Task<ActionResult<SuKienDto>> Create([FromBody] CreateSuKienDto dto)
         {
@@ -63,6 +70,28 @@ namespace aspiCore.Controllers
                 return NotFound(new { message = "Không tìm thấy sự kiện" });
             }
             return Ok(result);
+        }
+
+        [HttpPut("{id}/huy")]
+        public async Task<ActionResult<SuKienDto>> Cancel(int id, [FromBody] CancelSuKienDto dto)
+        {
+            try
+            {
+                var result = await _suKienService.CancelAsync(id, dto.LyDoHuy);
+                if (result == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy sự kiện" });
+                }
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

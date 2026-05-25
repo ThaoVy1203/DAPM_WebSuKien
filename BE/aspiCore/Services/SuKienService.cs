@@ -20,6 +20,8 @@ namespace aspiCore.Services
                 .Include(s => s.DiaDiem)
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
+                .Include(s => s.SuKien_DanhMucs)
+                .ThenInclude(sd => sd.DanhMuc)
                 .Select(s => new SuKienDto
                 {
                     IdSuKien = s.IdSuKien,
@@ -32,9 +34,11 @@ namespace aspiCore.Services
                     IdNguoiTao = s.IdNguoiTao,
                     TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
                     SoLuongToiDa = s.SoLuongToiDa,
+                    HinhAnh = s.HinhAnh,
                     TrangThai = s.TrangThai,
                     ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy")
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                    DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
                 })
                 .ToListAsync();
         }
@@ -45,6 +49,8 @@ namespace aspiCore.Services
                 .Include(s => s.DiaDiem)
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
+                .Include(s => s.SuKien_DanhMucs)
+                .ThenInclude(sd => sd.DanhMuc)
                 .FirstOrDefaultAsync(s => s.IdSuKien == id);
 
             if (suKien == null) return null;
@@ -61,9 +67,11 @@ namespace aspiCore.Services
                 IdNguoiTao = suKien.IdNguoiTao,
                 TenNguoiTao = suKien.NguoiTao?.HoTen,
                 SoLuongToiDa = suKien.SoLuongToiDa,
+                HinhAnh = suKien.HinhAnh,
                 TrangThai = suKien.TrangThai,
                 ThoiGianTao = suKien.ThoiGianTao,
-                SoDaDangKy = suKien.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy")
+                SoDaDangKy = suKien.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                DanhMucs = suKien.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
             };
         }
 
@@ -73,6 +81,8 @@ namespace aspiCore.Services
                 .Include(s => s.DiaDiem)
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
+                .Include(s => s.SuKien_DanhMucs)
+                .ThenInclude(sd => sd.DanhMuc)
                 .Where(s => s.TrangThai == trangThai)
                 .Select(s => new SuKienDto
                 {
@@ -86,15 +96,53 @@ namespace aspiCore.Services
                     IdNguoiTao = s.IdNguoiTao,
                     TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
                     SoLuongToiDa = s.SoLuongToiDa,
+                    HinhAnh = s.HinhAnh,
                     TrangThai = s.TrangThai,
                     ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy")
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                    DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
                 })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<SuKienDto>> GetByNguoiTaoAsync(string idNguoiTao)
+        {
+            return await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .Include(s => s.DangKySuKiens)
+                .Include(s => s.SuKien_DanhMucs)
+                .ThenInclude(sd => sd.DanhMuc)
+                .Where(s => s.IdNguoiTao == idNguoiTao)
+                .Select(s => new SuKienDto
+                {
+                    IdSuKien = s.IdSuKien,
+                    TenSuKien = s.TenSuKien,
+                    MoTa = s.MoTa,
+                    ThoiGianBatDau = s.ThoiGianBatDau,
+                    ThoiGianKetThuc = s.ThoiGianKetThuc,
+                    IdDiaDiem = s.IdDiaDiem,
+                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
+                    IdNguoiTao = s.IdNguoiTao,
+                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
+                    SoLuongToiDa = s.SoLuongToiDa,
+                    HinhAnh = s.HinhAnh,
+                    TrangThai = s.TrangThai,
+                    ThoiGianTao = s.ThoiGianTao,
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                    DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
+                })
+                .OrderByDescending(s => s.ThoiGianTao)
                 .ToListAsync();
         }
 
         public async Task<SuKienDto> CreateAsync(CreateSuKienDto dto)
         {
+            if (dto.ThoiGianKetThuc <= dto.ThoiGianBatDau)
+            {
+                throw new InvalidOperationException("Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
+            }
+
             var suKien = new SuKien
             {
                 TenSuKien = dto.TenSuKien,
@@ -104,6 +152,7 @@ namespace aspiCore.Services
                 IdDiaDiem = dto.IdDiaDiem,
                 IdNguoiTao = dto.IdNguoiTao,
                 SoLuongToiDa = dto.SoLuongToiDa,
+                HinhAnh = dto.HinhAnh,
                 TrangThai = "Nháp",
                 ThoiGianTao = DateTime.Now
             };
@@ -129,7 +178,10 @@ namespace aspiCore.Services
 
         public async Task<SuKienDto?> UpdateAsync(int id, UpdateSuKienDto dto)
         {
-            var suKien = await _context.SuKiens.FindAsync(id);
+            var suKien = await _context.SuKiens
+                .Include(s => s.SuKien_DanhMucs)
+                .FirstOrDefaultAsync(s => s.IdSuKien == id);
+                
             if (suKien == null) return null;
 
             if (!string.IsNullOrEmpty(dto.TenSuKien))
@@ -144,9 +196,50 @@ namespace aspiCore.Services
                 suKien.IdDiaDiem = dto.IdDiaDiem;
             if (dto.SoLuongToiDa.HasValue)
                 suKien.SoLuongToiDa = dto.SoLuongToiDa;
+            if (dto.HinhAnh != null)
+                suKien.HinhAnh = dto.HinhAnh;
             if (!string.IsNullOrEmpty(dto.TrangThai))
                 suKien.TrangThai = dto.TrangThai;
 
+            if (dto.ThoiGianKetThuc.HasValue || dto.ThoiGianBatDau.HasValue)
+            {
+                var start = dto.ThoiGianBatDau ?? suKien.ThoiGianBatDau;
+                var end = dto.ThoiGianKetThuc ?? suKien.ThoiGianKetThuc;
+                if (end <= start)
+                {
+                    throw new InvalidOperationException("Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
+                }
+            }
+
+            if (dto.DanhMucIds != null)
+            {
+                _context.SuKien_DanhMucs.RemoveRange(suKien.SuKien_DanhMucs);
+                foreach (var danhMucId in dto.DanhMucIds)
+                {
+                    _context.SuKien_DanhMucs.Add(new SuKien_DanhMuc
+                    {
+                        IdSuKien = suKien.IdSuKien,
+                        IdDanhMuc = danhMucId
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return await GetByIdAsync(id);
+        }
+
+        public async Task<SuKienDto?> CancelAsync(int id, string? lyDoHuy)
+        {
+            var suKien = await _context.SuKiens.FindAsync(id);
+            if (suKien == null) return null;
+
+            if (suKien.TrangThai == "Hủy" || suKien.TrangThai == "Kết thúc" || suKien.TrangThai == "Từ chối")
+            {
+                throw new InvalidOperationException("Không thể hủy sự kiện ở trạng thái này.");
+            }
+
+            suKien.TrangThai = "Hủy";
+            
             await _context.SaveChangesAsync();
             return await GetByIdAsync(id);
         }
