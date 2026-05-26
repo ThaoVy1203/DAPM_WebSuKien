@@ -1,5 +1,7 @@
 // BTC Approval Management JavaScript
-const API_BASE = "https://localhost:7160/api";
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
 
 let approvalPageData = {
     events: [],
@@ -43,7 +45,7 @@ async function loadEventsSelector() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/SuKien`, {
+        const res = await fetch(`${window.API_BASE}/SuKien`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -85,46 +87,23 @@ async function loadApprovalsForSelectedEvent() {
     const eventId = approvalPageData.selectedEventId;
     if (!eventId) return;
 
-    const event = approvalPageData.events.find(e => e.idSuKien == eventId);
-    const eventName = event ? event.tenSuKien : "Sự kiện";
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/PheDuyet/su-kien/${eventId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
 
-    // Load from localStorage
-    let appStr = localStorage.getItem(`approvals_event_${eventId}`);
-    let approvals;
+        if (!res.ok) throw new Error("Lỗi tải yêu cầu phê duyệt");
 
-    if (appStr) {
-        approvals = JSON.parse(appStr);
-    } else {
-        // Initial mock approvals list
-        approvals = [
-            {
-                id: 1,
-                tieuDe: `Phê duyệt kế hoạch tổ chức ${eventName}`,
-                loai: "event",
-                trangThai: "pending",
-                nguoiGui: "Trưởng Ban Tổ chức",
-                ngayGui: new Date().toLocaleDateString("vi-VN"),
-                nguoiDuyet: "Ban Giám hiệu",
-                moTa: `Kế hoạch chi tiết tổ chức ${eventName} với đầy đủ các nội dung về chương trình, nhân sự, dự trù kinh phí. Kính trình cấp trên xem duyệt phê duyệt để triển khai.`
-            },
-            {
-                id: 2,
-                tieuDe: `Phê duyệt ngân sách dự phòng ${eventName}`,
-                loai: "budget",
-                trangThai: "approved",
-                nguoiGui: "Trưởng Ban Tổ chức",
-                ngayGui: new Date().toLocaleDateString("vi-VN"),
-                nguoiDuyet: "Đoàn Trường",
-                moTa: `Kế hoạch kinh phí chi tiết cho hạng mục trang thiết bị, văn phòng phẩm, và chi phí dự trù phát sinh.`
-            }
-        ];
-        localStorage.setItem(`approvals_event_${eventId}`, JSON.stringify(approvals));
+        const approvals = await res.json();
+        approvalPageData.approvals = approvals;
+        renderApprovals(approvals);
+        updateStats(approvals);
+        initializeFilterTabs();
+
+    } catch (error) {
+        console.error("Lỗi load approvals:", error);
     }
-
-    approvalPageData.approvals = approvals;
-    renderApprovals(approvals);
-    updateStats(approvals);
-    initializeFilterTabs();
 }
 
 // ================= UPDATE STATS CARDS =================
@@ -333,23 +312,50 @@ async function saveApproval(trangThai) {
     const eventId = approvalPageData.selectedEventId;
     if (!eventId) return;
 
-    const data = collectFormData();
-    data.trangThai = trangThai;
+    const formData = collectFormData();
+    const payload = {
+        eventId: parseInt(eventId),
+        tieuDe: formData.tieuDe,
+        loai: formData.loai,
+        trangThai: trangThai,
+        nguoiGui: formData.nguoiGui,
+        nguoiDuyet: formData.nguoiDuyet,
+        moTa: formData.moTa
+    };
 
-    if (approvalPageData.currentApprovalId) {
-        const index = approvalPageData.approvals.findIndex(a => a.id == approvalPageData.currentApprovalId);
-        if (index !== -1) {
-            data.id = approvalPageData.currentApprovalId;
-            approvalPageData.approvals[index] = data;
+    try {
+        const token = localStorage.getItem("token");
+        let res;
+
+        if (approvalPageData.currentApprovalId) {
+            res = await fetch(`${window.API_BASE}/PheDuyet/${approvalPageData.currentApprovalId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            res = await fetch(`${window.API_BASE}/PheDuyet`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
         }
-    } else {
-        data.id = approvalPageData.approvals.length > 0 ? Math.max(...approvalPageData.approvals.map(a => a.id)) + 1 : 1;
-        approvalPageData.approvals.push(data);
-    }
 
-    localStorage.setItem(`approvals_event_${eventId}`, JSON.stringify(approvalPageData.approvals));
-    closeApprovalModal();
-    await loadApprovalsForSelectedEvent();
+        if (!res.ok) throw new Error("Lỗi lưu phê duyệt");
+
+        closeApprovalModal();
+        await loadApprovalsForSelectedEvent();
+
+    } catch (error) {
+        console.error("Lỗi lưu phê duyệt:", error);
+        alert("Lưu yêu cầu phê duyệt thất bại!");
+    }
 }
 
 document.getElementById("approvalForm")?.addEventListener("submit", async function (e) {
@@ -408,26 +414,43 @@ function viewApprovalDetail(id) {
 }
 
 // ================= CANCEL =================
-function cancelApproval(id) {
+async function cancelApproval(id) {
     if (!confirm("Hủy yêu cầu phê duyệt này?")) return;
 
-    const eventId = approvalPageData.selectedEventId;
-    const item = approvalPageData.approvals.find(a => a.id == id);
-    if (item) {
-        item.trangThai = "draft";
-        localStorage.setItem(`approvals_event_${eventId}`, JSON.stringify(approvalPageData.approvals));
-        loadApprovalsForSelectedEvent();
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/PheDuyet/cancel/${id}`, {
+            method: "PUT",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Lỗi hủy phê duyệt");
+        await loadApprovalsForSelectedEvent();
+
+    } catch (error) {
+        console.error("Lỗi hủy phê duyệt:", error);
+        alert("Hủy yêu cầu thất bại!");
     }
 }
 
 // ================= DELETE =================
-function deleteApproval(id) {
+async function deleteApproval(id) {
     if (!confirm("Xóa bản nháp này?")) return;
 
-    const eventId = approvalPageData.selectedEventId;
-    approvalPageData.approvals = approvalPageData.approvals.filter(a => a.id != id);
-    localStorage.setItem(`approvals_event_${eventId}`, JSON.stringify(approvalPageData.approvals));
-    loadApprovalsForSelectedEvent();
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/PheDuyet/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Lỗi xóa phê duyệt");
+        await loadApprovalsForSelectedEvent();
+
+    } catch (error) {
+        console.error("Lỗi xóa phê duyệt:", error);
+        alert("Xóa bản nháp thất bại!");
+    }
 }
 
 // ================= FILTER SELECT =================

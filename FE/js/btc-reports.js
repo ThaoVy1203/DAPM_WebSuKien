@@ -1,5 +1,7 @@
 // Reports Management JavaScript
-const API_BASE = "https://localhost:7160/api";
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
 
 let reportPageData = {
     events: [],
@@ -46,7 +48,7 @@ async function loadEventsSelector() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/SuKien`, {
+        const res = await fetch(`${window.API_BASE}/SuKien`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -97,56 +99,34 @@ async function loadReportsForSelectedEvent() {
     const eventId = reportPageData.selectedEventId;
     if (!eventId) return;
 
-    const event = reportPageData.events.find(e => e.idSuKien == eventId);
-    const eventName = event ? event.tenSuKien : "Sự kiện";
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/reports/su-kien/${eventId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
 
-    // Load from localStorage
-    let repStr = localStorage.getItem(`reports_event_${eventId}`);
-    let reports;
+        if (!res.ok) throw new Error("Lỗi tải báo cáo");
 
-    if (repStr) {
-        reports = JSON.parse(repStr);
-    } else {
-        // Initial mock reports for this event
-        reports = [
-            {
-                id: 1,
-                type: 'event',
-                typeLabel: 'Báo cáo sự kiện',
-                typeIcon: 'fas fa-calendar-check',
-                title: `Báo cáo tổng kết ${eventName}`,
-                status: 'completed',
-                statusLabel: 'Hoàn thành',
-                date: new Date().toLocaleDateString("vi-VN"),
-                creator: 'Nguyễn Văn A',
-                event: eventName,
-                updated: new Date().toLocaleDateString("vi-VN") + " 10:30",
-                description: `Báo cáo tổng kết sự kiện ${eventName} với đầy đủ thông tin số liệu người tham gia, tiến độ hoàn thành các công việc và khảo sát mức độ hài lòng.`,
-                content: `<p><strong>I. Tổng quan sự kiện</strong></p><p>Sự kiện ${eventName} đã diễn ra thành công tốt đẹp.</p><p><strong>II. Kết quả đạt được</strong></p><ul><li>Tất cả các công việc được hoàn thành đúng hạn.</li><li>Phản hồi tích cực từ phía người tham gia.</li></ul>`
-            },
-            {
-                id: 2,
-                type: 'budget',
-                typeLabel: 'Báo cáo tài chính',
-                typeIcon: 'fas fa-money-bill-wave',
-                title: `Báo cáo quyết toán ngân sách ${eventName}`,
-                status: 'completed',
-                statusLabel: 'Hoàn thành',
-                date: new Date().toLocaleDateString("vi-VN"),
-                creator: 'Nguyễn Văn A',
-                event: eventName,
-                updated: new Date().toLocaleDateString("vi-VN") + " 14:15",
-                description: `Báo cáo chi tiết về tổng kinh phí dự chi so với thực chi của ${eventName}.`,
-                content: `<p><strong>I. Tổng quan ngân sách</strong></p><p>Ngân sách đã được kiểm toán và phân bổ đầy đủ.</p>`
+        let reports = await res.json();
+        
+        let customRepStr = localStorage.getItem(`reports_custom_event_${eventId}`);
+        if (customRepStr) {
+            try {
+                let customReports = JSON.parse(customRepStr) || [];
+                reports = reports.concat(customReports);
+            } catch (e) {
+                console.error("Lỗi parse custom reports:", e);
             }
-        ];
-        localStorage.setItem(`reports_event_${eventId}`, JSON.stringify(reports));
-    }
+        }
 
-    reportPageData.reports = reports;
-    renderReports(reports);
-    updateStats(reports);
-    initializeFilterTabs();
+        reportPageData.reports = reports;
+        renderReports(reports);
+        updateStats(reports);
+        initializeFilterTabs();
+
+    } catch (error) {
+        console.error("Lỗi load reports:", error);
+    }
 }
 
 // ================= UPDATE STATS =================
@@ -330,21 +310,24 @@ async function saveReport(status = "completed") {
         updated: new Date().toLocaleDateString("vi-VN") + " 12:00",
         description: desc,
         content: content,
-        attachments: []
+        attachments: [],
+        isCustom: true
     };
 
+    let customReports = reportPageData.reports.filter(r => r.isCustom) || [];
+
     if (reportPageData.currentReportId) {
-        const index = reportPageData.reports.findIndex(r => r.id == reportPageData.currentReportId);
+        const index = customReports.findIndex(r => r.id == reportPageData.currentReportId);
         if (index !== -1) {
             data.id = reportPageData.currentReportId;
-            reportPageData.reports[index] = data;
+            customReports[index] = data;
         }
     } else {
-        data.id = reportPageData.reports.length > 0 ? Math.max(...reportPageData.reports.map(r => r.id)) + 1 : 1;
-        reportPageData.reports.push(data);
+        data.id = Date.now();
+        customReports.push(data);
     }
 
-    localStorage.setItem(`reports_event_${eventId}`, JSON.stringify(reportPageData.reports));
+    localStorage.setItem(`reports_custom_event_${eventId}`, JSON.stringify(customReports));
     closeReportModal();
     await loadReportsForSelectedEvent();
 }
@@ -425,8 +408,12 @@ function downloadReportFromView(format) {
 function deleteReport(id) {
     if (!confirm("Xác nhận xóa báo cáo này?")) return;
     const eventId = reportPageData.selectedEventId;
-    reportPageData.reports = reportPageData.reports.filter(r => r.id != id);
-    localStorage.setItem(`reports_event_${eventId}`, JSON.stringify(reportPageData.reports));
+    let customRepStr = localStorage.getItem(`reports_custom_event_${eventId}`);
+    if (customRepStr) {
+        let customReports = JSON.parse(customRepStr) || [];
+        customReports = customReports.filter(r => r.id != id);
+        localStorage.setItem(`reports_custom_event_${eventId}`, JSON.stringify(customReports));
+    }
     loadReportsForSelectedEvent();
 }
 

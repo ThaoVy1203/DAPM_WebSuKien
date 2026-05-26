@@ -1,5 +1,8 @@
 // api.js
-const API_BASE = "https://localhost:7160/api";
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
+
 
 // ======================
 // Generic Request Handler
@@ -16,7 +19,7 @@ async function request(endpoint, options = {}) {
     };
 
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, config);
+        const response = await fetch(`${window.API_BASE}${endpoint}`, config);
 
         if (response.status === 401) {
             localStorage.removeItem("token");

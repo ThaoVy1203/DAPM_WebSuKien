@@ -1,5 +1,7 @@
-// BTC Dashboard JavaScript
-const API_BASE = "https://localhost:7160/api";
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
+
 
 let dashboardData = {
     events: [],
@@ -105,7 +107,7 @@ async function loadEventsSelector() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/SuKien`, {
+        const res = await fetch(`${window.API_BASE}/SuKien`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -165,7 +167,7 @@ async function loadDashboardData() {
         const headers = { "Authorization": `Bearer ${token}` };
 
         // 1. Cập nhật thông tin sự kiện
-        const eventRes = await fetch(`${API_BASE}/SuKien/${eventId}`, { headers });
+        const eventRes = await fetch(`${window.API_BASE}/SuKien/${eventId}`, { headers });
         let eventName = "Sự kiện";
         if (eventRes.ok) {
             const eventInfo = await eventRes.json();
@@ -177,7 +179,7 @@ async function loadDashboardData() {
         }
 
         // 2. Lấy danh sách công việc của sự kiện
-        const tasksRes = await fetch(`${API_BASE}/tasks/su-kien/${eventId}`, { headers });
+        const tasksRes = await fetch(`${window.API_BASE}/tasks/su-kien/${eventId}`, { headers });
         const tasks = tasksRes.ok ? await tasksRes.json() : [];
         dashboardData.tasks = tasks;
 
@@ -197,7 +199,7 @@ async function loadDashboardData() {
         if (progressFill) progressFill.style.width = `${progress}%`;
 
         // 3. Lấy danh sách người đăng ký của sự kiện
-        const regRes = await fetch(`${API_BASE}/DangKy/su-kien/${eventId}`, { headers });
+        const regRes = await fetch(`${window.API_BASE}/DangKy/su-kien/${eventId}`, { headers });
         const registrations = regRes.ok ? await regRes.json() : [];
         
         const teamMembersEl = document.getElementById("teamMembers");

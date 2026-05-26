@@ -3,7 +3,10 @@
  */
 "use strict";
 
-const API_BASE = "https://localhost:7160/api";
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
+
 
 let attendancePageData = {
     events: [],
@@ -25,7 +28,7 @@ async function loadEventsSelector() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/SuKien`, {
+        const res = await fetch(`${window.API_BASE}/SuKien`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -71,7 +74,7 @@ async function loadEventDetailsAndAttendance() {
 
     // Load event details
     try {
-        const res = await fetch(`${API_BASE}/SuKien/${eventId}`, { headers: authHeaders() });
+        const res = await fetch(`${window.API_BASE}/SuKien/${eventId}`, { headers: authHeaders() });
         if (res.ok) {
             const ev = await res.json();
             const title = ev.tenSuKien || "Sự kiện";
@@ -101,7 +104,7 @@ async function loadEventDetailsAndAttendance() {
 
     // Load participants (registrations)
     try {
-        const res = await fetch(`${API_BASE}/DangKy/su-kien/${eventId}`, {
+        const res = await fetch(`${window.API_BASE}/DangKy/su-kien/${eventId}`, {
             headers: authHeaders()
         });
 
@@ -200,7 +203,7 @@ async function checkInByQrToken(qrToken) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/DangKy/check-in`, {
+        const res = await fetch(`${window.API_BASE}/DangKy/check-in`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({ 
@@ -233,7 +236,7 @@ async function approveRegistration(idNguoiDung) {
     const eventId = attendancePageData.selectedEventId;
     if (!eventId) return;
     try {
-        const res = await fetch(`${API_BASE}/DangKy/check-in`, {
+        const res = await fetch(`${window.API_BASE}/DangKy/check-in`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({ IdSuKien: parseInt(eventId, 10), IdNguoiDung: idNguoiDung })
@@ -254,7 +257,7 @@ async function rejectRegistration(idNguoiDung) {
     const eventId = attendancePageData.selectedEventId;
     if (!eventId || !confirm("Từ chối đăng ký này?")) return;
     try {
-        const res = await fetch(`${API_BASE}/DangKy/huy-dang-ky`, {
+        const res = await fetch(`${window.API_BASE}/DangKy/huy-dang-ky`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({ IdSuKien: parseInt(eventId, 10), IdNguoiDung: idNguoiDung })

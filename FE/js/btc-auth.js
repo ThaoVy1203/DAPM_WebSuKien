@@ -1,7 +1,9 @@
 // BTC Authorization Management
 // Sửa: đọc đúng field vaiTros từ API và localStorage
 
-const API_BASE = "https://localhost:7160/api";
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
 
 // User roles — khớp với tenVaiTro trong DB
 const BTC_ROLES = {
@@ -67,7 +69,7 @@ async function loadCurrentUser() {
             return null;
         }
 
-        const res = await fetch(`${API_BASE}/Auth/me`, {
+        const res = await fetch(`${window.API_BASE}/Auth/me`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -215,7 +217,7 @@ function showPermissionDeniedMessage() {
 async function loadAssignedTasks() {
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/Task/my-tasks`, {
+        const res = await fetch(`${window.API_BASE}/Task/my-tasks`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         if (!res.ok) throw new Error();
@@ -242,7 +244,7 @@ async function submitTaskStatusUpdate() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/Task/update-status/${taskId}`, {
+        const res = await fetch(`${window.API_BASE}/Task/update-status/${taskId}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,

@@ -1,4 +1,4 @@
-﻿namespace aspiCore.Dtos.CongViec
+namespace aspiCore.Dtos.CongViec
 {
     public class CongViecDto
     {
@@ -21,6 +21,7 @@
         public string? MoTa { get; set; }
         public DateTime? HanChot { get; set; }
         public string TrangThai { get; set; } = "Chưa bắt đầu";
+        public string? NguoiPhuTrach { get; set; }
     }
 
     public class UpdateCongViecDto
@@ -30,5 +31,6 @@
         public string? MoTa { get; set; }
         public DateTime? HanChot { get; set; }
         public string? TrangThai { get; set; }
+        public string? NguoiPhuTrach { get; set; }
     }
 }

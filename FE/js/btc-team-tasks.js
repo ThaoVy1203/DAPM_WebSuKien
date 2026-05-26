@@ -1,5 +1,7 @@
 // Team Tasks JavaScript
-const API_BASE = "https://localhost:7160/api";
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
 
 let taskPageData = {
     events: [],
@@ -40,7 +42,7 @@ function setupModals() {
 async function loadUsers() {
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/NguoiDung`, {
+        const res = await fetch(`${window.API_BASE}/NguoiDung`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -67,7 +69,7 @@ async function loadEventsSelector() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/SuKien`, {
+        const res = await fetch(`${window.API_BASE}/SuKien`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -111,7 +113,7 @@ async function loadTasksForSelectedEvent() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/tasks/su-kien/${eventId}`, {
+        const res = await fetch(`${window.API_BASE}/tasks/su-kien/${eventId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -258,7 +260,7 @@ function closeTaskModal() {
 async function loadTaskData(taskId) {
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
+        const res = await fetch(`${window.API_BASE}/tasks/${taskId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -308,7 +310,7 @@ function editTaskFromDetail() {
 async function loadTaskDetailData(taskId) {
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
+        const res = await fetch(`${window.API_BASE}/tasks/${taskId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -384,7 +386,7 @@ document.getElementById('taskForm')?.addEventListener('submit', async function (
         let response;
 
         if (taskPageData.currentTaskId) {
-            response = await fetch(`${API_BASE}/tasks/${taskPageData.currentTaskId}`, {
+            response = await fetch(`${window.API_BASE}/tasks/${taskPageData.currentTaskId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -394,7 +396,7 @@ document.getElementById('taskForm')?.addEventListener('submit', async function (
             });
             if (response.ok) alert('Đã cập nhật nhiệm vụ thành công');
         } else {
-            response = await fetch(`${API_BASE}/tasks`, {
+            response = await fetch(`${window.API_BASE}/tasks`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -424,7 +426,7 @@ async function deleteTask() {
 
     try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/tasks/${id}`, {
+        const response = await fetch(`${window.API_BASE}/tasks/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });

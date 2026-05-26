@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using aspiCore.Model;
 
 namespace aspiCore.Data
@@ -21,6 +21,9 @@ namespace aspiCore.Data
         public DbSet<ThongBao> ThongBaos { get; set; }
         public DbSet<CongViec> CongViecs { get; set; }
         public DbSet<PhanCong> PhanCongs { get; set; }
+        public DbSet<HoSoSuKien> HoSoSuKiens { get; set; }
+        public DbSet<LichSuPheDuyet> LichSuPheDuyets { get; set; }
+        public DbSet<NganSachDuKien> NganSachDuKiens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

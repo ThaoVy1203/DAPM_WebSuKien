@@ -1,6 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using aspiCore.Services;
 using aspiCore.Dtos.SuKien;
+using aspiCore.Data;
+using aspiCore.Dtos.Common;
+using aspiCore.Model;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Collections.Generic;
 
 namespace aspiCore.Controllers
 {
@@ -9,10 +15,12 @@ namespace aspiCore.Controllers
     public class SuKienController : ControllerBase
     {
         private readonly ISuKienService _suKienService;
+        private readonly ApplicationDBContext _context;
 
-        public SuKienController(ISuKienService suKienService)
+        public SuKienController(ISuKienService suKienService, ApplicationDBContext context)
         {
             _suKienService = suKienService;
+            _context = context;
         }
 
         [HttpGet]
@@ -92,6 +100,93 @@ namespace aspiCore.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        [HttpPut("{id}/duyet")]
+        public async Task<ActionResult<ApiResponse>> ApproveEvent(int id, [FromBody] aspiCore.Dtos.PheDuyet.ApproveEventRequestDto dto)
+        {
+            var ev = await _context.SuKiens.FindAsync(id);
+            if (ev == null)
+            {
+                return NotFound(new ApiResponse { Success = false, Message = "Không tìm thấy sự kiện" });
+            }
+
+            var hoSo = await _context.HoSoSuKiens
+                .Where(h => h.IdSuKien == id)
+                .OrderByDescending(h => h.ThoiGianGui)
+                .FirstOrDefaultAsync();
+
+            if (hoSo == null)
+            {
+                hoSo = new HoSoSuKien
+                {
+                    IdSuKien = id,
+                    TrangThaiDuyet = "Chờ duyệt",
+                    ThoiGianGui = DateTime.Now,
+                    NoiDungKeHoach = JsonSerializer.Serialize(new {
+                        TieuDe = $"Phê duyệt kế hoạch tổ chức {ev.TenSuKien}",
+                        Loai = "event",
+                        TrangThai = "pending",
+                        NguoiGui = "Trưởng Ban Tổ chức",
+                        NgayGui = DateTime.Now.ToString("dd/MM/yyyy"),
+                        NguoiDuyet = dto.CapDuyet,
+                        MoTa = ev.MoTa ?? ""
+                    })
+                };
+                _context.HoSoSuKiens.Add(hoSo);
+                await _context.SaveChangesAsync();
+            }
+
+            string newStatusDuyet = "Chờ duyệt";
+            string newEventStatus = ev.TrangThai;
+
+            if (dto.KetQua == "Đồng ý")
+            {
+                newStatusDuyet = dto.CapDuyet.Contains("Cấp 2") || dto.CapDuyet.Contains("CTSV") || dto.CapDuyet.Contains("BGH") 
+                    ? "Đã duyệt cấp 2" 
+                    : "Đã duyệt cấp 1";
+                newEventStatus = "Đã duyệt";
+            }
+            else if (dto.KetQua == "Từ chối")
+            {
+                newStatusDuyet = "Từ chối";
+                newEventStatus = "Từ chối";
+            }
+
+            hoSo.TrangThaiDuyet = newStatusDuyet;
+
+            if (!string.IsNullOrEmpty(hoSo.NoiDungKeHoach))
+            {
+                try
+                {
+                    var doc = JsonDocument.Parse(hoSo.NoiDungKeHoach);
+                    var dict = doc.RootElement.Deserialize<Dictionary<string, object>>() ?? new Dictionary<string, object>();
+                    dict["TrangThai"] = dto.KetQua == "Đồng ý" ? "approved" : "rejected";
+                    dict["NguoiDuyet"] = dto.CapDuyet;
+                    hoSo.NoiDungKeHoach = JsonSerializer.Serialize(dict);
+                }
+                catch {}
+            }
+
+            ev.TrangThai = newEventStatus;
+
+            var history = new LichSuPheDuyet
+            {
+                IdHoSo = hoSo.IdHoSo,
+                IdNguoiDuyet = "ND004", // CTSV/BGH mock user
+                CapDuyet = dto.CapDuyet,
+                KetQua = dto.KetQua,
+                GhiChu = dto.GhiChu,
+                ThoiGianPheDuyet = DateTime.Now
+            };
+
+            _context.LichSuPheDuyets.Add(history);
+            _context.SuKiens.Update(ev);
+            _context.HoSoSuKiens.Update(hoSo);
+            
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse { Success = true, Message = "Phê duyệt sự kiện thành công" });
         }
 
         [HttpDelete("{id}")]

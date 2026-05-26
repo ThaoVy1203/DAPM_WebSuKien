@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using aspiCore.Data;
 using aspiCore.Dtos.CongViec;
 using aspiCore.Model;
@@ -61,6 +61,23 @@ namespace aspiCore.Services
             _context.CongViecs.Add(cv);
             await _context.SaveChangesAsync();
 
+            if (!string.IsNullOrEmpty(dto.NguoiPhuTrach))
+            {
+                var user = await _context.NguoiDungs.FirstOrDefaultAsync(u => u.HoTen == dto.NguoiPhuTrach);
+                if (user != null)
+                {
+                    var pc = new PhanCong
+                    {
+                        IdCongViec = cv.IdCongViec,
+                        IdNguoiDung = user.IdNguoiDung,
+                        VaiTroTrongBTC = "Thành viên thực hiện",
+                        ThoiGianPhanCong = DateTime.Now
+                    };
+                    _context.PhanCongs.Add(pc);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             return await GetByIdAsync(cv.IdCongViec) ?? MapToDto(cv);
         }
 
@@ -76,6 +93,31 @@ namespace aspiCore.Services
             if (dto.TrangThai != null) cv.TrangThai = dto.TrangThai;
 
             await _context.SaveChangesAsync();
+
+            if (dto.NguoiPhuTrach != null)
+            {
+                var existingPcs = await _context.PhanCongs.Where(p => p.IdCongViec == id).ToListAsync();
+                _context.PhanCongs.RemoveRange(existingPcs);
+                await _context.SaveChangesAsync();
+
+                if (!string.IsNullOrEmpty(dto.NguoiPhuTrach))
+                {
+                    var user = await _context.NguoiDungs.FirstOrDefaultAsync(u => u.HoTen == dto.NguoiPhuTrach);
+                    if (user != null)
+                    {
+                        var pc = new PhanCong
+                        {
+                            IdCongViec = id,
+                            IdNguoiDung = user.IdNguoiDung,
+                            VaiTroTrongBTC = "Thành viên thực hiện",
+                            ThoiGianPhanCong = DateTime.Now
+                        };
+                        _context.PhanCongs.Add(pc);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
+
             return await GetByIdAsync(id);
         }
 

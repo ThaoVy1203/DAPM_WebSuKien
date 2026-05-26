@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -61,6 +61,20 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Run startup database column alteration for NganSachDuKien.ghiChu
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+    try
+    {
+        context.Database.ExecuteSqlRaw("IF COL_LENGTH('NganSachDuKien', 'ghiChu') IS NOT NULL ALTER TABLE NganSachDuKien ALTER COLUMN ghiChu NVARCHAR(MAX) NULL;");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error altering NganSachDuKien column at startup: {ex.Message}");
+    }
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
