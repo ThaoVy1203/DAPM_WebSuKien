@@ -81,48 +81,72 @@
                     <!-- Filters Sidebar -->
                     <aside class="sidebar filters-sidebar">
                     <div class="filter-section">
-                        <h3>Bộ lọc tìm kiếm</h3>
+                        <h3><i class="fas fa-sliders-h"></i> Bộ lọc tìm kiếm</h3>
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Tìm sự kiện...">
+                            <input type="text" placeholder="Tìm theo tên, địa điểm...">
                         </div>
                     </div>
 
                     <div class="filter-section">
-                        <h4>Khoa / Đơn vị</h4>
-                        <select class="filter-select">
-                            <option>Tất cả các khoa</option>
-                            <option>Khoa CNTT</option>
-                            <option>Khoa Điện</option>
-                            <option>Khoa Cơ khí</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-section">
                         <h4>Loại sự kiện</h4>
-                        <label class="checkbox-label">
-                            <input type="checkbox" checked>
-                            <span>Hội thảo</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" checked>
-                            <span>Cuộc thi</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" checked>
-                            <span>Tình nguyện</span>
-                        </label>
+                        <div class="category-checkboxes">
+                            <!-- Được render động từ API, fallback tĩnh bên dưới -->
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="category-filter" value="1" checked>
+                                <span>Hội thảo</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="category-filter" value="2" checked>
+                                <span>Cuộc thi</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="category-filter" value="3" checked>
+                                <span>Tình nguyện</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="category-filter" value="4" checked>
+                                <span>Workshop</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="filter-section">
                         <h4>Trạng thái</h4>
                         <div class="status-buttons">
-                            <button class="status-btn active">Sắp diễn ra</button>
-                            <button class="status-btn">Đã đóng</button>
+                            <button class="status-btn active" data-status="all">Tất cả</button>
+                            <button class="status-btn" data-status="upcoming">Sắp diễn ra</button>
+                            <button class="status-btn" data-status="pending">Chờ duyệt</button>
+                            <button class="status-btn" data-status="closed">Đã kết thúc</button>
                         </div>
                     </div>
 
-                    <button class="btn-apply-filter">Áp dụng bộ lọc</button>
+                    <div class="filter-section">
+                        <h4>Địa điểm</h4>
+                        <select id="filterDiaDiem" class="filter-select">
+                            <option value="">Tất cả địa điểm</option>
+                            <!-- Được render động từ API -->
+                        </select>
+                    </div>
+
+                    <div class="filter-section">
+                        <h4>Khoảng thời gian</h4>
+                        <div class="date-range">
+                            <label class="date-label">Từ ngày</label>
+                            <input type="date" id="dateFrom" class="filter-date">
+                            <label class="date-label">Đến ngày</label>
+                            <input type="date" id="dateTo" class="filter-date">
+                        </div>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button class="btn-apply-filter">
+                            <i class="fas fa-check"></i> Áp dụng
+                        </button>
+                        <button class="btn-reset-filter">
+                            <i class="fas fa-undo"></i> Đặt lại
+                        </button>
+                    </div>
                     </aside>
                 </div>
 

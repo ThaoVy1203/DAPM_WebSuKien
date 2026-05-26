@@ -1,16 +1,82 @@
 // Events page functionality
+
+// Global state
+let allEvents = [];         // Toàn bộ sự kiện từ API
+let filteredEvents = [];    // Sự kiện sau khi lọc
+let allCategories = [];     // Danh mục từ API
+let allDiaDiems = [];       // Địa điểm từ API
+const PAGE_SIZE = 5;        // Số sự kiện mỗi trang
+let currentPage = 1;
+
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Events page loaded');
+    
+    // Load danh mục và địa điểm song song
+    await Promise.all([loadCategories(), loadDiaDiems()]);
     
     // Load events from API
     await loadEvents();
     
     // Initialize filter functionality
     initializeFilters();
-    
-    // Initialize pagination
-    initializePagination();
 });
+
+// Load danh mục từ API để điền vào checkbox lọc
+async function loadCategories() {
+    try {
+        const categories = await API.get(API_CONFIG.ENDPOINTS.DANHMUC);
+        if (categories && categories.length > 0) {
+            allCategories = categories;
+            renderCategoryFilters(categories);
+        }
+    } catch (error) {
+        console.warn('Không thể tải danh mục, dùng danh mục mặc định:', error);
+    }
+}
+
+// Load địa điểm từ API để điền vào dropdown lọc
+async function loadDiaDiems() {
+    try {
+        const diaDiems = await API.get(API_CONFIG.ENDPOINTS.DIADIEM);
+        if (diaDiems && diaDiems.length > 0) {
+            allDiaDiems = diaDiems;
+            renderDiaDiemFilter(diaDiems);
+        }
+    } catch (error) {
+        console.warn('Không thể tải địa điểm:', error);
+    }
+}
+
+// Render dropdown địa điểm động
+function renderDiaDiemFilter(diaDiems) {
+    const select = document.getElementById('filterDiaDiem');
+    if (!select) return;
+    // Giữ option đầu "Tất cả địa điểm"
+    select.innerHTML = '<option value="">Tất cả địa điểm</option>';
+    diaDiems.forEach(dd => {
+        const opt = document.createElement('option');
+        opt.value = dd.idDiaDiem;
+        opt.textContent = dd.tenDiaDiem;
+        select.appendChild(opt);
+    });
+}
+
+// Render checkbox danh mục động
+function renderCategoryFilters(categories) {
+    const container = document.querySelector('.filter-section .category-checkboxes');
+    if (!container) return;
+
+    container.innerHTML = '';
+    categories.forEach(cat => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-label';
+        label.innerHTML = `
+            <input type="checkbox" class="category-filter" value="${cat.idDanhMuc}" checked>
+            <span>${cat.tenDanhMuc}</span>
+        `;
+        container.appendChild(label);
+    });
+}
 
 // Load events from API
 async function loadEvents() {
@@ -20,8 +86,10 @@ async function loadEvents() {
         console.log('Events loaded:', events);
         
         if (events && events.length > 0) {
-            renderEvents(events);
-            updateResultsCount(events.length);
+            allEvents = events;
+            filteredEvents = [...allEvents];
+            currentPage = 1;
+            renderPage();
         } else {
             showNoEventsMessage();
         }
@@ -31,21 +99,61 @@ async function loadEvents() {
     }
 }
 
-// Render events to the page
-function renderEvents(events) {
+// Render trang hiện tại (có phân trang)
+function renderPage() {
     const eventsSection = document.querySelector('.events-section');
-    const existingCards = eventsSection.querySelectorAll('.event-card');
-    
-    // Remove existing event cards
-    existingCards.forEach(card => card.remove());
-    
-    // Get pagination element to insert before it
+    // Xóa card cũ
+    eventsSection.querySelectorAll('.event-card, .no-events-message, .error-message').forEach(el => el.remove());
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageEvents = filteredEvents.slice(start, start + PAGE_SIZE);
     const pagination = eventsSection.querySelector('.pagination');
-    
-    events.forEach(event => {
-        const eventCard = createEventCard(event);
-        eventsSection.insertBefore(eventCard, pagination);
-    });
+
+    if (pageEvents.length === 0) {
+        showNoEventsMessage();
+    } else {
+        pageEvents.forEach(event => {
+            const card = createEventCard(event);
+            eventsSection.insertBefore(card, pagination);
+        });
+    }
+
+    updateResultsCount(filteredEvents.length);
+    renderPagination(filteredEvents.length);
+}
+
+// Render phân trang động
+function renderPagination(total) {
+    const pagination = document.querySelector('.pagination');
+    if (!pagination) return;
+
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    pagination.innerHTML = '';
+
+    // Nút prev
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
+    pagination.appendChild(prevBtn);
+
+    // Các nút số trang
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.addEventListener('click', () => { currentPage = i; renderPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        pagination.appendChild(btn);
+    }
+
+    // Nút next
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; renderPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
+    pagination.appendChild(nextBtn);
 }
 
 // Create event card HTML
@@ -176,38 +284,195 @@ function showErrorMessage(message) {
     eventsSection.insertBefore(errorDiv, pagination);
 }
 
-// Initialize filters
+// Initialize filters — kết nối tất cả bộ lọc với logic applyFilters()
 function initializeFilters() {
-    // Apply filter button
+    // Nút "Áp dụng bộ lọc"
     const applyFilterBtn = document.querySelector('.btn-apply-filter');
     if (applyFilterBtn) {
-        applyFilterBtn.addEventListener('click', function() {
-            console.log('Applying filters...');
-            // TODO: Add filter logic here
+        applyFilterBtn.addEventListener('click', applyFilters);
+    }
+
+    // Nút "Đặt lại"
+    const resetFilterBtn = document.querySelector('.btn-reset-filter');
+    if (resetFilterBtn) {
+        resetFilterBtn.addEventListener('click', resetFilters);
+    }
+
+    // Tìm kiếm realtime khi gõ (debounce 400ms)
+    const searchInput = document.querySelector('.search-box input');
+    if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(applyFilters, 400);
+        });
+        // Tìm kiếm khi nhấn Enter
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { clearTimeout(debounceTimer); applyFilters(); }
         });
     }
 
-    // Status buttons
+    // Nút trạng thái (Sắp diễn ra / Đã đóng / Tất cả)
     const statusButtons = document.querySelectorAll('.status-btn');
     statusButtons.forEach(button => {
         button.addEventListener('click', function() {
             statusButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
-            // TODO: Filter events by status
+            applyFilters();
         });
+    });
+
+    // Lọc theo ngày — áp dụng ngay khi thay đổi
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    if (dateFrom) dateFrom.addEventListener('change', applyFilters);
+    if (dateTo) dateTo.addEventListener('change', applyFilters);
+
+    // Dropdown địa điểm — áp dụng ngay khi thay đổi
+    const diaDiemSelect = document.getElementById('filterDiaDiem');
+    if (diaDiemSelect) diaDiemSelect.addEventListener('change', applyFilters);
+
+    // Checkbox danh mục — áp dụng ngay
+    document.addEventListener('change', (e) => {
+        if (e.target.classList.contains('category-filter')) applyFilters();
     });
 }
 
-// Initialize pagination
-function initializePagination() {
-    const pageButtons = document.querySelectorAll('.page-btn:not(.active)');
-    pageButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            if (!this.querySelector('i')) {
-                document.querySelectorAll('.page-btn').forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        });
+// Hàm lọc chính — gọi API server-side search
+async function applyFilters() {
+    const keyword = (document.querySelector('.search-box input')?.value || '').trim();
+    const activeStatusBtn = document.querySelector('.status-btn.active');
+    const selectedStatus = activeStatusBtn ? activeStatusBtn.dataset.status : 'all';
+    const dateFrom = document.getElementById('dateFrom')?.value;
+    const dateTo = document.getElementById('dateTo')?.value;
+    const idDiaDiem = document.getElementById('filterDiaDiem')?.value || '';
+
+    // Lấy danh mục được chọn (nếu không chọn hết thì lọc theo cái đầu tiên được chọn)
+    const checkedCategories = [...document.querySelectorAll('.category-filter:checked')].map(cb => parseInt(cb.value));
+    const allCatIds = allCategories.map(c => c.idDanhMuc);
+    // Nếu chọn tất cả hoặc không có danh mục nào → không lọc theo danh mục
+    const idDanhMuc = (allCategories.length > 0 && checkedCategories.length === 1)
+        ? checkedCategories[0]
+        : '';
+
+    // Xây dựng params cho API search
+    const params = {
+        keyword: keyword || undefined,
+        idDanhMuc: idDanhMuc || undefined,
+        idDiaDiem: idDiaDiem || undefined,
+        trangThai: (selectedStatus && selectedStatus !== 'all') ? mapStatusToTrangThai(selectedStatus) : undefined,
+        tuNgay: dateFrom || undefined,
+        denNgay: dateTo || undefined,
+    };
+
+    try {
+        showLoadingState();
+        const results = await API.getWithParams(API_CONFIG.ENDPOINTS.SUKIEN_SEARCH, params);
+        filteredEvents = results || [];
+
+        // Lọc thêm phía client theo danh mục nếu nhiều checkbox được chọn (nhưng không phải tất cả)
+        if (allCategories.length > 0 && checkedCategories.length > 0 && checkedCategories.length < allCatIds.length) {
+            filteredEvents = filteredEvents.filter(event => {
+                if (!event.danhMucIds || event.danhMucIds.length === 0) return false;
+                return event.danhMucIds.some(id => checkedCategories.includes(id));
+            });
+        }
+
+        currentPage = 1;
+        renderPage();
+        showSearchFeedback(keyword, filteredEvents.length);
+    } catch (error) {
+        console.error('Lỗi tìm kiếm:', error);
+        // Fallback: lọc client-side từ allEvents
+        applyFiltersClientSide(keyword, selectedStatus, dateFrom, dateTo, checkedCategories);
+    }
+}
+
+// Map trạng thái button → giá trị TrangThai trong DB
+function mapStatusToTrangThai(status) {
+    const map = {
+        'upcoming': 'Đã duyệt',
+        'closed': 'Đã kết thúc',
+        'pending': 'Chờ duyệt',
+    };
+    return map[status] || '';
+}
+
+// Fallback lọc client-side (dùng khi API lỗi)
+function applyFiltersClientSide(keyword, selectedStatus, dateFrom, dateTo, checkedCategories) {
+    filteredEvents = allEvents.filter(event => {
+        if (keyword) {
+            const searchTarget = [event.tenSuKien || '', event.moTa || '', event.tenDiaDiem || ''].join(' ').toLowerCase();
+            if (!searchTarget.includes(keyword.toLowerCase())) return false;
+        }
+        if (selectedStatus && selectedStatus !== 'all') {
+            const trangThai = mapStatusToTrangThai(selectedStatus);
+            if (trangThai && event.trangThai !== trangThai) return false;
+        }
+        if (dateFrom && new Date(event.thoiGianBatDau) < new Date(dateFrom)) return false;
+        if (dateTo && new Date(event.thoiGianBatDau) > new Date(dateTo + 'T23:59:59')) return false;
+        if (checkedCategories.length > 0 && allCategories.length > 0) {
+            const eventCatIds = event.danhMucIds || [];
+            if (eventCatIds.length > 0 && !eventCatIds.some(id => checkedCategories.includes(id))) return false;
+        }
+        return true;
     });
+    currentPage = 1;
+    renderPage();
+    showSearchFeedback(keyword, filteredEvents.length);
+}
+
+// Hiển thị trạng thái đang tải
+function showLoadingState() {
+    const eventsSection = document.querySelector('.events-section');
+    eventsSection.querySelectorAll('.event-card, .no-events-message, .error-message, .loading-state').forEach(el => el.remove());
+    const pagination = eventsSection.querySelector('.pagination');
+    const loading = document.createElement('div');
+    loading.className = 'loading-state';
+    loading.style.cssText = 'text-align:center;padding:40px;color:#6B7280;';
+    loading.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:32px;margin-bottom:12px;display:block;color:#0D5A9C"></i><p>Đang tìm kiếm...</p>';
+    eventsSection.insertBefore(loading, pagination);
+}
+
+// Đặt lại tất cả bộ lọc
+function resetFilters() {
+    const searchInput = document.querySelector('.search-box input');
+    if (searchInput) searchInput.value = '';
+
+    const statusButtons = document.querySelectorAll('.status-btn');
+    statusButtons.forEach((btn, i) => btn.classList.toggle('active', i === 0));
+
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    if (dateFrom) dateFrom.value = '';
+    if (dateTo) dateTo.value = '';
+
+    const diaDiemSelect = document.getElementById('filterDiaDiem');
+    if (diaDiemSelect) diaDiemSelect.value = '';
+
+    document.querySelectorAll('.category-filter').forEach(cb => cb.checked = true);
+
+    filteredEvents = [...allEvents];
+    currentPage = 1;
+    renderPage();
+
+    const feedback = document.querySelector('.search-feedback');
+    if (feedback) feedback.remove();
+}
+
+// Hiển thị phản hồi tìm kiếm
+function showSearchFeedback(keyword, count) {
+    let feedback = document.querySelector('.search-feedback');
+    if (!feedback) {
+        feedback = document.createElement('div');
+        feedback.className = 'search-feedback';
+        const header = document.querySelector('.section-header');
+        if (header) header.after(feedback);
+    }
+    if (keyword) {
+        feedback.innerHTML = `<i class="fas fa-search"></i> Tìm kiếm "<strong>${keyword}</strong>": tìm thấy <strong>${count}</strong> sự kiện`;
+        feedback.style.display = 'flex';
+    } else {
+        feedback.style.display = 'none';
+    }
 }

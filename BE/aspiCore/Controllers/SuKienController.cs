@@ -40,6 +40,17 @@ namespace aspiCore.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Tìm kiếm và lọc sự kiện theo nhiều tiêu chí.
+        /// GET /api/SuKien/search?keyword=...&idDanhMuc=...&idDiaDiem=...&trangThai=...&tuNgay=...&denNgay=...
+        /// </summary>
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<SuKienDto>>> Search([FromQuery] SuKienQueryDto query)
+        {
+            var result = await _suKienService.SearchAsync(query);
+            return Ok(result);
+        }
+
         [HttpPost]
         public async Task<ActionResult<SuKienDto>> Create([FromBody] CreateSuKienDto dto)
         {
