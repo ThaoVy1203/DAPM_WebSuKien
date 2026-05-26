@@ -1,0 +1,268 @@
+/* BGH Reports Page Styles */
+
+/* Chart Card */
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.chart-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.chart-header h3 i {
+    color: #3b82f6;
+}
+
+.filter-select-small {
+    padding: 6px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: #374151;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-select-small:hover {
+    border-color: #3b82f6;
+}
+
+.filter-select-small:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Table Styles */
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 16px;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.report-table thead {
+    background: #f9fafb;
+}
+
+.report-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.report-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+}
+
+.report-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.report-table tbody td {
+    padding: 14px 16px;
+    color: #4b5563;
+    vertical-align: middle;
+}
+
+.report-table tbody td:first-child {
+    font-weight: 600;
+    color: #6b7280;
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-purple {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+/* Star Rating */
+.report-table td i.fa-star,
+.report-table td i.far.fa-star {
+    font-size: 0.875rem;
+    margin-right: 2px;
+}
+
+/* Button Small */
+.btn-secondary-small {
+    padding: 6px 14px;
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary-small:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+/* Metric Card */
+.metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.metric-header i {
+    font-size: 1.25rem;
+    color: #3b82f6;
+}
+
+.metric-header h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.metric-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.metric-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.metric-value.success {
+    color: #059669;
+}
+
+.metric-value.danger {
+    color: #dc2626;
+}
+
+/* Stat Trend */
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.stat-trend.positive {
+    color: #059669;
+}
+
+.stat-trend.negative {
+    color: #dc2626;
+}
+
+.stat-trend i {
+    font-size: 0.625rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .report-table {
+        font-size: 0.75rem;
+    }
+
+    .report-table thead th,
+    .report-table tbody td {
+        padding: 10px 12px;
+    }
+
+    .metric-card {
+        padding: 16px;
+    }
+}
+
+/* Chart Canvas */
+canvas {
+    max-height: 300px;
+}

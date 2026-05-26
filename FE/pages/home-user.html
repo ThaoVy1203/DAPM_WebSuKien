@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/home-user.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* User menu dropdown */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            position: relative;
+            padding: 6px 12px;
+            border-radius: 40px;
+            background: #f0f2f5;
+            transition: background 0.2s;
+        }
+        .user-menu:hover { background: #e4e6e9; }
+        .user-menu .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-name-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            min-width: 210px;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .user-dropdown a:hover { background: #f0f2f5; }
+        .user-dropdown hr { margin: 0; border: none; border-top: 1px solid #eee; }
+        .user-dropdown a i { width: 16px; color: #0D5A9C; }
+        #logoutBtn i { color: #e53e3e !important; }
+        #logoutBtn { color: #e53e3e; }
+        #logoutBtn:hover { background: #fff5f5; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-wrapper">
+                <div class="logo">
+                    <img src="../images/logo.png" alt="UTE Events" onerror="this.src='https://via.placeholder.com/150x50/0D5A9C/FFFFFF?text=UTE+Events'">
+                </div>
+                <nav class="nav-menu">
+                    <a href="home-user.html" class="nav-link active">Trang chủ</a>
+                    <a href="events.html" class="nav-link">Sự kiện</a>
+                    <a href="calender.html" class="nav-link">Lịch cá nhân</a>
+                    <a href="notifications.html" class="nav-link">Thông báo</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn-notification" onclick="window.location.href='notifications.html'" title="Thông báo">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <!-- User menu - được JS cập nhật -->
+                    <div class="user-menu" id="userMenuWrapper">
+                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="User" class="user-avatar">
+                        <span id="userName" class="user-name-text">Đang tải...</span>
+                        <i class="fas fa-chevron-down"></i>
+                        <!-- Dropdown -->
+                        <div class="user-dropdown" id="userDropdown" style="display:none;">
+                            <a href="profile.html"><i class="fas fa-user"></i> Hồ sơ cá nhân</a>
+                            <a href="my-tickets.html"><i class="fas fa-ticket-alt"></i> Vé của tôi</a>
+                            <a href="history.html"><i class="fas fa-history"></i> Lịch sử tham gia</a>
+                            <a href="notifications.html"><i class="fas fa-bell"></i> Thông báo</a>
+                            <hr>
+                            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-background">
+            <img src="../images/UTE Campus Collaboration.png" alt="UTE Campus" onerror="this.src='https://via.placeholder.com/1920x600/0D5A9C/FFFFFF?text=UTE+Campus'">
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Hệ thống Quản lý Sự kiện UTE - Nâng tầm trải nghiệm sinh viên
+                </h1>
+                <p class="hero-description">
+                    Khám phá hàng trăm sự kiện học thuật, văn hóa và cộng đồng tại<br>
+                    Trường Đại học Sư phạm Kỹ thuật Đà Nẵng. Kết nối, học hỏi và phát triển<br>
+                    cùng cộng đồng sinh viên năng động.
+                </p>
+                <div class="hero-buttons">
+                    <a href="events.html" class="btn btn-primary">
+                        <i class="fas fa-calendar-check"></i>
+                        Khám phá sự kiện
+                    </a>
+                    <a href="calender.html" class="btn btn-outline">
+                        <i class="fas fa-calendar-alt"></i>
+                        Xem lịch của tôi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">100+</div>
+                    <div class="stat-label">SỰ KIỆN MỖI NĂM</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">12,000+</div>
+                    <div class="stat-label">SINH VIÊN THAM GIA</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">CÁC LẦN TỔ CHỨC</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Events Section -->
+    <section class="featured-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Sự kiện nổi bật</h2>
+                <p>Cùng tìm hiểu những hoạt động nổi bật đang diễn ra tại trường</p>
+                <a href="events.html" class="link-view-all">Xem tất cả →</a>
+            </div>
+            
+            <div class="events-grid">
+                <div class="event-card featured">
+                    <div class="event-badge">Sắp diễn ra</div>
+                    <img src="../images/UTE Tech Showcase.png" alt="UTE Tech Showcase 2024" onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=UTE+Tech+2024'">
+                    <div class="event-card-content">
+                        <h3>UTE Tech Showcase 2024</h3>
+                        <div class="event-meta">
+                            <span><i class="far fa-calendar"></i> 15/12/2024 - 20/12</span>
+                            <span><i class="fas fa-map-marker-alt"></i> Hội trường A - Tòa nhà chính</span>
+                        </div>
+                        <a href="event-detail.html" class="btn-view-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-badge blue">Đang diễn ra</div>
+                    <img src="../images/Skills Talk.png" alt="Top đầm tay công Thế kỷ 21" onerror="this.src='https://via.placeholder.com/400x250/1976D2/FFFFFF?text=Workshop'">
+                    <div class="event-card-content">
+                        <h3>Top đầm tay công Thế kỷ 21</h3>
+                        <div class="event-meta">
+                            <span><i class="far fa-calendar"></i> 10/12/2024 - 12/12</span>
+                            <span><i class="fas fa-map-marker-alt"></i> Phòng hội thảo A2, Tòa nhà</span>
+                        </div>
+                        <a href="event-detail.html" class="btn-view-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-badge green">Đã kết thúc</div>
+                    <img src="../images/Culture Festival.png" alt="Ngày hội Văn hóa UTE" onerror="this.src='https://via.placeholder.com/400x250/10B981/FFFFFF?text=Culture+Day'">
+                    <div class="event-card-content">
+                        <h3>Ngày hội Văn hóa UTE</h3>
+                        <div class="event-meta">
+                            <span><i class="far fa-calendar"></i> 01/12/2024 - 03/12</span>
+                            <span><i class="fas fa-map-marker-alt"></i> Sân vận động trường</span>
+                        </div>
+                        <a href="event-detail.html" class="btn-view-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="section-header centered">
+                <h2>Lợi ích quản lý</h2>
+                <p>Hệ thống quản lý hoạt động sự kiện dành cho sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+            </div>
+
+            <div class="features-grid">
+                <!-- For Students -->
+                <div class="feature-column">
+                    <div class="feature-header">
+                        <i class="fas fa-user-graduate"></i>
+                        <h3>Dành cho Người tham gia</h3>
+                    </div>
+                    <p class="feature-intro">Trải nghiệm tham gia sự kiện dễ dàng hơn</p>
+                    
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">1</div>
+                            <div class="feature-text">
+                                <h4>Dễ dàng đăng ký</h4>
+                                <p>Thao tác nhanh chóng qua QR Code hoặc link trường người tham gia đăng ký tức thì</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">2</div>
+                            <div class="feature-text">
+                                <h4>Thông tin rõ ràng và cập nhật</h4>
+                                <p>Nhận thông báo về thời gian, địa điểm, nội dung sự kiện kịp thời qua email hoặc ứng dụng</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">3</div>
+                            <div class="feature-text">
+                                <h4>Tự động hóa theo dõi thời gian</h4>
+                                <p>Hệ thống tự động ghi nhận thời gian tham gia, giúp sinh viên dễ dàng theo dõi điểm rèn luyện</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- For Organizers -->
+                <div class="feature-column highlight">
+                    <div class="feature-header">
+                        <i class="fas fa-users-cog"></i>
+                        <h3>Dành cho Nhà tổ chức</h3>
+                    </div>
+                    <p class="feature-intro">Quản lý sự kiện hiệu quả và chuyên nghiệp</p>
+                    
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">1</div>
+                            <div class="feature-text">
+                                <h4>Tạo và quản lý sự kiện dễ dàng</h4>
+                                <p>Thiết lập sự kiện nhanh chóng với giao diện thân thiện, tùy chỉnh linh hoạt các yếu tố như thời gian, địa điểm và nội dung</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">2</div>
+                            <div class="feature-text">
+                                <h4>Theo dõi và báo cáo chi tiết</h4>
+                                <p>Xem số lượng người đăng ký, tỷ lệ tham gia và các chỉ số quan trọng khác để đánh giá hiệu quả</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">3</div>
+                            <div class="feature-text">
+                                <h4>Tự động hóa quy trình</h4>
+                                <p>Từ gửi thông báo, nhắc lịch đến check-in, hệ thống tự động hóa các công việc lặp lại, tiết kiệm thời gian và công sức cho nhà tổ chức</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partners Section -->
+    <section class="partners-section">
+        <div class="container">
+            <h3>ĐỐI TÁC & ĐƠN VỊ ĐỒNG HÀNH</h3>
+            <div class="partners-grid">
+                <div class="partner-logo">KHOA ĐIỆN</div>
+                <div class="partner-logo">KHOA CƠ KHÍ</div>
+                <div class="partner-logo">KHOA CNTT</div>
+                <div class="partner-logo">INTEL VIETNAM</div>
+                <div class="partner-logo">FPT SOFTWARE</div>
+                <div class="partner-logo">BOSCH</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/home-user.js"></script>
+</body>
+</html>

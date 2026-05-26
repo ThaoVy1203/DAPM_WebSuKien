@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Quản trị hệ thống</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/ctsv-approval.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">5</span>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Admin</span>
+                    <span class="user-role">Quản trị viên hệ thống</span>
+                </div>
+                <img src="../images/avatar-admin.jpg" alt="Admin" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin-users.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Tài khoản</span>
+                </a>
+                <a href="admin-roles.html" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Phân quyền</span>
+                </a>
+                <a href="admin-event-categories.html" class="nav-item">
+                    <i class="fas fa-tags"></i>
+                    <span>Danh mục SK</span>
+                </a>
+                <a href="admin-locations.html" class="nav-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Địa điểm</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Tổng quan hệ thống</h1>
+                    <p>Thống kê và giám sát hoạt động của hệ thống</p>
+                </div>
+                <div class="header-actions">
+                    <select class="filter-select" id="timePeriod" style="margin-right: 12px;">
+                        <option value="today">Hôm nay</option>
+                        <option value="week">Tuần này</option>
+                        <option value="month" selected>Tháng này</option>
+                        <option value="year">Năm nay</option>
+                    </select>
+                    <button class="btn-secondary" onclick="exportReport()">
+                        <i class="fas fa-file-export"></i>
+                        Xuất báo cáo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Stats -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">1,248</div>
+                    <div class="stat-label">NGƯỜI DÙNG</div>
+                    <div class="stat-description">Tổng số tài khoản</div>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +45 người dùng mới
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">SỰ KIỆN</div>
+                    <div class="stat-description">Tổng số sự kiện</div>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +12 sự kiện mới
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stat-number">28</div>
+                    <div class="stat-label">ĐỊA ĐIỂM</div>
+                    <div class="stat-description">Cơ sở vật chất</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-minus"></i> Không thay đổi
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">DANH MỤC</div>
+                    <div class="stat-description">Loại sự kiện</div>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +2 danh mục mới
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">VAI TRÒ</div>
+                    <div class="stat-description">Phân quyền hệ thống</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                    <div class="stat-header">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-number">98.5%</div>
+                    <div class="stat-label">UPTIME</div>
+                    <div class="stat-description">Thời gian hoạt động</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <!-- User Growth Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-user-plus"></i> Tăng trưởng người dùng</h3>
+                        <select class="filter-select-small">
+                            <option>6 tháng gần đây</option>
+                            <option>12 tháng gần đây</option>
+                        </select>
+                    </div>
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+
+                <!-- Event Status Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie"></i> Trạng thái sự kiện</h3>
+                    </div>
+                    <canvas id="eventStatusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity Tables -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <!-- Recent Users -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-user-clock"></i> Người dùng mới</h3>
+                        <button class="btn-secondary-small" onclick="window.location.href='admin-users.html'">Xem tất cả</button>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <img src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=3b82f6&color=fff" alt="User" class="activity-avatar">
+                            <div class="activity-info">
+                                <div class="activity-name">Nguyễn Văn A</div>
+                                <div class="activity-desc">Sinh viên - MSSV: 102210001</div>
+                            </div>
+                            <div class="activity-time">5 phút trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <img src="https://ui-avatars.com/api/?name=Tran+Thi+B&background=8b5cf6&color=fff" alt="User" class="activity-avatar">
+                            <div class="activity-info">
+                                <div class="activity-name">Trần Thị B</div>
+                                <div class="activity-desc">Sinh viên - MSSV: 102210002</div>
+                            </div>
+                            <div class="activity-time">15 phút trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <img src="https://ui-avatars.com/api/?name=Le+Van+C&background=f59e0b&color=fff" alt="User" class="activity-avatar">
+                            <div class="activity-info">
+                                <div class="activity-name">Lê Văn C</div>
+                                <div class="activity-desc">Giảng viên - Khoa CNTT</div>
+                            </div>
+                            <div class="activity-time">1 giờ trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <img src="https://ui-avatars.com/api/?name=Pham+Thi+D&background=ec4899&color=fff" alt="User" class="activity-avatar">
+                            <div class="activity-info">
+                                <div class="activity-name">Phạm Thị D</div>
+                                <div class="activity-desc">Sinh viên - MSSV: 102210003</div>
+                            </div>
+                            <div class="activity-time">2 giờ trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <img src="https://ui-avatars.com/api/?name=Vo+Van+E&background=10b981&color=fff" alt="User" class="activity-avatar">
+                            <div class="activity-info">
+                                <div class="activity-name">Võ Văn E</div>
+                                <div class="activity-desc">Cán bộ - Phòng CTSV</div>
+                            </div>
+                            <div class="activity-time">3 giờ trước</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Activities -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-history"></i> Hoạt động gần đây</h3>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #dbeafe; color: #1e40af;">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="activity-info">
+                                <div class="activity-name">Tạo tài khoản mới</div>
+                                <div class="activity-desc">Admin đã tạo 5 tài khoản sinh viên</div>
+                            </div>
+                            <div class="activity-time">10 phút trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #d1fae5; color: #065f46;">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="activity-info">
+                                <div class="activity-name">Phê duyệt sự kiện</div>
+                                <div class="activity-desc">BGH đã phê duyệt "Hội thảo Khởi nghiệp"</div>
+                            </div>
+                            <div class="activity-time">30 phút trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #fef3c7; color: #92400e;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="activity-info">
+                                <div class="activity-name">Cập nhật địa điểm</div>
+                                <div class="activity-desc">Admin đã chỉnh sửa thông tin "Hội trường A"</div>
+                            </div>
+                            <div class="activity-time">1 giờ trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #ede9fe; color: #5b21b6;">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <div class="activity-info">
+                                <div class="activity-name">Phân quyền</div>
+                                <div class="activity-desc">Admin đã gán vai trò "BTC" cho Nguyễn Văn A</div>
+                            </div>
+                            <div class="activity-time">2 giờ trước</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: #fee2e2; color: #991b1b;">
+                                <i class="fas fa-trash"></i>
+                            </div>
+                            <div class="activity-info">
+                                <div class="activity-name">Xóa danh mục</div>
+                                <div class="activity-desc">Admin đã xóa danh mục "Sự kiện test"</div>
+                            </div>
+                            <div class="activity-time">3 giờ trước</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="chart-card" style="margin-bottom: 24px;">
+                <div class="chart-header">
+                    <h3><i class="fas fa-server"></i> Trạng thái hệ thống</h3>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 10px 0;">
+                    <div class="system-status-item">
+                        <div class="status-header">
+                            <i class="fas fa-database"></i>
+                            <span>Database</span>
+                        </div>
+                        <div class="status-indicator online">
+                            <span class="status-dot"></span>
+                            <span>Hoạt động bình thường</span>
+                        </div>
+                        <div class="status-details">
+                            <span>Kết nối: 45/100</span>
+                            <span>Dung lượng: 2.8GB/10GB</span>
+                        </div>
+                    </div>
+                    <div class="system-status-item">
+                        <div class="status-header">
+                            <i class="fas fa-server"></i>
+                            <span>API Server</span>
+                        </div>
+                        <div class="status-indicator online">
+                            <span class="status-dot"></span>
+                            <span>Hoạt động bình thường</span>
+                        </div>
+                        <div class="status-details">
+                            <span>CPU: 35%</span>
+                            <span>RAM: 4.2GB/8GB</span>
+                        </div>
+                    </div>
+                    <div class="system-status-item">
+                        <div class="status-header">
+                            <i class="fas fa-cloud"></i>
+                            <span>Storage</span>
+                        </div>
+                        <div class="status-indicator online">
+                            <span class="status-dot"></span>
+                            <span>Hoạt động bình thường</span>
+                        </div>
+                        <div class="status-details">
+                            <span>Files: 1,248</span>
+                            <span>Dung lượng: 15GB/50GB</span>
+                        </div>
+                    </div>
+                    <div class="system-status-item">
+                        <div class="status-header">
+                            <i class="fas fa-envelope"></i>
+                            <span>Email Service</span>
+                        </div>
+                        <div class="status-indicator online">
+                            <span class="status-dot"></span>
+                            <span>Hoạt động bình thường</span>
+                        </div>
+                        <div class="status-details">
+                            <span>Đã gửi: 1,245</span>
+                            <span>Hàng đợi: 12</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/admin-dashboard.js"></script>
+    <script src="../js/btc-logout.js"></script>
+</body>
+</html>

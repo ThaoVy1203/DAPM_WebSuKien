@@ -1,0 +1,466 @@
+/* BTC Authorization Styles */
+
+/* Disabled sidebar items */
+.sidebar .nav-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: auto;
+    position: relative;
+}
+
+.sidebar .nav-item.disabled::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+.sidebar .nav-item.disabled i {
+    color: #9CA3AF;
+}
+
+.sidebar .nav-item.disabled span {
+    color: #9CA3AF;
+}
+
+.sidebar .nav-item.disabled:hover {
+    background: transparent;
+    transform: none;
+}
+
+/* Lock icon for disabled items */
+.sidebar .nav-item.disabled::before {
+    content: '\f023';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9CA3AF;
+    font-size: 12px;
+    z-index: 1;
+}
+
+/* Permission denied toast */
+.permission-toast {
+    position: fixed;
+    top: 80px;
+    right: -400px;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    min-width: 350px;
+    max-width: 400px;
+    transition: right 0.3s ease;
+}
+
+.permission-toast.show {
+    right: 20px;
+}
+
+.permission-toast i {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.permission-toast span {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* Access denied page */
+.access-denied-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 40px;
+}
+
+.access-denied-icon {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.access-denied-icon i {
+    font-size: 56px;
+    color: #EF4444;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.access-denied-container h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 16px;
+}
+
+.access-denied-container p {
+    font-size: 16px;
+    color: #6B7280;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.access-denied-detail {
+    font-size: 14px;
+    color: #EF4444;
+    font-weight: 600;
+    margin-bottom: 32px;
+}
+
+.access-denied-container .btn-primary {
+    padding: 12px 24px;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Role badge in user profile */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.role-badge.leader {
+    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+    color: #78350F;
+}
+
+.role-badge.member {
+    background: linear-gradient(135deg, #93C5FD 0%, #60A5FA 100%);
+    color: #1E3A8A;
+}
+
+.role-badge i {
+    font-size: 10px;
+}
+
+/* Disabled buttons */
+button.disabled,
+.btn-primary.disabled,
+.btn-secondary.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Permission indicator on cards */
+.permission-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #EF4444;
+    font-size: 14px;
+}
+
+/* Restricted content overlay */
+.restricted-overlay {
+    position: relative;
+}
+
+.restricted-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    z-index: 10;
+}
+
+/* Member view indicators */
+.member-view-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #DBEAFE;
+    color: #1E40AF;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.member-view-badge i {
+    font-size: 14px;
+}
+
+/* Tooltip for disabled items */
+.sidebar .nav-item.disabled[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 12px;
+    padding: 8px 12px;
+    background: #1F2937;
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .permission-toast {
+        min-width: auto;
+        max-width: calc(100% - 40px);
+        right: -100%;
+    }
+    
+    .permission-toast.show {
+        right: 20px;
+    }
+    
+    .access-denied-container {
+        padding: 20px;
+    }
+    
+    .access-denied-icon {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .access-denied-icon i {
+        font-size: 40px;
+    }
+    
+    .access-denied-container h1 {
+        font-size: 24px;
+    }
+    
+    .role-badge {
+        font-size: 10px;
+        padding: 3px 10px;
+    }
+}
+
+/* Animation for restricted items */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.sidebar .nav-item.disabled:active {
+    animation: shake 0.3s ease;
+}
+
+/* Leader-only badge on features */
+.leader-only-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: #FEF3C7;
+    color: #92400E;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+}
+
+.leader-only-badge i {
+    font-size: 8px;
+}
+
+/* Filter indicator for members */
+.filtered-view-notice {
+    background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+    border-left: 4px solid #3B82F6;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filtered-view-notice i {
+    font-size: 20px;
+    color: #1E40AF;
+}
+
+.filtered-view-notice span {
+    font-size: 14px;
+    color: #1E40AF;
+    font-weight: 600;
+}
+
+/* Member view notice - special styling */
+.member-view-notice {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border-left: 4px solid #F59E0B;
+}
+
+.member-view-notice i {
+    color: #92400E;
+}
+
+.member-view-notice span {
+    color: #92400E;
+}
+
+/* Task status update modal */
+#taskStatusUpdateModal .modal-content {
+    max-width: 500px;
+}
+
+#taskStatusUpdateModal .form-group {
+    margin-bottom: 20px;
+}
+
+#taskStatusUpdateModal .form-group:last-child {
+    margin-bottom: 0;
+}
+
+#taskStatusUpdateModal label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1A1A1A;
+    margin-bottom: 8px;
+}
+
+#taskStatusUpdateModal .required {
+    color: #EF4444;
+}
+
+#taskStatusUpdateModal select,
+#taskStatusUpdateModal input,
+#taskStatusUpdateModal textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+}
+
+#taskStatusUpdateModal select:focus,
+#taskStatusUpdateModal input:focus,
+#taskStatusUpdateModal textarea:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#taskStatusUpdateModal textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Member edit notice in modal */
+.member-edit-notice {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border-left: 4px solid #F59E0B;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.member-edit-notice i {
+    font-size: 18px;
+    color: #92400E;
+    flex-shrink: 0;
+}
+
+.member-edit-notice span {
+    font-size: 13px;
+    color: #92400E;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* Disabled form fields styling */
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background-color: #F3F4F6 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+/* Update status button styling */
+.btn-update-status {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.btn-update-status:hover {
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}

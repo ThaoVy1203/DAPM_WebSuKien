@@ -1,0 +1,877 @@
+/* Budget Management Page Styles */
+
+/* Ensure CSS Variables are available */
+:root {
+    --primary-color: #0D5A9C;
+    --primary-dark: #094578;
+    --primary-light: #1976D2;
+    --secondary-color: #F5F7FA;
+    --text-dark: #1A1A1A;
+    --text-gray: #6B7280;
+    --text-light: #9CA3AF;
+    --border-color: #E5E7EB;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --error-color: #EF4444;
+    --white: #FFFFFF;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Base Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-gray);
+    cursor: pointer;
+    padding: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.btn-close:hover {
+    background: var(--secondary-color);
+    color: var(--error-color);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--secondary-color);
+}
+
+/* Form Styles */
+.form-section {
+    margin-bottom: 32px;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.form-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.required {
+    color: var(--error-color);
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+    background: var(--white);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 90, 156, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Modal Footer Buttons */
+.btn-cancel-modal {
+    padding: 10px 20px;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-gray);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-cancel-modal:hover {
+    background: var(--secondary-color);
+    border-color: var(--text-gray);
+}
+
+.btn-save-draft {
+    padding: 10px 20px;
+    background: var(--secondary-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-save-draft:hover {
+    background: var(--text-gray);
+    color: var(--white);
+    border-color: var(--text-gray);
+}
+
+.btn-submit {
+    padding: 10px 20px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    color: var(--white);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-submit:hover {
+    background: var(--primary-dark);
+}
+
+/* Budget Overview Cards */
+.budget-overview {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.overview-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: all 0.3s;
+}
+
+.overview-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.overview-card.total .card-icon {
+    background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+    color: var(--white);
+}
+
+.overview-card.spent .card-icon {
+    background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%);
+    color: var(--white);
+}
+
+.overview-card.remaining .card-icon {
+    background: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%);
+    color: var(--white);
+}
+
+.overview-card.pending .card-icon {
+    background: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
+    color: var(--white);
+}
+
+.card-content {
+    flex: 1;
+}
+
+.card-content h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-gray);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-content .amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.card-content .sub-text {
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+/* Budget Table */
+.budget-table-wrapper {
+    overflow-x: auto;
+}
+
+.budget-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.budget-table thead {
+    background: var(--secondary-color);
+}
+
+.budget-table th {
+    text-align: left;
+    padding: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.budget-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.budget-table tbody tr:hover {
+    background: var(--secondary-color);
+}
+
+.budget-table td {
+    padding: 16px;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.event-info h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.event-date {
+    font-size: 12px;
+    color: var(--text-gray);
+}
+
+.budget-table td strong {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Progress Container */
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--secondary-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--warning-color) 0%, var(--success-color) 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.success {
+    background: var(--success-color);
+}
+
+.progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-gray);
+    min-width: 45px;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.approved {
+    background: #D1FAE5;
+    color: var(--success-color);
+}
+
+.status-badge.pending {
+    background: #FEF3C7;
+    color: var(--warning-color);
+}
+
+.status-badge.rejected {
+    background: #FEE2E2;
+    color: var(--error-color);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    background: none;
+    border: 1px solid var(--border-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.btn-action:hover {
+    background: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+/* Filter Select */
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--white);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Modal Large */
+.modal-content.modal-large {
+    max-width: 1000px;
+}
+
+.modal-content.modal-small {
+    max-width: 500px;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-add-item {
+    padding: 8px 16px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 6px;
+    color: var(--white);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.btn-add-item:hover {
+    background: var(--primary-dark);
+}
+
+/* Budget Items Table */
+.budget-items-container {
+    overflow-x: auto;
+    margin-bottom: 16px;
+}
+
+.budget-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.budget-items-table thead {
+    background: var(--secondary-color);
+}
+
+.budget-items-table th {
+    text-align: left;
+    padding: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.budget-items-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--white);
+}
+
+.budget-items-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.budget-items-table input,
+.budget-items-table select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: var(--white);
+}
+
+.budget-items-table input:focus,
+.budget-items-table select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(13, 90, 156, 0.1);
+}
+
+.budget-items-table input[type="number"] {
+    text-align: right;
+}
+
+.item-total {
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: right;
+}
+
+.btn-remove-item {
+    background: none;
+    border: none;
+    color: var(--error-color);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 4px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.btn-remove-item:hover {
+    background: #FEE2E2;
+}
+
+.btn-remove-item i {
+    font-size: 14px;
+}
+
+/* Budget Summary */
+.budget-summary {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 16px;
+    border: 2px solid var(--primary-color);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.summary-row span:first-child {
+    color: var(--text-dark);
+}
+
+.summary-total {
+    font-size: 28px;
+    color: var(--primary-color);
+}
+
+/* Budget Detail Modal */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.detail-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.detail-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.stat-item {
+    background: var(--secondary-color);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.stat-value.spent {
+    color: var(--error-color);
+}
+
+.stat-value.remaining {
+    color: var(--success-color);
+}
+
+.detail-section {
+    margin-bottom: 32px;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.detail-section h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.detail-table thead {
+    background: var(--secondary-color);
+}
+
+.detail-table th {
+    text-align: left;
+    padding: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.detail-table td {
+    padding: 12px;
+    font-size: 14px;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.detail-table td strong {
+    color: var(--primary-color);
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.category-badge.venue {
+    background: #E0E7FF;
+    color: #4F46E5;
+}
+
+.category-badge.food {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.category-badge.decoration {
+    background: #FCE7F3;
+    color: #DB2777;
+}
+
+.category-badge.equipment {
+    background: #DBEAFE;
+    color: #2563EB;
+}
+
+.category-badge.marketing {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.category-badge.staff {
+    background: #D1FAE5;
+    color: #059669;
+}
+
+.category-badge.other {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.detail-section p {
+    font-size: 14px;
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .budget-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .detail-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .budget-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .budget-table-wrapper {
+        overflow-x: scroll;
+    }
+
+    .budget-table {
+        min-width: 800px;
+    }
+
+    .budget-items-table {
+        min-width: 700px;
+    }
+
+    .modal-content.modal-large {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+    }
+}
+
+/* Additional Modal Fixes */
+.modal-content.modal-large .modal-body {
+    max-height: calc(90vh - 180px);
+    overflow-y: auto;
+}
+
+/* Ensure proper z-index layering */
+.modal {
+    z-index: 9999;
+}
+
+/* Smooth scrolling for modal body */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--secondary-color);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--text-light);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-gray);
+}
+
+/* Fix for form section spacing */
+.form-section .section-header h3 {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Ensure buttons in modal footer are visible */
+.modal-footer .btn-primary {
+    padding: 10px 20px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    color: var(--white);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modal-footer .btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+/* Fix table cell alignment */
+.budget-items-table td:last-child {
+    text-align: center;
+}

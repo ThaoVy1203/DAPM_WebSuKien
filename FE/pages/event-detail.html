@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Chi tiết sự kiện - UTE Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/event-detail.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-wrapper">
+                <div class="logo">
+                    <img src="../images/logo.png" alt="UTE Events" onerror="this.src='https://via.placeholder.com/150x50/0D5A9C/FFFFFF?text=UTE+Events'">
+                </div>
+                <nav class="nav-menu">
+                    <a href="home-user.html" class="nav-link">Trang chủ</a>
+                    <a href="events.html" class="nav-link active">Sự kiện</a>
+                    <a href="calender.html" class="nav-link">Lịch cá nhân</a>
+                    <a href="notifications.html" class="nav-link">Thông báo</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn-notification" onclick="window.location.href='notifications.html'" title="Thông báo">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <div class="user-menu" id="userMenuWrapper">
+                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="User" class="user-avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                        <span id="userName" style="font-size:14px;font-weight:600;color:#1a1a2e;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">...</span>
+                        <i class="fas fa-chevron-down" style="font-size:12px;color:#666;"></i>
+                        <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:210px;z-index:9999;overflow:hidden;">
+                            <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;"></i> Hồ sơ cá nhân</a>
+                            <a href="my-tickets.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;width:16px;"></i> Vé của tôi</a>
+                            <a href="history.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;width:16px;"></i> Lịch sử tham gia</a>
+                            <a href="notifications.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-bell" style="color:#0D5A9C;width:16px;"></i> Thông báo</a>
+                            <hr style="margin:0;border:none;border-top:1px solid #eee;">
+                            <a href="#" id="logoutBtn" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;width:16px;"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="event-hero">
+        <div class="hero-image-wrapper">
+            <img id="eventBanner" src="../images/UTE Tech Conference Banner.png" alt="Event Banner" onerror="this.src='https://via.placeholder.com/1920x400/0D5A9C/FFFFFF?text=Event+Banner'">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="event-badges">
+                    <span class="badge badge-status" id="eventStatus">SẮP DIỄN RA SỚM</span>
+                    <span class="badge badge-type" id="eventSlot">CÒN CHỖ TRỐNG</span>
+                </div>
+                <h1 class="event-title" id="eventTitle">UTE Innovate 2024: Tương lai của Trí tuệ Nhân tạo trong Kỹ thuật</h1>
+                <div class="event-quick-info">
+                    <span><i class="far fa-calendar"></i> <span id="eventDate">Thứ Tư, ngày 13, 2024</span></span>
+                    <span><i class="far fa-clock"></i> <span id="eventTime">08:30 - 11:30</span></span>
+                    <span><i class="fas fa-map-marker-alt"></i> <span id="eventLocation">Hội trường A - Tòa trung tâm UTE</span></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-layout">
+                <!-- Left Content -->
+                <div class="event-details">
+                    <!-- About Event -->
+                    <section class="detail-section">
+                        <h2>Mô tả sự kiện</h2>
+                        <p id="eventDescription">Hội thảo về trí tuệ nhân tạo dành cho sinh viên ngành kỹ thuật tại UTE. Hội thảo UTE Innovate 2024 là nơi quy tụ những chuyên gia hàng đầu trong lĩnh vực AI. Mang đến cái nhìn bao quát về cách mà AI đang thay đổi ngành kỹ thuật và định hình tương lai nghề nghiệp của sinh viên.</p>
+                        <p>Người tham gia sẽ có cơ hội trải nghiệm các buổi toạ đàm chuyên sâu, tham gia phiên thảo luận về các xu hướng mới nhất, kết nối với các nhà tuyển dụng hàng đầu và khám phá cơ hội nghề nghiệp.</p>
+                    </section>
+
+                    <!-- Schedule -->
+                    <section class="detail-section">
+                        <h2>Lịch trình chi tiết</h2>
+                        <div class="schedule-list">
+                            <div class="schedule-item">
+                                <div class="schedule-time">
+                                    <span class="time-badge">08:00 - 08:30</span>
+                                </div>
+                                <div class="schedule-content">
+                                    <h4>Đón tiếp & Check-in</h4>
+                                    <p>Nhận tài liệu và vào sẵn sàng cho sự kiện (mặc).</p>
+                                </div>
+                            </div>
+                            <div class="schedule-item">
+                                <div class="schedule-time">
+                                    <span class="time-badge">08:30 - 09:30</span>
+                                </div>
+                                <div class="schedule-content">
+                                    <h4>Keynote: AI trong Kỹ thuật Hiện đại</h4>
+                                    <p>Diễn giả chính: TS. Nguyễn Văn A</p>
+                                </div>
+                            </div>
+                            <div class="schedule-item">
+                                <div class="schedule-time">
+                                    <span class="time-badge">09:45 - 11:00</span>
+                                </div>
+                                <div class="schedule-content">
+                                    <h4>Panel Discussion: Cơ hội nghề nghiệp</h4>
+                                    <p>Thảo luận cùng các chuyên gia từ doanh nghiệp</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Speakers -->
+                    <section class="detail-section">
+                        <h2>Diễn giả & Khách mời</h2>
+                        <div class="speakers-grid">
+                            <div class="speaker-card">
+                                <img src="../images/avatar1.jpg" alt="Speaker" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Van+A&background=0D5A9C&color=fff'">
+                                <div class="speaker-info">
+                                    <h4>TS. Nguyễn Văn A</h4>
+                                    <p>Giám đốc Nghiên cứu AI</p>
+                                </div>
+                            </div>
+                            <div class="speaker-card">
+                                <img src="../images/avatar2.jpg" alt="Speaker" onerror="this.src='https://ui-avatars.com/api/?name=Tran+Thi+B&background=1976D2&color=fff'">
+                                <div class="speaker-info">
+                                    <h4>Ms. Trần Thị B</h4>
+                                    <p>Trưởng bộ phận, Viettel</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Q&A Section -->
+                    <section class="detail-section">
+                        <h2>Hỏi đáp & Thảo luận</h2>
+                        <div class="qa-section">
+                            <div class="qa-item">
+                                <div class="qa-avatar">
+                                    <span>LD</span>
+                                </div>
+                                <div class="qa-content">
+                                    <h5>Lê Duy (SV Khoa Cơ khí)</h5>
+                                    <p>Sự kiện có cấp chứng nhận tham gia cho sinh viên không? Điểm rèn luyện được tính như thế nào?</p>
+                                    <div class="qa-actions">
+                                        <button class="qa-btn"><i class="far fa-thumbs-up"></i> Thích</button>
+                                        <button class="qa-btn"><i class="far fa-comment"></i> Trả lời</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="qa-item">
+                                <div class="qa-avatar" id="qaUserAvatar">
+                                    <img src="https://ui-avatars.com/api/?name=User&background=10B981&color=fff" alt="User">
+                                </div>
+                                <div class="qa-content">
+                                    <textarea id="qaTextarea" placeholder="Gửi câu hỏi của bạn tại đây..."></textarea>
+                                </div>
+                            </div>
+                            <div id="qaResult" style="display:none;padding:8px 12px;border-radius:8px;margin-bottom:8px;font-size:14px;"></div>
+                            <button class="btn-submit-question" id="btnSubmitQuestion">Gửi câu hỏi</button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Sidebar - Registration -->
+                <aside class="registration-sidebar">
+                    <div class="registration-card">
+                        <h3>Quyền lợi sinh viên</h3>
+                        <div class="benefits-list">
+                            <div class="benefit-item">
+                                <i class="fas fa-certificate"></i>
+                                <span>Giấy chứng nhận tham gia + Certificate</span>
+                            </div>
+                            <div class="benefit-item">
+                                <i class="fas fa-users"></i>
+                                <span>Teamwork & Social giải trí</span>
+                            </div>
+                        </div>
+
+                        <div class="registration-form">
+                            <h4>Đăng ký tham gia</h4>
+                            <span class="form-note" id="registeredCount">Đang tải...</span>
+
+                            <!-- Trạng thái đăng ký hiện tại (ẩn mặc định) -->
+                            <div id="registrationStatus" style="display:none; margin-bottom:16px; padding:14px; border-radius:10px; text-align:center;">
+                                <div id="statusIcon" style="font-size:28px; margin-bottom:6px;"></div>
+                                <div id="statusText" style="font-weight:700; font-size:15px;"></div>
+                                <div id="statusSub" style="font-size:13px; color:#666; margin-top:4px;"></div>
+                            </div>
+
+                            <!-- Form đăng ký (ẩn khi đã đăng ký) -->
+                            <div id="registerForm">
+                                <div class="form-group">
+                                    <label>Họ và Tên</label>
+                                    <input type="text" id="regName" placeholder="Nguyễn Văn Nam">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>MSSV / Mã SSO</label>
+                                    <input type="text" id="regMSSV" placeholder="23115053001">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="regEmail" placeholder="email@ute.udn.vn">
+                                </div>
+
+                                <div id="registerResult" style="display:none;padding:10px;border-radius:8px;margin-bottom:12px;font-size:14px;"></div>
+
+                                <!-- Nút đăng ký nhanh (inline) -->
+                                <button class="btn-register" id="btnRegister">ĐĂNG KÝ NGAY</button>
+
+                                <!-- Nút đăng ký trang riêng (đầy đủ hơn) -->
+                                <a id="btnRegisterFull" href="#"
+                                   style="display:block;text-align:center;margin-top:10px;padding:10px;border:1.5px solid #0D5A9C;border-radius:8px;color:#0D5A9C;text-decoration:none;font-size:13px;font-weight:600;">
+                                    <i class="fas fa-external-link-alt"></i> Đăng ký đầy đủ thông tin
+                                </a>
+                            </div>
+
+                            <!-- Nút sau khi đã đăng ký (ẩn mặc định) -->
+                            <div id="registeredActions" style="display:none;">
+                                <a id="btnViewTicket" href="my-tickets.html" class="btn-register" style="display:block; text-align:center; text-decoration:none; background:#059669; margin-bottom:10px;">
+                                    <i class="fas fa-qrcode"></i> XEM VÉ & QR CHECK-IN
+                                </a>
+                                <button id="btnCancelReg" class="btn-register" style="background:#ef4444;">
+                                    <i class="fas fa-times-circle"></i> HỦY ĐĂNG KÝ
+                                </button>
+                            </div>
+
+                            <div class="event-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Đã đăng ký</div>
+                                    <div class="stat-value" id="statRegistered">-</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Sức chứa</div>
+                                    <div class="stat-value" id="statCapacity">-</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Trạng thái</div>
+                                    <div class="stat-value" id="statStatus">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/event-detail.js"></script>
+    <script src="../js/header-user.js"></script>
+</body>
+</html>

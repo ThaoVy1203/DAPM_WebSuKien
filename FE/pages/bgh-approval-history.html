@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử duyệt - Ban Giám Hiệu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/btc-dashboard.css">
+    <link rel="stylesheet" href="../css/ctsv-approval.css">
+    <link rel="stylesheet" href="../css/ctsv-history.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <img src="../images/logo.png" alt="UTE Events">
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm hồ sơ, sự kiện...">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-notification">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">PGS.TS Trần Văn Hùng</span>
+                    <span class="user-role">Cán bộ phê duyệt cấp 2</span>
+                </div>
+                <img src="../images/avatar-bgh.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Tran+Van+Hung&background=dc2626&color=fff'">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="bgh-pending-approval.html" class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Chờ duyệt cấp cao</span>
+                </a>
+                <a href="bgh-approval-history.html" class="nav-item active">
+                    <i class="fas fa-history"></i>
+                    <span>Lịch sử duyệt</span>
+                </a>
+                <a href="bgh-reports.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo tổng thể</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Trợ giúp</span>
+                </a>
+                <a href="#" class="nav-item danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Lịch sử phê duyệt cấp cao</h1>
+                    <p>Danh sách các hồ sơ đã được Ban Giám Hiệu xét duyệt</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="exportHistory()">
+                        <i class="fas fa-file-export"></i>
+                        Xuất báo cáo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card total-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="stat-number">38</div>
+                    <div class="stat-label">TỔNG SỐ</div>
+                    <div class="stat-description">Đã xử lý trong tháng</div>
+                </div>
+
+                <div class="stat-card approved-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number">35</div>
+                    <div class="stat-label">ĐÃ DUYỆT</div>
+                    <div class="stat-description">92.1% tỷ lệ duyệt</div>
+                </div>
+
+                <div class="stat-card rejected-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">TỪ CHỐI</div>
+                    <div class="stat-description">7.9% tỷ lệ từ chối</div>
+                </div>
+
+                <div class="stat-card time-stat">
+                    <div class="stat-header">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number">1.8h</div>
+                    <div class="stat-label">THỜI GIAN TB</div>
+                    <div class="stat-description">Xử lý mỗi hồ sơ</div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-filter="all">Tất cả (38)</button>
+                    <button class="tab-btn" data-filter="approved">Đã duyệt (35)</button>
+                    <button class="tab-btn" data-filter="rejected">Từ chối (3)</button>
+                </div>
+                <div class="filter-controls">
+                    <select class="filter-select" id="monthFilter">
+                        <option value="current">Tháng này</option>
+                        <option value="last">Tháng trước</option>
+                        <option value="3months">3 tháng gần đây</option>
+                        <option value="6months">6 tháng gần đây</option>
+                        <option value="year">Năm nay</option>
+                    </select>
+                    <select class="filter-select" id="eventTypeFilter">
+                        <option value="all">Tất cả loại sự kiện</option>
+                        <option value="hoi-thao">Hội thảo</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="thi-dau">Thi đấu</option>
+                        <option value="van-nghe">Văn nghệ</option>
+                    </select>
+                    <button class="btn-filter" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i>
+                        Lọc
+                    </button>
+                </div>
+            </div>
+
+            <!-- History List -->
+            <div class="history-list">
+                <!-- History Item 1 - Approved -->
+                <div class="history-item approved" data-status="approved">
+                    <div class="history-header">
+                        <div class="history-info">
+                            <span class="history-badge approved">ĐÃ DUYỆT</span>
+                            <span class="history-id">#HS2024-015</span>
+                            <span class="history-date">
+                                <i class="fas fa-calendar"></i>
+                                Duyệt: 29/12/2024 10:15
+                            </span>
+                        </div>
+                        <div class="history-approver">
+                            <i class="fas fa-user-check"></i>
+                            <span>Bởi: <strong>PGS.TS Trần Văn Hùng</strong></span>
+                        </div>
+                    </div>
+                    <div class="history-body">
+                        <h3>Hội thảo Khởi nghiệp và Đổi mới Sáng tạo 2025</h3>
+                        <div class="history-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>BTC: <strong>Nguyễn Văn B</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Ngày tổ chức: <strong>05/02/2025</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>Quy mô: <strong>300 người</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Ngân sách: <strong>80,000,000 đ</strong></span>
+                            </div>
+                        </div>
+                        <div class="history-comment">
+                            <div class="comment-label">
+                                <i class="fas fa-comment-dots"></i>
+                                Ý kiến phê duyệt BGH:
+                            </div>
+                            <p>Sự kiện có ý nghĩa, phù hợp với định hướng phát triển của trường. Đồng ý phê duyệt toàn bộ kế hoạch.</p>
+                        </div>
+                    </div>
+                    <div class="history-footer">
+                        <button class="btn-view-history" onclick="viewHistoryDetail(1)">
+                            <i class="fas fa-eye"></i>
+                            Xem chi tiết
+                        </button>
+                        <div class="history-timeline">
+                            <span class="timeline-item">
+                                <i class="fas fa-paper-plane"></i>
+                                BTC gửi: 27/12/2024 10:00
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check"></i>
+                                CTSV: 28/12/2024 15:30
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check-double"></i>
+                                BGH: 29/12/2024 10:15
+                            </span>
+                            <span class="timeline-duration">(2 ngày)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Item 2 - Approved -->
+                <div class="history-item approved" data-status="approved">
+                    <div class="history-header">
+                        <div class="history-info">
+                            <span class="history-badge approved">ĐÃ DUYỆT</span>
+                            <span class="history-id">#HS2024-013</span>
+                            <span class="history-date">
+                                <i class="fas fa-calendar"></i>
+                                Duyệt: 27/12/2024 14:30
+                            </span>
+                        </div>
+                        <div class="history-approver">
+                            <i class="fas fa-user-check"></i>
+                            <span>Bởi: <strong>PGS.TS Trần Văn Hùng</strong></span>
+                        </div>
+                    </div>
+                    <div class="history-body">
+                        <h3>Ngày hội Việc làm và Cơ hội Nghề nghiệp</h3>
+                        <div class="history-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>BTC: <strong>Lê Thị D</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Ngày tổ chức: <strong>20/01/2025</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>Quy mô: <strong>800 người</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Ngân sách: <strong>200,000,000 đ</strong></span>
+                            </div>
+                        </div>
+                        <div class="history-comment">
+                            <div class="comment-label">
+                                <i class="fas fa-comment-dots"></i>
+                                Ý kiến phê duyệt BGH:
+                            </div>
+                            <p>Sự kiện quan trọng, tạo cơ hội việc làm cho sinh viên. Phê duyệt với ngân sách đề xuất.</p>
+                        </div>
+                    </div>
+                    <div class="history-footer">
+                        <button class="btn-view-history" onclick="viewHistoryDetail(2)">
+                            <i class="fas fa-eye"></i>
+                            Xem chi tiết
+                        </button>
+                        <div class="history-timeline">
+                            <span class="timeline-item">
+                                <i class="fas fa-paper-plane"></i>
+                                BTC gửi: 25/12/2024 09:00
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check"></i>
+                                CTSV: 26/12/2024 11:45
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check-double"></i>
+                                BGH: 27/12/2024 14:30
+                            </span>
+                            <span class="timeline-duration">(2 ngày 5 giờ)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Item 3 - Rejected -->
+                <div class="history-item rejected" data-status="rejected">
+                    <div class="history-header">
+                        <div class="history-info">
+                            <span class="history-badge rejected">TỪ CHỐI</span>
+                            <span class="history-id">#HS2024-011</span>
+                            <span class="history-date">
+                                <i class="fas fa-calendar"></i>
+                                Từ chối: 26/12/2024 16:20
+                            </span>
+                        </div>
+                        <div class="history-approver">
+                            <i class="fas fa-user-times"></i>
+                            <span>Bởi: <strong>PGS.TS Trần Văn Hùng</strong></span>
+                        </div>
+                    </div>
+                    <div class="history-body">
+                        <h3>Festival Âm nhạc Mùa Xuân</h3>
+                        <div class="history-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>BTC: <strong>Hoàng Văn F</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Ngày tổ chức: <strong>08/01/2025</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>Quy mô: <strong>600 người</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Ngân sách: <strong>150,000,000 đ</strong></span>
+                            </div>
+                        </div>
+                        <div class="history-comment reject-comment">
+                            <div class="comment-label">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Lý do từ chối:
+                            </div>
+                            <p>Ngân sách quá cao so với quy mô sự kiện. Cần xem xét lại chi phí và tối ưu hóa ngân sách. Đề nghị điều chỉnh xuống còn 100 triệu.</p>
+                        </div>
+                    </div>
+                    <div class="history-footer">
+                        <button class="btn-view-history" onclick="viewHistoryDetail(3)">
+                            <i class="fas fa-eye"></i>
+                            Xem chi tiết
+                        </button>
+                        <div class="history-timeline">
+                            <span class="timeline-item">
+                                <i class="fas fa-paper-plane"></i>
+                                BTC gửi: 23/12/2024 15:00
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-times"></i>
+                                CTSV từ chối: 24/12/2024 10:15
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-paper-plane"></i>
+                                BTC gửi lại: 25/12/2024 14:00
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check"></i>
+                                CTSV: 26/12/2024 09:30
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-times"></i>
+                                BGH: 26/12/2024 16:20
+                            </span>
+                            <span class="timeline-duration">(3 ngày)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Item 4 - Approved -->
+                <div class="history-item approved" data-status="approved">
+                    <div class="history-header">
+                        <div class="history-info">
+                            <span class="history-badge approved">ĐÃ DUYỆT</span>
+                            <span class="history-id">#HS2024-012</span>
+                            <span class="history-date">
+                                <i class="fas fa-calendar"></i>
+                                Duyệt: 26/12/2024 09:00
+                            </span>
+                        </div>
+                        <div class="history-approver">
+                            <i class="fas fa-user-check"></i>
+                            <span>Bởi: <strong>PGS.TS Trần Văn Hùng</strong></span>
+                        </div>
+                    </div>
+                    <div class="history-body">
+                        <h3>Chương trình Giao lưu Văn hóa Quốc tế</h3>
+                        <div class="history-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>BTC: <strong>Phạm Văn E</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Ngày tổ chức: <strong>10/02/2025</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>Quy mô: <strong>400 người</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Ngân sách: <strong>95,000,000 đ</strong></span>
+                            </div>
+                        </div>
+                        <div class="history-comment">
+                            <div class="comment-label">
+                                <i class="fas fa-comment-dots"></i>
+                                Ý kiến phê duyệt BGH:
+                            </div>
+                            <p>Chương trình giao lưu văn hóa ý nghĩa, tăng cường hợp tác quốc tế. Đồng ý phê duyệt.</p>
+                        </div>
+                    </div>
+                    <div class="history-footer">
+                        <button class="btn-view-history" onclick="viewHistoryDetail(4)">
+                            <i class="fas fa-eye"></i>
+                            Xem chi tiết
+                        </button>
+                        <div class="history-timeline">
+                            <span class="timeline-item">
+                                <i class="fas fa-paper-plane"></i>
+                                BTC gửi: 24/12/2024 14:30
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check"></i>
+                                CTSV: 25/12/2024 16:00
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check-double"></i>
+                                BGH: 26/12/2024 09:00
+                            </span>
+                            <span class="timeline-duration">(1 ngày 18 giờ)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Item 5 - Approved -->
+                <div class="history-item approved" data-status="approved">
+                    <div class="history-header">
+                        <div class="history-info">
+                            <span class="history-badge approved">ĐÃ DUYỆT</span>
+                            <span class="history-id">#HS2024-010</span>
+                            <span class="history-date">
+                                <i class="fas fa-calendar"></i>
+                                Duyệt: 25/12/2024 11:20
+                            </span>
+                        </div>
+                        <div class="history-approver">
+                            <i class="fas fa-user-check"></i>
+                            <span>Bởi: <strong>PGS.TS Trần Văn Hùng</strong></span>
+                        </div>
+                    </div>
+                    <div class="history-body">
+                        <h3>Cuộc thi Lập trình Sáng tạo 2025</h3>
+                        <div class="history-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>BTC: <strong>Võ Văn F</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Ngày tổ chức: <strong>15/02/2025</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>Quy mô: <strong>200 người</strong></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Ngân sách: <strong>60,000,000 đ</strong></span>
+                            </div>
+                        </div>
+                        <div class="history-comment">
+                            <div class="comment-label">
+                                <i class="fas fa-comment-dots"></i>
+                                Ý kiến phê duyệt BGH:
+                            </div>
+                            <p>Cuộc thi bổ ích, khuyến khích sinh viên phát triển kỹ năng lập trình. Phê duyệt kế hoạch.</p>
+                        </div>
+                    </div>
+                    <div class="history-footer">
+                        <button class="btn-view-history" onclick="viewHistoryDetail(5)">
+                            <i class="fas fa-eye"></i>
+                            Xem chi tiết
+                        </button>
+                        <div class="history-timeline">
+                            <span class="timeline-item">
+                                <i class="fas fa-paper-plane"></i>
+                                BTC gửi: 23/12/2024 10:00
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check"></i>
+                                CTSV: 24/12/2024 14:20
+                            </span>
+                            <span class="timeline-arrow">→</span>
+                            <span class="timeline-item">
+                                <i class="fas fa-check-double"></i>
+                                BGH: 25/12/2024 11:20
+                            </span>
+                            <span class="timeline-duration">(2 ngày 1 giờ)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <div>
+                            <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
+                            <p>Trường Đại học Sư phạm Kỹ thuật</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Hệ thống quản lý học tập và các sự kiện sinh viên tại trường Đại học Sư phạm Kỹ thuật Đà Nẵng</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Thông tin liên lạc</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Bản đồ chỉ dẫn</h4>
+                    <div class="map-placeholder">
+                        <img src="../images/map.png" alt="Bản đồ">
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kết nối</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-google"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Website Quản lý các sự kiện tại trường Đại học Sư phạm Kỹ Thuật - Đại học Đà Nẵng</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/ctsv-history.js"></script>
+    <script src="../js/btc-logout.js"></script>
+</body>
+</html>
