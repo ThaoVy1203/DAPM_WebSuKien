@@ -1,53 +1,159 @@
 // Budget Management JavaScript
-let currentBudgetId = null;
+const API_BASE = "https://localhost:7160/api";
+
+let budgetPageData = {
+    events: [],
+    selectedEventId: null,
+    currentBudget: null
+};
 
 // ==========================
 // INIT
 // ==========================
 document.addEventListener('DOMContentLoaded', async function () {
     initializeBudgetCalculation();
-    initializeFilterSelect();
-
-    await loadBudgets();
-    await loadEvents();
+    setupModals();
+    await loadEventsSelector();
+    await loadBudgetForSelectedEvent();
 });
 
 // ==========================
-// LOAD DATA FROM API
+// SETUP MODALS
 // ==========================
-async function loadBudgets() {
-    try {
-        const res = await fetch(`${API_BASE}/NganSach`);
-        const budgets = await res.json();
+function setupModals() {
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeBudgetModal();
+            closeBudgetDetailModal();
+        }
+    });
 
-        renderBudgetTable(budgets);
-    } catch (error) {
-        console.error("Lỗi load ngân sách:", error);
-        alert("Không kết nối được backend!");
-    }
+    // Close on click outside
+    window.addEventListener('click', function(e) {
+        const budgetModal = document.getElementById('budgetModal');
+        const budgetDetailModal = document.getElementById('budgetDetailModal');
+        if (e.target === budgetModal) closeBudgetModal();
+        if (e.target === budgetDetailModal) closeBudgetDetailModal();
+    });
 }
 
-async function loadEvents() {
+// ==========================
+// LOAD EVENTS SELECTOR
+// ==========================
+async function loadEventsSelector() {
+    const selector = document.getElementById("eventSelector");
+    if (!selector) return;
+
     try {
-        const res = await fetch(`${API_BASE}/SuKien`);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/SuKien`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Lỗi tải sự kiện");
+
         const events = await res.json();
+        budgetPageData.events = events;
 
-        const eventSelect = document.getElementById('eventSelect');
-        if (!eventSelect) return;
+        selector.innerHTML = "";
+        events.forEach(e => {
+            selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
+        });
 
-        eventSelect.innerHTML = '<option value="">-- Chọn sự kiện --</option>';
+        // Initialize eventSelect in the modal form too
+        const formEventSelect = document.getElementById("eventSelect");
+        if (formEventSelect) {
+            formEventSelect.innerHTML = '<option value="">Chọn sự kiện</option>';
+            events.forEach(e => {
+                formEventSelect.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
+            });
+        }
 
-        events.forEach(event => {
-            eventSelect.innerHTML += `
-                <option value="${event.id}">
-                    ${event.tenSuKien}
-                </option>
-            `;
+        // Get saved selected event
+        let savedId = localStorage.getItem("btc_budget_selected_event_id");
+        if (savedId && events.some(e => e.idSuKien == savedId)) {
+            selector.value = savedId;
+            budgetPageData.selectedEventId = savedId;
+        } else if (events.length > 0) {
+            selector.value = events[0].idSuKien;
+            budgetPageData.selectedEventId = events[0].idSuKien;
+            localStorage.setItem("btc_budget_selected_event_id", events[0].idSuKien);
+        }
+
+        // Add change listener
+        selector.addEventListener("change", function () {
+            budgetPageData.selectedEventId = this.value;
+            localStorage.setItem("btc_budget_selected_event_id", this.value);
+            loadBudgetForSelectedEvent();
         });
 
     } catch (error) {
-        console.error("Lỗi load sự kiện:", error);
+        console.error("Lỗi tải selector:", error);
     }
+}
+
+// ==========================
+// LOAD BUDGET FOR SELECTED EVENT
+// ==========================
+async function loadBudgetForSelectedEvent() {
+    const eventId = budgetPageData.selectedEventId;
+    if (!eventId) return;
+
+    // Get event detail to show name
+    const event = budgetPageData.events.find(e => e.idSuKien == eventId);
+    const eventName = event ? event.tenSuKien : "Sự kiện đang chọn";
+
+    // Load budget from localStorage (since backend is mock)
+    let budgetStr = localStorage.getItem(`budget_event_${eventId}`);
+    let budgetData;
+
+    if (budgetStr) {
+        budgetData = JSON.parse(budgetStr);
+    } else {
+        // Initialize with default budget items if it doesn't exist
+        const total = 100000000;
+        const spent = 65000000;
+        budgetData = {
+            eventId: eventId,
+            tenSuKien: eventName,
+            tongNganSach: total,
+            daChi: spent,
+            conLai: total - spent,
+            trangThai: "approved",
+            ghiChu: "Kế hoạch ngân sách mặc định được khởi tạo.",
+            items: [
+                { tenHangMuc: "Thuê địa điểm tổ chức", loai: "venue", soLuong: 1, donGia: 40000000, thanhTien: 40000000 },
+                { tenHangMuc: "Tiệc trà nhẹ (teabreak)", loai: "food", soLuong: 100, donGia: 150000, thanhTien: 15000000 },
+                { tenHangMuc: "In ấn banner, hashtag", loai: "marketing", soLuong: 10, donGia: 500000, thanhTien: 5000000 },
+                { tenHangMuc: "Quà tặng cho đại biểu", loai: "other", soLuong: 10, donGia: 500000, thanhTien: 5000000 }
+            ]
+        };
+        localStorage.setItem(`budget_event_${eventId}`, JSON.stringify(budgetData));
+    }
+
+    budgetPageData.currentBudget = budgetData;
+
+    // Update Overview Cards
+    const totalEl = document.querySelector(".overview-card.total .amount");
+    if (totalEl) totalEl.textContent = formatCurrency(budgetData.tongNganSach) + " đ";
+
+    const spentEl = document.querySelector(".overview-card.spent .amount");
+    if (spentEl) spentEl.textContent = formatCurrency(budgetData.daChi) + " đ";
+    const spentPctSub = document.querySelector(".overview-card.spent .sub-text");
+    if (spentPctSub && budgetData.tongNganSach > 0) {
+        spentPctSub.textContent = ((budgetData.daChi / budgetData.tongNganSach) * 100).toFixed(1) + "% tổng ngân sách";
+    }
+
+    const remainingEl = document.querySelector(".overview-card.remaining .amount");
+    if (remainingEl) remainingEl.textContent = formatCurrency(budgetData.conLai) + " đ";
+    const remainingPctSub = document.querySelector(".overview-card.remaining .sub-text");
+    if (remainingPctSub && budgetData.tongNganSach > 0) {
+        remainingPctSub.textContent = ((budgetData.conLai / budgetData.tongNganSach) * 100).toFixed(1) + "% tổng ngân sách";
+    }
+
+    // Render event budget table row (only showing the selected event's budget)
+    renderBudgetTable([budgetData]);
 }
 
 // ==========================
@@ -59,22 +165,43 @@ function renderBudgetTable(budgets) {
 
     tbody.innerHTML = '';
 
+    if (budgets.length === 0 || !budgets[0]) {
+        tbody.innerHTML = '<tr><td colspan="7" class="loading">Không có dữ liệu ngân sách cho sự kiện này</td></tr>';
+        return;
+    }
+
     budgets.forEach(budget => {
         const row = document.createElement('tr');
-
+        const progressPct = budget.tongNganSach > 0 ? ((budget.daChi / budget.tongNganSach) * 100).toFixed(1) : 0;
+        
         row.innerHTML = `
-            <td>${budget.tenSuKien}</td>
-            <td>${formatCurrency(budget.tongNganSach)} đ</td>
+            <td>
+                <div class="event-info">
+                    <h4>${budget.tenSuKien}</h4>
+                    <span class="event-date">Sự kiện đang chọn</span>
+                </div>
+            </td>
+            <td><strong>${formatCurrency(budget.tongNganSach)} đ</strong></td>
             <td>${formatCurrency(budget.daChi)} đ</td>
             <td>${formatCurrency(budget.conLai)} đ</td>
             <td>
-                <span class="status-badge ${budget.trangThai}">
-                    ${getStatusText(budget.trangThai)}
-                </span>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progressPct}%"></div>
+                    </div>
+                    <span class="progress-text">${progressPct}%</span>
+                </div>
             </td>
+            <td><span class="status-badge ${budget.trangThai}">${getStatusText(budget.trangThai)}</span></td>
             <td>
-                <button onclick="viewBudgetDetail(${budget.id})">Chi tiết</button>
-                <button onclick="editBudget(${budget.id})">Sửa</button>
+                <div class="action-buttons">
+                    <button class="btn-action" onclick="viewBudgetDetail()" title="Xem chi tiết">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-action" onclick="editBudget()" title="Chỉnh sửa">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
             </td>
         `;
 
@@ -86,104 +213,183 @@ function getStatusText(status) {
     const map = {
         approved: "Đã duyệt",
         pending: "Chờ duyệt",
-        rejected: "Từ chối"
+        rejected: "Từ chối",
+        "Đã duyệt": "Đã duyệt",
+        "Chờ duyệt": "Chờ duyệt",
+        "Từ chối": "Từ chối"
     };
-
     return map[status] || status;
 }
 
 // ==========================
-// CREATE / UPDATE
+// MODAL CONTROLS
 // ==========================
-async function saveBudget(formData) {
-    try {
-        let method = currentBudgetId ? "PUT" : "POST";
-        let url = currentBudgetId
-            ? `${API_BASE}/NganSach/${currentBudgetId}`
-            : `${API_BASE}/NganSach`;
+function openCreateBudgetModal() {
+    const modal = document.getElementById('budgetModal');
+    const modalTitle = document.getElementById('budgetModalTitle');
+    if (!modal) return;
 
-        const res = await fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(formData)
-        });
-
-        if (!res.ok) throw new Error("Save failed");
-
-        alert(currentBudgetId
-            ? "Cập nhật ngân sách thành công"
-            : "Tạo ngân sách thành công");
-
-        closeBudgetModal();
-        await loadBudgets();
-
-    } catch (error) {
-        console.error("Lỗi lưu ngân sách:", error);
-        alert("Lưu thất bại!");
+    modalTitle.textContent = 'Lập kế hoạch chi phí';
+    document.getElementById('budgetForm').reset();
+    
+    // Clear and pre-populate item rows
+    const tbody = document.getElementById('budgetItemsBody');
+    if (tbody) {
+        tbody.innerHTML = "";
+        addBudgetItem();
     }
+
+    // Pre-select current event
+    const formEventSelect = document.getElementById('eventSelect');
+    if (formEventSelect && budgetPageData.selectedEventId) {
+        formEventSelect.value = budgetPageData.selectedEventId;
+    }
+
+    modal.classList.add('active');
+}
+
+function closeBudgetModal() {
+    const modal = document.getElementById('budgetModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function closeBudgetDetailModal() {
+    const modal = document.getElementById('budgetDetailModal');
+    if (modal) modal.classList.remove('active');
 }
 
 // ==========================
-// LOAD DETAIL
+// SAVE BUDGET
 // ==========================
-async function viewBudgetDetail(budgetId) {
-    try {
-        const res = await fetch(`${API_BASE}/NganSach/${budgetId}`);
-        const data = await res.json();
+async function saveBudget(trangThai = "approved") {
+    const eventSelect = document.getElementById('eventSelect');
+    const eventId = eventSelect.value;
+    if (!eventId) {
+        alert("Vui lòng chọn sự kiện!");
+        return;
+    }
 
-        currentBudgetId = budgetId;
+    const items = [];
+    let total = 0;
 
-        document.getElementById('detailEventName').textContent = data.tenSuKien;
-        document.getElementById('detailTotalBudget').textContent =
-            formatCurrency(data.tongNganSach) + ' đ';
+    document.querySelectorAll('#budgetItemsBody tr').forEach(row => {
+        const name = row.querySelector('.item-name').value;
+        const category = row.querySelector('.item-category').value;
+        const qty = parseInt(row.querySelector('.item-quantity').value) || 0;
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const itemTotal = qty * price;
 
-        document.getElementById('detailSpent').textContent =
-            formatCurrency(data.daChi) + ' đ';
+        if (name) {
+            items.push({
+                tenHangMuc: name,
+                loai: category,
+                soLuong: qty,
+                donGia: price,
+                thanhTien: itemTotal
+            });
+            total += itemTotal;
+        }
+    });
 
-        document.getElementById('detailRemaining').textContent =
-            formatCurrency(data.conLai) + ' đ';
+    const event = budgetPageData.events.find(e => e.idSuKien == eventId);
+    const eventName = event ? event.tenSuKien : "Sự kiện";
 
-        document.getElementById('detailNotes').textContent = data.ghiChu || '';
+    // Set spent to ~60% of total for simulation, or match items
+    const spent = Math.round(total * 0.65);
 
-        const tbody = document.getElementById('detailItemsBody');
+    const budgetData = {
+        eventId: eventId,
+        tenSuKien: eventName,
+        tongNganSach: total,
+        daChi: spent,
+        conLai: total - spent,
+        trangThai: trangThai,
+        ghiChu: document.getElementById('budgetNotes').value || "",
+        items: items
+    };
+
+    // Save to localStorage
+    localStorage.setItem(`budget_event_${eventId}`, JSON.stringify(budgetData));
+    
+    // Synchronize to selected event selector if it changes
+    if (budgetPageData.selectedEventId != eventId) {
+        budgetPageData.selectedEventId = eventId;
+        const selector = document.getElementById("eventSelector");
+        if (selector) selector.value = eventId;
+        localStorage.setItem("btc_budget_selected_event_id", eventId);
+    }
+
+    alert("Lưu kế hoạch ngân sách thành công!");
+    closeBudgetModal();
+    await loadBudgetForSelectedEvent();
+}
+
+// Bind Submit buttons
+document.getElementById('budgetForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    await saveBudget("pending"); // Gửi phê duyệt => Chờ duyệt
+});
+
+document.querySelector('.btn-save-draft')?.addEventListener('click', async function () {
+    await saveBudget("Nháp");
+});
+
+// ==========================
+// LOAD DETAILS FOR MODAL
+// ==========================
+function viewBudgetDetail() {
+    const data = budgetPageData.currentBudget;
+    if (!data) return;
+
+    document.getElementById('detailEventName').textContent = data.tenSuKien;
+    document.getElementById('detailStatus').textContent = getStatusText(data.trangThai);
+    document.getElementById('detailStatus').className = `status-badge ${data.trangThai}`;
+
+    document.getElementById('detailTotalBudget').textContent = formatCurrency(data.tongNganSach) + ' đ';
+    document.getElementById('detailSpent').textContent = formatCurrency(data.daChi) + ' đ';
+    document.getElementById('detailRemaining').textContent = formatCurrency(data.conLai) + ' đ';
+    document.getElementById('detailNotes').textContent = data.ghiChu || 'Không có ghi chú';
+
+    const tbody = document.getElementById('detailItemsBody');
+    if (tbody) {
         tbody.innerHTML = '';
-
         data.items.forEach(item => {
             tbody.innerHTML += `
                 <tr>
                     <td>${item.tenHangMuc}</td>
+                    <td><span class="category-badge ${item.loai}">${item.loai}</span></td>
                     <td>${item.soLuong}</td>
                     <td>${formatCurrency(item.donGia)} đ</td>
-                    <td>${formatCurrency(item.thanhTien)} đ</td>
+                    <td><strong>${formatCurrency(item.thanhTien)} đ</strong></td>
                 </tr>
             `;
         });
-
-        document.getElementById('budgetDetailModal').classList.add('active');
-
-    } catch (error) {
-        console.error("Lỗi load chi tiết:", error);
     }
+
+    document.getElementById('budgetDetailModal').classList.add('active');
 }
 
 // ==========================
-// EDIT
+// EDIT BUDGET
 // ==========================
-async function editBudget(budgetId) {
-    try {
-        const res = await fetch(`${API_BASE}/NganSach/${budgetId}`);
-        const data = await res.json();
+function editBudget() {
+    const data = budgetPageData.currentBudget;
+    if (!data) return;
 
-        currentBudgetId = budgetId;
+    closeBudgetDetailModal();
 
-        document.getElementById('eventSelect').value = data.suKienId;
-        document.getElementById('budgetNotes').value = data.ghiChu || '';
+    const modal = document.getElementById('budgetModal');
+    const modalTitle = document.getElementById('budgetModalTitle');
+    if (!modal) return;
 
-        const tbody = document.getElementById('budgetItemsBody');
+    modalTitle.textContent = 'Chỉnh sửa kế hoạch chi phí';
+    
+    document.getElementById('eventSelect').value = data.eventId;
+    document.getElementById('budgetNotes').value = data.ghiChu || '';
+
+    const tbody = document.getElementById('budgetItemsBody');
+    if (tbody) {
         tbody.innerHTML = '';
-
         data.items.forEach(item => {
             tbody.appendChild(createBudgetItemRow({
                 name: item.tenHangMuc,
@@ -192,44 +398,18 @@ async function editBudget(budgetId) {
                 price: item.donGia
             }));
         });
-
-        calculateTotal();
-
-        document.getElementById('budgetModal').classList.add('active');
-
-    } catch (error) {
-        console.error("Lỗi load sửa ngân sách:", error);
     }
+
+    calculateTotal();
+    modal.classList.add('active');
+}
+
+function editFromDetail() {
+    editBudget();
 }
 
 // ==========================
-// SUBMIT FORM
-// ==========================
-document.getElementById('budgetForm')?.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const items = [];
-
-    document.querySelectorAll('#budgetItemsBody tr').forEach(row => {
-        items.push({
-            tenHangMuc: row.querySelector('.item-name').value,
-            loai: row.querySelector('.item-category').value,
-            soLuong: parseInt(row.querySelector('.item-quantity').value),
-            donGia: parseFloat(row.querySelector('.item-price').value)
-        });
-    });
-
-    const formData = {
-        suKienId: document.getElementById('eventSelect').value,
-        ghiChu: document.getElementById('budgetNotes').value,
-        items: items
-    };
-
-    await saveBudget(formData);
-});
-
-// ==========================
-// UTIL
+// UTILITIES FOR CALCULATIONS
 // ==========================
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount);
@@ -257,7 +437,6 @@ function calculateTotal() {
         if (itemTotalCell) {
             itemTotalCell.textContent = formatCurrency(itemTotal) + ' đ';
         }
-        
         total += itemTotal;
     });
 
@@ -310,3 +489,12 @@ function createBudgetItemRow(item) {
     `;
     return tr;
 }
+
+window.openCreateBudgetModal = openCreateBudgetModal;
+window.closeBudgetModal = closeBudgetModal;
+window.closeBudgetDetailModal = closeBudgetDetailModal;
+window.viewBudgetDetail = viewBudgetDetail;
+window.editBudget = editBudget;
+window.editFromDetail = editFromDetail;
+window.removeBudgetItem = removeBudgetItem;
+window.addBudgetItem = addBudgetItem;

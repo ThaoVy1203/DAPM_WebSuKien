@@ -153,7 +153,7 @@ namespace aspiCore.Services
                 IdNguoiTao = dto.IdNguoiTao,
                 SoLuongToiDa = dto.SoLuongToiDa,
                 HinhAnh = dto.HinhAnh,
-                TrangThai = "Nháp",
+                TrangThai = string.IsNullOrEmpty(dto.TrangThai) ? "Nháp" : dto.TrangThai,
                 ThoiGianTao = DateTime.Now
             };
 

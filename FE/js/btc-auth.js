@@ -277,6 +277,31 @@ function addRoleBadge() {
 }
 
 // ==========================
+// HIỂN THỊ THÔNG TIN NGƯỜI DÙNG (Tên, Avatar)
+// ==========================
+function updateUserProfileDisplay() {
+    if (!currentUser) return;
+    
+    const nameEl = document.querySelector(".user-name");
+    const avatarEl = document.querySelector(".user-avatar");
+    
+    const userName = currentUser.hoTen || currentUser.name || "Người dùng";
+    
+    if (nameEl) {
+        nameEl.textContent = userName;
+    }
+    
+    if (avatarEl) {
+        if (currentUser.anhDaiDien) {
+            avatarEl.src = currentUser.anhDaiDien;
+        } else {
+            const nameToUrl = encodeURIComponent(userName);
+            avatarEl.src = `https://ui-avatars.com/api/?name=${nameToUrl}&background=0D5A9C&color=fff`;
+        }
+    }
+}
+
+// ==========================
 // INIT
 // ==========================
 document.addEventListener('DOMContentLoaded', async function () {
@@ -284,6 +309,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     initializeSidebarPermissions();
     checkPageAccess();
     addRoleBadge();
+    updateUserProfileDisplay();
 });
 
 // Export

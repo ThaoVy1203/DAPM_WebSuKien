@@ -93,28 +93,37 @@
             <!-- Page Header -->
             <div class="page-header">
                 <h1>Nhiệm vụ nhóm</h1>
-                <div class="header-actions">
-                    <div class="event-selector">
-                        <span class="event-label">LỌC THEO SỰ KIỆN</span>
-                        <button class="event-dropdown">
-                            Hội nghị Công nghệ Thường niên 2024
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
+                <div class="header-sub-row">
+                    <div class="event-selector-wrapper">
+                        <select id="eventSelector" class="event-dropdown-select">
+                            <option value="">-- Chọn sự kiện --</option>
+                        </select>
                     </div>
-                    <div class="team-members">
-                        <img src="https://ui-avatars.com/api/?name=A&background=0D5A9C&color=fff" alt="Member">
-                        <img src="https://ui-avatars.com/api/?name=B&background=1976D2&color=fff" alt="Member">
-                        <img src="https://ui-avatars.com/api/?name=C&background=10B981&color=fff" alt="Member">
-                        <button class="btn-add-member">
+                    <div class="header-actions">
+                        <div class="team-members">
+                            <img src="https://ui-avatars.com/api/?name=A&background=0D5A9C&color=fff" alt="Member">
+                            <img src="https://ui-avatars.com/api/?name=B&background=1976D2&color=fff" alt="Member">
+                            <img src="https://ui-avatars.com/api/?name=C&background=10B981&color=fff" alt="Member">
+                            <button class="btn-add-member">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <button class="btn-add-task" onclick="openCreateTaskModal()">
                             <i class="fas fa-plus"></i>
+                            Thêm Nhiệm vụ Mới
                         </button>
                     </div>
-                    <button class="btn-add-task" onclick="openCreateTaskModal()">
-                        <i class="fas fa-plus"></i>
-                        Thêm Nhiệm vụ Mới
-                    </button>
                 </div>
             </div>
+
+    <style>
+        .kanban-board {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+        .status-dot.completed {
+            background: var(--success-color);
+        }
+    </style>
 
             <!-- Kanban Board -->
             <div class="kanban-board">
@@ -124,42 +133,11 @@
                         <div class="column-title">
                             <span class="status-dot todo"></span>
                             <span>CẦN LÀM</span>
-                            <span class="task-count">3</span>
+                            <span class="task-count" id="count-todo">0</span>
                         </div>
-                        <button class="btn-column-menu">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
                     </div>
-                    <div class="tasks-list">
-                        <div class="task-card" onclick="openTaskDetailModal(1)">
-                            <div class="task-priority high">ƯU TIÊN CAO</div>
-                            <h3 class="task-title">Ký kết hợp đồng ăn uống cho Tiệc tối VIP</h3>
-                            <div class="task-footer">
-                                <div class="task-assignee">
-                                    <img src="https://ui-avatars.com/api/?name=TS+Aris&background=0D5A9C&color=fff" alt="Assignee">
-                                    <span>TS. Aris</span>
-                                </div>
-                                <div class="task-date">
-                                    <i class="fas fa-calendar"></i>
-                                    12 TH10
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="task-card" onclick="openTaskDetailModal(2)">
-                            <div class="task-priority medium">TRUNG BÌNH</div>
-                            <h3 class="task-title">Hoàn tất danh sách diễn giả và sắp xếp đi lại</h3>
-                            <div class="task-footer">
-                                <div class="task-assignee">
-                                    <img src="https://ui-avatars.com/api/?name=Sarah+L&background=10B981&color=fff" alt="Assignee">
-                                    <span>Sarah L.</span>
-                                </div>
-                                <div class="task-date">
-                                    <i class="fas fa-calendar"></i>
-                                    15 TH10
-                                </div>
-                            </div>
-                        </div>
+                    <div class="tasks-list" id="list-todo">
+                        <!-- Populated dynamically -->
                     </div>
                 </div>
 
@@ -169,32 +147,11 @@
                         <div class="column-title">
                             <span class="status-dot in-progress"></span>
                             <span>ĐANG THỰC HIỆN</span>
-                            <span class="task-count">2</span>
+                            <span class="task-count" id="count-inprogress">0</span>
                         </div>
-                        <button class="btn-column-menu">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
                     </div>
-                    <div class="tasks-list">
-                        <div class="task-card" onclick="openTaskDetailModal(3)">
-                            <div class="task-priority low">ƯU TIÊN THẤP</div>
-                            <h3 class="task-title">Thiết kế banner mạng xã hội cho đợt Tuyển dụng</h3>
-                            <div class="task-progress">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 60%"></div>
-                                </div>
-                            </div>
-                            <div class="task-footer">
-                                <div class="task-assignee">
-                                    <img src="https://ui-avatars.com/api/?name=Mike+T&background=1976D2&color=fff" alt="Assignee">
-                                    <span>Mike T.</span>
-                                </div>
-                                <div class="task-date">
-                                    <i class="fas fa-calendar"></i>
-                                    08 TH10
-                                </div>
-                            </div>
-                        </div>
+                    <div class="tasks-list" id="list-inprogress">
+                        <!-- Populated dynamically -->
                     </div>
                 </div>
 
@@ -204,27 +161,25 @@
                         <div class="column-title">
                             <span class="status-dot review"></span>
                             <span>XEM XÉT</span>
-                            <span class="task-count">1</span>
+                            <span class="task-count" id="count-review">0</span>
                         </div>
-                        <button class="btn-column-menu">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
                     </div>
-                    <div class="tasks-list">
-                        <div class="task-card" onclick="openTaskDetailModal(4)">
-                            <div class="task-priority high">ƯU TIÊN CAO</div>
-                            <h3 class="task-title">Kiểm tra các giao thức an toàn cho sự kiện trong khuôn viên</h3>
-                            <div class="task-footer">
-                                <div class="task-assignee">
-                                    <img src="https://ui-avatars.com/api/?name=D+Jane&background=F59E0B&color=fff" alt="Assignee">
-                                    <span>D/u Jane</span>
-                                </div>
-                                <div class="task-date">
-                                    <i class="fas fa-calendar"></i>
-                                    HÔM NAY
-                                </div>
-                            </div>
+                    <div class="tasks-list" id="list-review">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Column 4: Hoàn thành -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span class="status-dot completed"></span>
+                            <span>HOÀN THÀNH</span>
+                            <span class="task-count" id="count-done">0</span>
                         </div>
+                    </div>
+                    <div class="tasks-list" id="list-done">
+                        <!-- Populated dynamically -->
                     </div>
                 </div>
             </div>

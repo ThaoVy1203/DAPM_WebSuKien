@@ -35,6 +35,7 @@ namespace aspiCore.Dtos.SuKien
         public string IdNguoiTao { get; set; } = string.Empty;
         public int? SoLuongToiDa { get; set; }
         public string? HinhAnh { get; set; }
+        public string? TrangThai { get; set; }
         public List<int>? DanhMucIds { get; set; }
     }
 

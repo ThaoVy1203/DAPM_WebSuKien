@@ -97,10 +97,6 @@
                     <p>Quản lý tất cả các sự kiện bạn đang tổ chức</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-secondary">
-                        <i class="fas fa-filter"></i>
-                        Lọc
-                    </button>
                     <button class="btn-primary" onclick="openCreateEventModal()">
                         <i class="fas fa-plus"></i>
                         Tạo sự kiện mới
@@ -113,8 +109,9 @@
                 <button class="tab-btn active" data-status="all">Tất cả (0)</button>
                 <button class="tab-btn" data-status="Nháp">Nháp (0)</button>
                 <button class="tab-btn" data-status="Chờ duyệt">Chờ duyệt (0)</button>
-                <button class="tab-btn" data-status="Đã duyệt">Đã duyệt (0)</button>
-                <button class="tab-btn" data-status="Từ chối">Từ chối (0)</button>
+                <button class="tab-btn" data-status="Sắp diễn ra">Sắp diễn ra (0)</button>
+                <button class="tab-btn" data-status="Đã hoàn thành">Đã hoàn thành (0)</button>
+                <button class="tab-btn" data-status="Hủy">Đã hủy (0)</button>
             </div>
 
             <!-- Events Grid -->
@@ -222,21 +219,17 @@
                     <div class="form-section">
                         <h3>3. Ban tổ chức</h3>
                         <div class="organizers-list" id="organizersList">
-                            <div class="organizer-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 40px; height: 40px; background: #0056b3; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">NA</div>
-                                    <div class="organizer-info">
-                                        <div class="organizer-name" style="font-weight: 600;">Nguyễn Văn A</div>
-                                        <div class="organizer-role" style="font-size: 12px; color: #666;">20CNTT1 — Trưởng ban tổ chức</div>
-                                    </div>
-                                </div>
-                                <span style="background: #e6f4ea; color: #1e8e3e; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Trưởng BTC</span>
-                            </div>
+                            <!-- Selected users will be populated here -->
                         </div>
-                        <button type="button" class="btn-add-organizer" style="margin-top: 15px; font-weight: 600;" onclick="addOrganizerRow()">
+                        <button type="button" class="btn-add-organizer" style="margin-top: 15px; font-weight: 600;" onclick="toggleUserSelection()">
                             Thêm thành viên ban tổ chức
                         </button>
-                        <p style="font-size: 12px; color: #666; margin-top: 5px;">Nhập mã sinh viên để tìm và thêm thành viên.</p>
+                        <div id="userSelectionContainer" style="display: none; margin-top: 10px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc; max-height: 200px; overflow-y: auto;">
+                            <input type="text" id="userSearchInput" placeholder="Tìm kiếm người dùng..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 4px;" oninput="filterUserSelection()">
+                            <div id="userCheckboxes" style="display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>

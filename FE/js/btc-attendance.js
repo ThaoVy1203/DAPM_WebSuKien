@@ -1,19 +1,15 @@
 /**
  * btc-attendance.js — BTC: danh sách đăng ký, duyệt, quét QR check-in
- * URL: btc-attendance.html?idSuKien={id}
  */
 "use strict";
 
 const API_BASE = "https://localhost:7160/api";
 
-let participantsData = [];
-let currentIdSuKien = null;
-let currentEventInfo = null;
-
-function getIdSuKienFromUrl() {
-    const p = new URLSearchParams(window.location.search);
-    return p.get("idSuKien") || p.get("id") || localStorage.getItem("btcCurrentSuKien") || null;
-}
+let attendancePageData = {
+    events: [],
+    selectedEventId: null,
+    participants: []
+};
 
 function authHeaders() {
     const token = localStorage.getItem("token");
@@ -22,43 +18,90 @@ function authHeaders() {
     return h;
 }
 
-// ─── LOAD EVENT + PARTICIPANTS ───────────────────────────────────────────────
-async function loadEventInfo(idSuKien) {
+// ================= LOAD EVENTS SELECTOR =================
+async function loadEventsSelector() {
+    const selector = document.getElementById("eventSelector");
+    if (!selector) return;
+
     try {
-        const res = await fetch(`${API_BASE}/SuKien/${idSuKien}`, { headers: authHeaders() });
-        if (!res.ok) return;
-        const ev = await res.json();
-        currentEventInfo = ev;
-        const title = ev.TenSuKien ?? ev.tenSuKien ?? "Sự kiện";
-        const diaDiem = ev.TenDiaDiem ?? ev.tenDiaDiem ?? "";
-        const batDau = ev.ThoiGianBatDau ?? ev.thoiGianBatDau;
-        const ketThuc = ev.ThoiGianKetThuc ?? ev.thoiGianKetThuc;
-        const h1 = document.querySelector(".event-info h1");
-        if (h1) h1.textContent = title;
-        const meta = document.querySelector(".event-meta");
-        if (meta && batDau) {
-            const s = new Date(batDau);
-            const e = ketThuc ? new Date(ketThuc) : null;
-            const timeStr = e
-                ? `${s.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} – ${e.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
-                : s.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-            meta.innerHTML = `
-                <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem || "—")}</span>
-                <span><i class="fas fa-clock"></i> ${timeStr}</span>`;
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/SuKien`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Lỗi tải sự kiện");
+
+        const events = await res.json();
+        attendancePageData.events = events;
+
+        selector.innerHTML = "";
+        events.forEach(e => {
+            selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
+        });
+
+        // Get saved selected event
+        let savedId = localStorage.getItem("btc_attendance_selected_event_id") || localStorage.getItem("btcCurrentSuKien");
+        if (savedId && events.some(e => e.idSuKien == savedId)) {
+            selector.value = savedId;
+            attendancePageData.selectedEventId = savedId;
+        } else if (events.length > 0) {
+            selector.value = events[0].idSuKien;
+            attendancePageData.selectedEventId = events[0].idSuKien;
+            localStorage.setItem("btc_attendance_selected_event_id", events[0].idSuKien);
+            localStorage.setItem("btcCurrentSuKien", events[0].idSuKien);
         }
-    } catch (e) {
-        console.warn("Không tải thông tin SK:", e);
+
+        // Change listener
+        selector.addEventListener("change", function () {
+            attendancePageData.selectedEventId = this.value;
+            localStorage.setItem("btc_attendance_selected_event_id", this.value);
+            localStorage.setItem("btcCurrentSuKien", this.value);
+            loadEventDetailsAndAttendance();
+        });
+
+    } catch (error) {
+        console.error("Lỗi tải selector:", error);
     }
 }
 
-async function loadAttendanceData() {
-    if (!currentIdSuKien) {
-        showBtcMessage("Thiếu id sự kiện. Mở trang dạng: btc-attendance.html?idSuKien=1", "error");
-        return;
+// ================= LOAD EVENT DETAILS & ATTENDANCE DATA =================
+async function loadEventDetailsAndAttendance() {
+    const eventId = attendancePageData.selectedEventId;
+    if (!eventId) return;
+
+    // Load event details
+    try {
+        const res = await fetch(`${API_BASE}/SuKien/${eventId}`, { headers: authHeaders() });
+        if (res.ok) {
+            const ev = await res.json();
+            const title = ev.tenSuKien || "Sự kiện";
+            const diaDiem = ev.tenDiaDiem || "Hội trường";
+            const batDau = ev.thoiGianBatDau;
+            const ketThuc = ev.thoiGianKetThuc;
+
+            const titleEl = document.getElementById("attendanceEventTitle");
+            if (titleEl) titleEl.textContent = title;
+
+            const locEl = document.getElementById("attendanceEventLocation");
+            if (locEl) locEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${diaDiem}`;
+
+            const timeEl = document.getElementById("attendanceEventTime");
+            if (timeEl && batDau) {
+                const s = new Date(batDau);
+                const e = ketThuc ? new Date(ketThuc) : null;
+                const timeStr = e
+                    ? `${s.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} – ${e.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
+                    : s.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+                timeEl.innerHTML = `<i class="fas fa-clock"></i> Trực tiếp • ${timeStr}`;
+            }
+        }
+    } catch (error) {
+        console.error("Lỗi load event details:", error);
     }
 
+    // Load participants (registrations)
     try {
-        const res = await fetch(`${API_BASE}/DangKy/su-kien/${currentIdSuKien}`, {
+        const res = await fetch(`${API_BASE}/DangKy/su-kien/${eventId}`, {
             headers: authHeaders()
         });
 
@@ -66,30 +109,31 @@ async function loadAttendanceData() {
 
         const data = await res.json();
         const raw = Array.isArray(data) ? data : (data.data || data.items || []);
-        participantsData = raw.map(normalizeParticipant);
+        attendancePageData.participants = raw.map(normalizeParticipant);
 
-        renderParticipantsTable(participantsData);
+        renderParticipantsTable(attendancePageData.participants);
         updateStats();
     } catch (error) {
         console.error("Lỗi load đăng ký:", error);
-        showBtcMessage("Không tải được danh sách đăng ký. Kiểm tra Backend và idSuKien.", "error");
+        const tbody = document.getElementById("participantsTableBody");
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Không tải được dữ liệu tham gia.</td></tr>`;
     }
 }
 
 function normalizeParticipant(p) {
     return {
-        idDangKy: p.IdDangKy ?? p.idDangKy,
-        idSuKien: p.IdSuKien ?? p.idSuKien,
-        idNguoiDung: p.IdNguoiDung ?? p.idNguoiDung,
-        hoTen: p.HoTenNguoiDung ?? p.hoTenNguoiDung ?? "—",
-        trangThai: p.TrangThai ?? p.trangThai ?? "",
-        thoiGianDangKy: p.ThoiGianDangKy ?? p.thoiGianDangKy,
-        thoiGianCheckin: p.ThoiGianCheckin ?? p.thoiGianCheckin,
-        thoiGianCheckout: p.ThoiGianCheckout ?? p.thoiGianCheckout
+        idDangKy: p.idDangKy ?? p.IdDangKy,
+        idSuKien: p.idSuKien ?? p.IdSuKien,
+        idNguoiDung: p.idNguoiDung ?? p.IdNguoiDung,
+        hoTen: p.hoTenNguoiDung ?? p.HoTenNguoiDung ?? "—",
+        trangThai: p.trangThai ?? p.TrangThai ?? "",
+        thoiGianDangKy: p.thoiGianDangKy ?? p.ThoiGianDangKy,
+        thoiGianCheckin: p.thoiGianCheckin ?? p.ThoiGianCheckin,
+        thoiGianCheckout: p.thoiGianCheckout ?? p.ThoiGianCheckout
     };
 }
 
-// ─── RENDER TABLE ─────────────────────────────────────────────────────────────
+// ================= RENDER TABLE =================
 function renderParticipantsTable(list) {
     const tbody = document.getElementById("participantsTableBody");
     if (!tbody) return;
@@ -97,7 +141,7 @@ function renderParticipantsTable(list) {
     tbody.innerHTML = "";
 
     if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#888;">Chưa có đăng ký</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#888;">Chưa có người đăng ký</td></tr>`;
         return;
     }
 
@@ -112,7 +156,7 @@ function renderParticipantsTable(list) {
             : "—";
 
         let actions = "";
-        if (p.trangThai === "Chờ xác nhận") {
+        if (p.trangThai === "Chờ xác nhận" || p.trangThai === "pending") {
             actions = `
                 <button class="btn-btc-approve" title="Xác nhận" onclick="approveRegistration('${p.idNguoiDung}')"><i class="fas fa-check"></i></button>
                 <button class="btn-btc-reject" title="Từ chối" onclick="rejectRegistration('${p.idNguoiDung}')"><i class="fas fa-times"></i></button>`;
@@ -137,17 +181,17 @@ function renderParticipantsTable(list) {
 }
 
 function mapStatusClass(trangThai) {
-    switch (trangThai) {
-        case "Đã tham gia": return "present";
-        case "Đã xác nhận": return "confirmed";
-        case "Chờ xác nhận": return "pending";
-        case "Vắng mặt": return "absent";
-        case "Đã hủy": return "cancelled";
-        default: return "";
-    }
+    if (!trangThai) return "";
+    const lower = trangThai.toLowerCase();
+    if (lower.includes("đã tham") || lower.includes("có mặt")) return "present";
+    if (lower.includes("xác nhận") || lower === "confirmed") return "confirmed";
+    if (lower.includes("chờ") || lower === "pending") return "pending";
+    if (lower.includes("vắng") || lower === "absent") return "absent";
+    if (lower.includes("hủy") || lower === "cancelled") return "cancelled";
+    return "";
 }
 
-// ─── QR CHECK-IN (BTC) ───────────────────────────────────────────────────────
+// ================= QR CHECK-IN =================
 async function checkInByQrToken(qrToken) {
     const token = (qrToken || "").trim();
     if (!token) {
@@ -156,24 +200,27 @@ async function checkInByQrToken(qrToken) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/DangKy/check-in-qr`, {
+        const res = await fetch(`${API_BASE}/DangKy/check-in`, {
             method: "POST",
             headers: authHeaders(),
-            body: JSON.stringify({ QrToken: token })
+            body: JSON.stringify({ 
+                IdSuKien: parseInt(attendancePageData.selectedEventId),
+                IdNguoiDung: token // giả sử token QR là IdNguoiDung
+            })
         });
         const data = await res.json().catch(() => ({}));
-        const ok = data.Success ?? data.success;
-        const msg = data.Message || data.message || "";
+        const ok = data.success ?? data.Success;
+        const msg = data.message || data.Message || "";
 
         if (res.ok && ok !== false) {
             showBtcMessage(msg || "Check-in QR thành công!", "success");
-            pushActivity("QR check-in", "THÀNH CÔNG");
+            pushActivity("QR check-in: " + token, "THÀNH CÔNG");
             const input = document.getElementById("qrTokenInput");
             if (input) input.value = "";
-            await loadAttendanceData();
+            await loadEventDetailsAndAttendance();
         } else {
-            showBtcMessage(msg || "Mã QR không hợp lệ hoặc đã hết hạn.", "error");
-            pushActivity(msg || "QR thất bại", "LỖI");
+            showBtcMessage(msg || "Mã check-in không hợp lệ.", "error");
+            pushActivity(msg || "QR thất bại: " + token, "LỖI");
         }
     } catch (e) {
         console.error(e);
@@ -181,21 +228,22 @@ async function checkInByQrToken(qrToken) {
     }
 }
 
-// ─── DUYỆT / TỪ CHỐI ĐĂNG KÝ ─────────────────────────────────────────────────
+// ================= DUYỆT ĐĂNG KÝ =================
 async function approveRegistration(idNguoiDung) {
-    if (!currentIdSuKien) return;
+    const eventId = attendancePageData.selectedEventId;
+    if (!eventId) return;
     try {
-        const res = await fetch(`${API_BASE}/DangKy/xac-nhan`, {
+        const res = await fetch(`${API_BASE}/DangKy/check-in`, {
             method: "POST",
             headers: authHeaders(),
-            body: JSON.stringify({ IdSuKien: parseInt(currentIdSuKien, 10), IdNguoiDung: idNguoiDung })
+            body: JSON.stringify({ IdSuKien: parseInt(eventId, 10), IdNguoiDung: idNguoiDung })
         });
         const data = await res.json().catch(() => ({}));
-        if (res.ok && (data.Success ?? data.success) !== false) {
-            showBtcMessage("Đã xác nhận đăng ký.", "success");
-            await loadAttendanceData();
+        if (res.ok && (data.success ?? data.Success) !== false) {
+            showBtcMessage("Đã xác nhận điểm danh thành công.", "success");
+            await loadEventDetailsAndAttendance();
         } else {
-            showBtcMessage(data.Message || data.message || "Xác nhận thất bại.", "error");
+            showBtcMessage(data.message || data.Message || "Xác nhận thất bại.", "error");
         }
     } catch (e) {
         showBtcMessage("Lỗi kết nối.", "error");
@@ -203,50 +251,33 @@ async function approveRegistration(idNguoiDung) {
 }
 
 async function rejectRegistration(idNguoiDung) {
-    if (!currentIdSuKien || !confirm("Từ chối đăng ký này?")) return;
+    const eventId = attendancePageData.selectedEventId;
+    if (!eventId || !confirm("Từ chối đăng ký này?")) return;
     try {
-        const res = await fetch(`${API_BASE}/DangKy/tu-choi`, {
+        const res = await fetch(`${API_BASE}/DangKy/huy-dang-ky`, {
             method: "POST",
             headers: authHeaders(),
-            body: JSON.stringify({ IdSuKien: parseInt(currentIdSuKien, 10), IdNguoiDung: idNguoiDung })
+            body: JSON.stringify({ IdSuKien: parseInt(eventId, 10), IdNguoiDung: idNguoiDung })
         });
         const data = await res.json().catch(() => ({}));
-        if (res.ok && (data.Success ?? data.success) !== false) {
-            showBtcMessage("Đã từ chối đăng ký.", "success");
-            await loadAttendanceData();
+        if (res.ok && (data.success ?? data.Success) !== false) {
+            showBtcMessage("Đã hủy đăng ký.", "success");
+            await loadEventDetailsAndAttendance();
         } else {
-            showBtcMessage(data.Message || data.message || "Từ chối thất bại.", "error");
+            showBtcMessage(data.message || data.Message || "Hủy thất bại.", "error");
         }
     } catch (e) {
         showBtcMessage("Lỗi kết nối.", "error");
     }
 }
 
-// ─── MANUAL: dán mã QR hoặc nhập id vé ───────────────────────────────────────
-async function manualCheckIn() {
-    const qr = prompt(
-        "Dán mã QR (UTE-CHECKIN-...) hoặc chỉ nhập IdDangKy:",
-        document.getElementById("qrTokenInput")?.value || ""
-    );
-    if (!qr) return;
-
-    const trimmed = qr.trim();
-    if (/^\d+$/.test(trimmed) && typeof TicketBiz !== "undefined") {
-        await checkInByQrToken(TicketBiz.buildQrPayload(parseInt(trimmed, 10)));
-    } else if (/^UTE-CHECKIN-/i.test(trimmed)) {
-        await checkInByQrToken(trimmed);
-    } else {
-        await checkInByQrToken(trimmed);
-    }
-}
-
-// ─── STATS ───────────────────────────────────────────────────────────────────
+// ================= STATS & PROGRESS =================
 function updateStats() {
-    const total = participantsData.length;
-    const present = participantsData.filter(p =>
-        p.trangThai === "Đã tham gia" || p.thoiGianCheckin
+    const total = attendancePageData.participants.length;
+    const present = attendancePageData.participants.filter(p =>
+        p.trangThai.toLowerCase().includes("tham gia") || p.trangThai.toLowerCase().includes("có mặt") || p.thoiGianCheckin
     ).length;
-    const pending = participantsData.filter(p => p.trangThai === "Chờ xác nhận").length;
+    const pending = attendancePageData.participants.filter(p => p.trangThai === "Chờ xác nhận" || p.trangThai === "pending").length;
     const absent = total - present;
 
     const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
@@ -272,7 +303,6 @@ function updateStats() {
     if (pendingEl) pendingEl.textContent = pending > 0 ? `${pending} đăng ký chờ duyệt` : "";
 }
 
-// ─── ACTIVITY FEED ───────────────────────────────────────────────────────────
 function pushActivity(text, statusText) {
     const list = document.querySelector(".activity-list");
     if (!list) return;
@@ -293,15 +323,14 @@ function pushActivity(text, statusText) {
     while (list.children.length > 8) list.removeChild(list.lastChild);
 }
 
-// ─── SEARCH ──────────────────────────────────────────────────────────────────
+// ================= SEARCH & EXPORT =================
 function setupSearch() {
-    const searchInput = document.querySelector(".participants-card .search-box input")
-        || document.querySelector(".search-box input");
+    const searchInput = document.querySelector(".search-box input");
     if (!searchInput) return;
 
     searchInput.addEventListener("input", function (e) {
         const term = e.target.value.toLowerCase();
-        const filtered = participantsData.filter(p =>
+        const filtered = attendancePageData.participants.filter(p =>
             (p.hoTen || "").toLowerCase().includes(term) ||
             String(p.idNguoiDung || "").toLowerCase().includes(term) ||
             String(p.idDangKy || "").includes(term)
@@ -310,13 +339,13 @@ function setupSearch() {
     });
 }
 
-function exportToExcel() {
-    if (!participantsData.length) {
-        showBtcMessage("Không có dữ liệu để xuất.", "info");
+function exportParticipants() {
+    if (!attendancePageData.participants.length) {
+        alert("Không có dữ liệu để xuất.");
         return;
     }
     const headers = ["IdDangKy", "HoTen", "IdNguoiDung", "TrangThai", "ThoiGianCheckin"];
-    const rows = participantsData.map(p => [
+    const rows = attendancePageData.participants.map(p => [
         p.idDangKy,
         p.hoTen,
         p.idNguoiDung,
@@ -327,19 +356,8 @@ function exportToExcel() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `diem-danh-sk${currentIdSuKien}.csv`;
+    a.download = `diem-danh-sk${attendancePageData.selectedEventId}.csv`;
     a.click();
-}
-
-function setupEventListeners() {
-    document.querySelector(".btn-export")?.addEventListener("click", exportToExcel);
-    document.querySelector(".btn-manual-checkin")?.addEventListener("click", manualCheckIn);
-    document.getElementById("btnScanQr")?.addEventListener("click", () => {
-        checkInByQrToken(document.getElementById("qrTokenInput")?.value);
-    });
-    document.getElementById("qrTokenInput")?.addEventListener("keydown", e => {
-        if (e.key === "Enter") checkInByQrToken(e.target.value);
-    });
 }
 
 function showBtcMessage(msg, type) {
@@ -355,30 +373,26 @@ function escapeHtml(str) {
     );
 }
 
-// ─── INIT ────────────────────────────────────────────────────────────────────
+// ================= DOM CONTENT LOADED =================
 document.addEventListener("DOMContentLoaded", async function () {
-    currentIdSuKien = getIdSuKienFromUrl();
-    if (currentIdSuKien) localStorage.setItem("btcCurrentSuKien", currentIdSuKien);
-
-    setupEventListeners();
     setupSearch();
+    
+    // Bind verify check-in button
+    document.getElementById("btnScanQr")?.addEventListener("click", () => {
+        checkInByQrToken(document.getElementById("qrTokenInput")?.value);
+    });
+    document.getElementById("qrTokenInput")?.addEventListener("keydown", e => {
+        if (e.key === "Enter") checkInByQrToken(e.target.value);
+    });
 
-    if (currentIdSuKien) {
-        await loadEventInfo(currentIdSuKien);
-        await loadAttendanceData();
-        setInterval(loadAttendanceData, 30000);
-    } else {
-        const id = prompt("Nhập IdSuKien cho trang điểm danh:");
-        if (id) {
-            window.location.search = `?idSuKien=${encodeURIComponent(id)}`;
-        }
-    }
+    await loadEventsSelector();
+    await loadEventDetailsAndAttendance();
+    
+    // Refresh participant list every 30s
+    setInterval(loadEventDetailsAndAttendance, 30000);
 });
 
-window.attendanceModule = {
-    loadAttendanceData,
-    checkInByQrToken,
-    approveRegistration,
-    rejectRegistration,
-    manualCheckIn
-};
+// Bind globally for inline onclick
+window.approveRegistration = approveRegistration;
+window.rejectRegistration = rejectRegistration;
+window.exportParticipants = exportParticipants;

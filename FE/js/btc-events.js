@@ -5,6 +5,7 @@ if (typeof window.API_BASE === 'undefined') {
 let eventsData = [];
 let locationsData = [];
 let categoriesData = [];
+let usersData = [];
 let currentEventId = null;
 let currentFilter = 'all';
 
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadLocations();
     loadCategories();
+    loadUsers();
     loadEvents();
     initializeFilterTabs();
     
@@ -88,6 +90,17 @@ async function loadCategories() {
     }
 }
 
+async function loadUsers() {
+    try {
+        const res = await authFetch(`${window.API_BASE}/NguoiDung`);
+        if (res.ok) {
+            usersData = await res.json();
+        }
+    } catch (error) {
+        console.error("Error loading users:", error);
+    }
+}
+
 async function loadEvents() {
     try {
         const userDataStr = localStorage.getItem('userData');
@@ -119,25 +132,29 @@ function initializeFilterTabs() {
 }
 
 function updateFilterCounts() {
+    const now = new Date();
     const counts = {
         all: eventsData.length,
         draft: eventsData.filter(e => e.trangThai === 'Nháp').length,
         pending: eventsData.filter(e => e.trangThai === 'Chờ duyệt').length,
-        approved: eventsData.filter(e => e.trangThai === 'Đã duyệt').length,
-        rejected: eventsData.filter(e => e.trangThai === 'Từ chối').length
+        upcoming: eventsData.filter(e => e.trangThai === 'Đã duyệt' && new Date(e.thoiGianKetThuc) >= now).length,
+        completed: eventsData.filter(e => e.trangThai === 'Đã duyệt' && new Date(e.thoiGianKetThuc) < now).length,
+        cancelled: eventsData.filter(e => e.trangThai === 'Hủy' || e.trangThai === 'Từ chối').length
     };
     
     const allBtn = document.querySelector('.tab-btn[data-status="all"]');
     const draftBtn = document.querySelector('.tab-btn[data-status="Nháp"]');
     const pendingBtn = document.querySelector('.tab-btn[data-status="Chờ duyệt"]');
-    const approvedBtn = document.querySelector('.tab-btn[data-status="Đã duyệt"]');
-    const rejectedBtn = document.querySelector('.tab-btn[data-status="Từ chối"]');
+    const upcomingBtn = document.querySelector('.tab-btn[data-status="Sắp diễn ra"]');
+    const completedBtn = document.querySelector('.tab-btn[data-status="Đã hoàn thành"]');
+    const cancelledBtn = document.querySelector('.tab-btn[data-status="Hủy"]');
 
     if (allBtn) allBtn.textContent = `Tất cả (${counts.all})`;
     if (draftBtn) draftBtn.textContent = `Nháp (${counts.draft})`;
     if (pendingBtn) pendingBtn.textContent = `Chờ duyệt (${counts.pending})`;
-    if (approvedBtn) approvedBtn.textContent = `Đã duyệt (${counts.approved})`;
-    if (rejectedBtn) rejectedBtn.textContent = `Từ chối (${counts.rejected})`;
+    if (upcomingBtn) upcomingBtn.textContent = `Sắp diễn ra (${counts.upcoming})`;
+    if (completedBtn) completedBtn.textContent = `Đã hoàn thành (${counts.completed})`;
+    if (cancelledBtn) cancelledBtn.textContent = `Đã hủy (${counts.cancelled})`;
 }
 
 function isUpcoming(event) {
@@ -192,9 +209,12 @@ function renderEvents() {
     container.innerHTML = '';
     
     let filtered = eventsData;
-    if (currentFilter !== 'all') {
-        filtered = eventsData.filter(e => e.trangThai === currentFilter);
-    }
+    const now = new Date();
+    if (currentFilter === 'Nháp') filtered = eventsData.filter(e => e.trangThai === 'Nháp');
+    else if (currentFilter === 'Chờ duyệt') filtered = eventsData.filter(e => e.trangThai === 'Chờ duyệt');
+    else if (currentFilter === 'Sắp diễn ra') filtered = eventsData.filter(e => e.trangThai === 'Đã duyệt' && new Date(e.thoiGianKetThuc) >= now);
+    else if (currentFilter === 'Đã hoàn thành') filtered = eventsData.filter(e => e.trangThai === 'Đã duyệt' && new Date(e.thoiGianKetThuc) < now);
+    else if (currentFilter === 'Hủy') filtered = eventsData.filter(e => e.trangThai === 'Hủy' || e.trangThai === 'Từ chối');
     
     if (filtered.length === 0) {
         container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fff; border-radius: 8px;">
@@ -215,7 +235,9 @@ function renderEvents() {
         if (event.trangThai === 'Nháp') {
             actionsHtml += `<button class="btn-action btn-submit-approval" style="color: #0056b3; border-color: #0056b3; background: #e6f0fa;" onclick="submitApproval(${event.idSuKien})"><i class="fas fa-paper-plane"></i> Gửi phê duyệt</button>`;
         }
-        if (event.trangThai === 'Nháp' || event.trangThai === 'Chờ duyệt' || event.trangThai === 'Đã duyệt') {
+        const cancelAllowedStatuses = ['Nháp', 'Chờ duyệt', 'Từ chối', 'Đã duyệt'];
+        const isFutureEvent = new Date(event.thoiGianBatDau) > new Date();
+        if (cancelAllowedStatuses.includes(event.trangThai) && isFutureEvent) {
             actionsHtml += `<button class="btn-action btn-cancel" onclick="confirmCancelEvent(${event.idSuKien})"><i class="fas fa-times-circle"></i> Hủy</button>`;
         }
         actionsHtml += `<button class="btn-action btn-view" onclick="openViewEventModal(${event.idSuKien})"><i class="fas fa-eye"></i> Chi tiết</button>`;
@@ -579,26 +601,95 @@ window.calculateBudgetTotal = function() {
     }
 }
 
-window.addOrganizerRow = function() {
+window.toggleUserSelection = function() {
     if (document.getElementById('eventForm').classList.contains('readonly')) return;
+    
+    const container = document.getElementById('userSelectionContainer');
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        renderUserCheckboxes();
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+window.filterUserSelection = function() {
+    const term = document.getElementById('userSearchInput').value.toLowerCase();
+    renderUserCheckboxes(term);
+}
+
+function renderUserCheckboxes(filterTerm = '') {
+    const container = document.getElementById('userCheckboxes');
+    container.innerHTML = '';
+    
+    // Ignore current logged in user (organizer themselves) if needed, but let's show all
+    const filteredUsers = usersData.filter(u => 
+        (u.hoTen && u.hoTen.toLowerCase().includes(filterTerm)) ||
+        (u.maSoSSO && u.maSoSSO.toLowerCase().includes(filterTerm)) ||
+        (u.email && u.email.toLowerCase().includes(filterTerm))
+    );
+    
+    // Get currently added users to check them
+    const addedUserIds = Array.from(document.querySelectorAll('.organizer-item')).map(el => el.dataset.userId);
+
+    if (filteredUsers.length === 0) {
+        container.innerHTML = '<p style="color: #666; font-size: 14px;">Không tìm thấy người dùng.</p>';
+        return;
+    }
+
+    filteredUsers.forEach(u => {
+        const isChecked = addedUserIds.includes(u.idNguoiDung) ? 'checked' : '';
+        const nameText = `${u.hoTen || 'Chưa cập nhật'} (${u.maSoSSO || u.email})`;
+        
+        container.innerHTML += `
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                <input type="checkbox" value="${u.idNguoiDung}" onchange="handleUserSelectionChange(this, '${u.idNguoiDung}', '${escapeHtml(u.hoTen || '')}', '${escapeHtml(u.maSoSSO || '')}')" ${isChecked}>
+                <span>${escapeHtml(nameText)}</span>
+            </label>
+        `;
+    });
+}
+
+window.handleUserSelectionChange = function(checkbox, userId, userName, maSo) {
     const list = document.getElementById('organizersList');
-    if (!list) return;
     
-    // Add a simple input row for adding a member
-    const div = document.createElement('div');
-    div.className = 'organizer-item new-organizer';
-    div.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; background: #f8fafc; margin-top: 10px; border-radius: 8px;';
-    
-    div.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-            <input type="text" placeholder="Nhập mã sinh viên..." class="student-id-input" style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
-            <input type="text" placeholder="Vai trò (VD: Thành viên)" class="role-input" style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
-        </div>
-        <div style="margin-left: 10px;">
-            <button type="button" onclick="this.closest('.new-organizer').remove()" style="color: #ef4444; background: none; border: none; cursor: pointer; padding: 8px;"><i class="fas fa-trash"></i></button>
-        </div>
-    `;
-    
-    list.appendChild(div);
+    if (checkbox.checked) {
+        // Add to list
+        const div = document.createElement('div');
+        div.className = 'organizer-item new-organizer';
+        div.dataset.userId = userId;
+        div.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; background: #f8fafc; margin-top: 10px; border-radius: 8px;';
+        
+        const avatarInitial = userName ? userName.charAt(0).toUpperCase() : 'U';
+        
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <div style="width: 32px; height: 32px; background: #64748b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${avatarInitial}</div>
+                <div class="organizer-info" style="flex: 1;">
+                    <div class="organizer-name" style="font-weight: 600; font-size: 14px;">${userName} <span style="font-weight:normal; color:#666; font-size: 12px;">(${maSo})</span></div>
+                    <input type="text" placeholder="Phân công nhiệm vụ..." class="role-input" style="width: 100%; padding: 4px 8px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                </div>
+            </div>
+            <div style="margin-left: 10px;">
+                <button type="button" onclick="removeOrganizer('${userId}')" style="color: #ef4444; background: none; border: none; cursor: pointer; padding: 4px;"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        list.appendChild(div);
+    } else {
+        // Remove from list
+        removeOrganizer(userId);
+    }
+}
+
+window.removeOrganizer = function(userId) {
+    const items = document.querySelectorAll('.organizer-item');
+    items.forEach(item => {
+        if (item.dataset.userId === userId) {
+            item.remove();
+        }
+    });
+    // Uncheck if modal is open
+    const checkbox = document.querySelector(`#userCheckboxes input[value="${userId}"]`);
+    if (checkbox) checkbox.checked = false;
 }
 

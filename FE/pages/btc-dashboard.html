@@ -149,15 +149,22 @@
                     <h1>Tổng quan Dự án</h1>
                     <p id="welcomeMsg">Cập nhật lúc hôm nay. Kiểm tra tất cả nhiệm vụ và ngân sách.</p>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-secondary" onclick="exportReport()">
-                        <i class="fas fa-file-export"></i>
-                        Gửi báo cáo
-                    </button>
-                    <button class="btn-primary" onclick="submitBudgetApproval()">
-                        <i class="fas fa-check"></i>
-                        Gửi phê duyệt ngân sách
-                    </button>
+                <div class="header-sub-row">
+                    <div class="event-selector-wrapper">
+                        <select id="eventSelector" class="event-dropdown-select">
+                            <option value="">-- Chọn sự kiện --</option>
+                        </select>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-secondary" onclick="exportReport()">
+                            <i class="fas fa-file-export"></i>
+                            Gửi báo cáo
+                        </button>
+                        <button class="btn-primary" onclick="submitBudgetApproval()">
+                            <i class="fas fa-check"></i>
+                            Gửi phê duyệt ngân sách
+                        </button>
+                    </div>
                 </div>
             </div>
 
