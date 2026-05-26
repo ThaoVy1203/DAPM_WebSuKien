@@ -20,6 +20,7 @@ builder.Services.AddScoped<INguoiDungService, NguoiDungService>();
 builder.Services.AddScoped<IDangKyService, DangKyService>();
 builder.Services.AddScoped<IDiaDiemService, DiaDiemService>();
 builder.Services.AddScoped<IDanhMucService, DanhMucService>();
+builder.Services.AddScoped<IBaoCaoService, BaoCaoService>();
 
 // Add CORS
 builder.Services.AddCors(options =>

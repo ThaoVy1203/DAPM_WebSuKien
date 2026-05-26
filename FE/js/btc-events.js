@@ -2,38 +2,88 @@
 
 // Global variables
 let currentEventId = null;
+let allBtcEvents = [];      // Cache toàn bộ event cards
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    // Cache tất cả event cards ban đầu
+    allBtcEvents = [...document.querySelectorAll('.event-card')];
+
     initializeFilterTabs();
     initializeBudgetCalculation();
+    initializeSearch();
 });
 
-// Filter Tabs
+// ===== Tìm kiếm & Lọc cho BTC =====
+
+function initializeSearch() {
+    const searchInput = document.querySelector('.search-bar input');
+    const clearBtn = document.getElementById('btnClearSearch');
+    if (!searchInput) return;
+
+    let debounceTimer;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        // Hiện/ẩn nút xóa
+        if (clearBtn) clearBtn.style.display = searchInput.value ? 'flex' : 'none';
+        debounceTimer = setTimeout(applyBtcSearch, 300);
+    });
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { clearTimeout(debounceTimer); applyBtcSearch(); }
+    });
+
+    // Nút xóa tìm kiếm
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            applyBtcSearch();
+            searchInput.focus();
+        });
+    }
+}
+
+function applyBtcSearch() {
+    const keyword = (document.querySelector('.search-bar input')?.value || '').trim().toLowerCase();
+    const activeTab = document.querySelector('.tab-btn.active');
+    const activeStatus = activeTab ? activeTab.dataset.status : 'all';
+
+    allBtcEvents.forEach(card => {
+        const title = (card.querySelector('.event-title')?.textContent || '').toLowerCase();
+        const location = (card.querySelector('.event-location span')?.textContent || '').toLowerCase();
+        const date = (card.querySelector('.event-date span')?.textContent || '').toLowerCase();
+
+        const matchKeyword = !keyword || title.includes(keyword) || location.includes(keyword) || date.includes(keyword);
+        const matchStatus = activeStatus === 'all' || card.dataset.status === activeStatus;
+
+        card.style.display = matchKeyword && matchStatus ? 'block' : 'none';
+    });
+
+    updateBtcResultCount();
+}
+
+function updateBtcResultCount() {
+    const visible = allBtcEvents.filter(c => c.style.display !== 'none').length;
+    let counter = document.querySelector('.btc-result-count');
+    if (!counter) {
+        counter = document.createElement('p');
+        counter.className = 'btc-result-count';
+        const grid = document.querySelector('.events-grid');
+        if (grid) grid.before(counter);
+    }
+    counter.textContent = `Hiển thị ${visible} / ${allBtcEvents.length} sự kiện`;
+    counter.style.cssText = 'font-size:13px;color:#6B7280;margin-bottom:12px;';
+}
+
+// Filter Tabs — cập nhật để kết hợp với tìm kiếm
 function initializeFilterTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
-    const eventCards = document.querySelectorAll('.event-card');
 
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
-            // Remove active class from all buttons
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Add active class to clicked button
             this.classList.add('active');
-
-            // Get filter status
-            const filterStatus = this.getAttribute('data-status');
-
-            // Filter event cards
-            eventCards.forEach(card => {
-                if (filterStatus === 'all') {
-                    card.style.display = 'block';
-                } else {
-                    const cardStatus = card.getAttribute('data-status');
-                    card.style.display = cardStatus === filterStatus ? 'block' : 'none';
-                }
-            });
+            applyBtcSearch(); // Áp dụng cả tìm kiếm + tab
         });
     });
 }
