@@ -8,6 +8,7 @@ namespace aspiCore.Dtos.NguoiDung
         public string Email { get; set; } = string.Empty;
         public string? SDT { get; set; }
         public string? AnhDaiDien { get; set; }
+        public bool TrangThai { get; set; } = true;
         public List<string> VaiTros { get; set; } = new();
     }
 
@@ -27,6 +28,7 @@ namespace aspiCore.Dtos.NguoiDung
         public string Email { get; set; } = string.Empty;
         public string? SDT { get; set; }
         public string? AnhDaiDien { get; set; }
+        public bool? TrangThai { get; set; }
     }
 
     public class LoginDto

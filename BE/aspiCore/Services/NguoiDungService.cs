@@ -45,6 +45,7 @@ namespace aspiCore.Services
                     Email = nguoiDung.Email,
                     SDT = nguoiDung.SDT,
                     AnhDaiDien = nguoiDung.AnhDaiDien,
+                    TrangThai = nguoiDung.TrangThai,
                     VaiTros = nguoiDung.VaiTro_NguoiDungs
                         .Where(vn => vn.TrangThai && vn.VaiTro != null)
                         .Select(vn => vn.VaiTro!.TenVaiTro)
@@ -66,6 +67,7 @@ namespace aspiCore.Services
                     Email = n.Email,
                     SDT = n.SDT,
                     AnhDaiDien = n.AnhDaiDien,
+                    TrangThai = n.TrangThai,
                     VaiTros = n.VaiTro_NguoiDungs
                         .Where(vn => vn.TrangThai && vn.VaiTro != null)
                         .Select(vn => vn.VaiTro!.TenVaiTro)
@@ -91,6 +93,7 @@ namespace aspiCore.Services
                 Email = nguoiDung.Email,
                 SDT = nguoiDung.SDT,
                 AnhDaiDien = nguoiDung.AnhDaiDien,
+                TrangThai = nguoiDung.TrangThai,
                 VaiTros = nguoiDung.VaiTro_NguoiDungs
                     .Where(vn => vn.TrangThai && vn.VaiTro != null)
                     .Select(vn => vn.VaiTro!.TenVaiTro)
@@ -121,6 +124,7 @@ namespace aspiCore.Services
                 Email = nguoiDung.Email,
                 SDT = nguoiDung.SDT,
                 AnhDaiDien = nguoiDung.AnhDaiDien,
+                TrangThai = nguoiDung.TrangThai,
                 VaiTros = new List<string>()
             };
         }
@@ -140,6 +144,8 @@ namespace aspiCore.Services
             nguoiDung.SDT = dto.SDT;
             if (dto.AnhDaiDien != null)
                 nguoiDung.AnhDaiDien = dto.AnhDaiDien;
+            if (dto.TrangThai.HasValue)
+                nguoiDung.TrangThai = dto.TrangThai.Value;
 
             await _context.SaveChangesAsync();
 
@@ -151,6 +157,7 @@ namespace aspiCore.Services
                 Email = nguoiDung.Email,
                 SDT = nguoiDung.SDT,
                 AnhDaiDien = nguoiDung.AnhDaiDien,
+                TrangThai = nguoiDung.TrangThai,
                 VaiTros = nguoiDung.VaiTro_NguoiDungs
                     .Where(vn => vn.TrangThai && vn.VaiTro != null)
                     .Select(vn => vn.VaiTro!.TenVaiTro)
@@ -202,6 +209,29 @@ namespace aspiCore.Services
             _context.NguoiDungs.Remove(nguoiDung);
             await _context.SaveChangesAsync();
 
+            return true;
+        }
+
+        public async Task<bool> GanVaiTroAsync(string idNguoiDung, int idVaiTro)
+        {
+            // Kiểm tra vai trò tồn tại
+            var vaiTro = await _context.VaiTros.FindAsync(idVaiTro);
+            if (vaiTro == null) return false;
+
+            // Kiểm tra đã gán chưa
+            var exists = await _context.VaiTro_NguoiDungs
+                .AnyAsync(vn => vn.IdNguoiDung == idNguoiDung && vn.IdVaiTro == idVaiTro);
+            if (exists) return false;
+
+            _context.VaiTro_NguoiDungs.Add(new VaiTro_NguoiDung
+            {
+                IdNguoiDung = idNguoiDung,
+                IdVaiTro = idVaiTro,
+                TrangThai = true,
+                ThoiGianCapQuan = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
             return true;
         }
     }

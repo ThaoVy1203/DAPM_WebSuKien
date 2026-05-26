@@ -161,12 +161,7 @@ window.addEventListener('DOMContentLoaded', function() {
         document.getElementById('remember').checked = true;
     }
     
-    // Check if user is already logged in
-    const user = localStorage.getItem('user');
-    if (user) {
-        // Redirect to dashboard if already logged in
-        window.location.href = '../index.html';
-    }
+    // Không tự redirect khi đã đăng nhập — để người dùng đăng nhập lại nếu muốn
 });
 
 // Handle Enter key press

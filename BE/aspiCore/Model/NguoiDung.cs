@@ -31,6 +31,9 @@ namespace aspiCore.Model
         [MaxLength(30)]
         public string MatKhauSSO { get; set; } = string.Empty;
 
+        /// <summary>Trạng thái tài khoản: true = Hoạt động, false = Tạm khóa</summary>
+        public bool TrangThai { get; set; } = true;
+
         public ICollection<VaiTro_NguoiDung> VaiTro_NguoiDungs { get; set; } = new List<VaiTro_NguoiDung>();
         public ICollection<SuKien> SuKiensTao { get; set; } = new List<SuKien>();
         public ICollection<DangKySuKien> DangKySuKiens { get; set; } = new List<DangKySuKien>();

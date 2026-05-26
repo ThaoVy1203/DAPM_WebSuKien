@@ -475,12 +475,11 @@
                             <label>Vai trò <span class="required">*</span></label>
                             <select class="form-control" id="userRole" required>
                                 <option value="">Chọn vai trò</option>
-                                <option value="student">Sinh viên</option>
-                                <option value="teacher">Giảng viên</option>
-                                <option value="staff">Cán bộ</option>
-                                <option value="btc">Ban Tổ chức</option>
-                                <option value="ctsv">CTSV</option>
-                                <option value="bgh">BGH</option>
+                                <option value="user">Sinh viên / Người tham gia</option>
+                                <option value="btc">Trưởng Ban Tổ chức</option>
+                                <option value="btc_member">Thành viên Ban Tổ chức</option>
+                                <option value="ctsv">Cán bộ CTSV (Duyệt cấp 1)</option>
+                                <option value="bgh">Ban Giám hiệu (Duyệt cấp 2)</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
@@ -493,8 +492,11 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Mã số (MSSV/Mã CB)</label>
-                        <input type="text" class="form-control" id="userId">
+                        <label>Mã số (MSSV/Mã CB) <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="userId" placeholder="VD: 23115053001 hoặc CB001">
+                        <small style="color:#6B7280;font-size:12px;">
+                            ID hệ thống sẽ tự sinh từ 5 ký tự cuối mã số này.
+                        </small>
                     </div>
                     <div class="form-group">
                         <label>Số điện thoại</label>
@@ -512,7 +514,7 @@
         </div>
     </div>
 
-    <script src="../js/config.js"></script>
-    <script src="../js/admin-users.js"></script>
+    <script src="../js/config.js?v=2"></script>
+    <script src="../js/admin-users.js?v=2"></script>
 </body>
 </html>

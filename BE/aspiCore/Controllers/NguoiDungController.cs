@@ -72,5 +72,28 @@ namespace aspiCore.Controllers
             }
             return Ok(new { message = "Xóa người dùng thành công" });
         }
+
+        /// <summary>
+        /// Gán vai trò cho người dùng.
+        /// POST /api/NguoiDung/{id}/vai-tro  body: { "idVaiTro": 2 }
+        /// </summary>
+        [HttpPost("{id}/vai-tro")]
+        public async Task<ActionResult> GanVaiTro(string id, [FromBody] GanVaiTroDto dto)
+        {
+            var nguoiDung = await _nguoiDungService.GetByIdAsync(id);
+            if (nguoiDung == null)
+                return NotFound(new { message = "Không tìm thấy người dùng" });
+
+            var result = await _nguoiDungService.GanVaiTroAsync(id, dto.IdVaiTro);
+            if (!result)
+                return BadRequest(new { message = "Vai trò không tồn tại hoặc đã được gán" });
+
+            return Ok(new { message = "Gán vai trò thành công" });
+        }
     }
+}
+
+public class GanVaiTroDto
+{
+    public int IdVaiTro { get; set; }
 }

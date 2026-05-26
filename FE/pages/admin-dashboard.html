@@ -22,7 +22,10 @@
             </div>
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm...">
+                <input type="text" id="dashboardSearch" placeholder="Tìm kiếm người dùng, sự kiện...">
+                <button id="dashboardClearSearch" style="display:none;position:absolute;right:10px;background:none;border:none;color:#9CA3AF;cursor:pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
         <div class="header-right">
@@ -372,6 +375,70 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Quản lý sự kiện -->
+            <div class="chart-card" style="margin-bottom: 24px;">
+                <div class="chart-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Quản lý sự kiện</h3>
+                    <button class="btn-secondary-small" onclick="window.location.href='events.html'">
+                        <i class="fas fa-external-link-alt"></i> Xem trang sự kiện
+                    </button>
+                </div>
+
+                <!-- Thanh tìm kiếm & lọc -->
+                <div class="admin-event-filters">
+                    <div class="admin-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="adminEventKeyword" placeholder="Tìm theo tên, địa điểm...">
+                        <button id="adminClearSearch" style="display:none;" title="Xóa">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <select id="adminFilterDanhMuc">
+                        <option value="">Tất cả danh mục</option>
+                    </select>
+                    <select id="adminFilterTrangThai">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Nháp">Nháp</option>
+                        <option value="Chờ duyệt">Chờ duyệt</option>
+                        <option value="Đã duyệt">Đã duyệt</option>
+                        <option value="Đang diễn ra">Đang diễn ra</option>
+                        <option value="Đã kết thúc">Đã kết thúc</option>
+                        <option value="Đã hủy">Đã hủy</option>
+                    </select>
+                    <input type="date" id="adminFilterTuNgay" title="Từ ngày">
+                    <input type="date" id="adminFilterDenNgay" title="Đến ngày">
+                    <button class="admin-btn-reset" id="adminResetFilter">
+                        <i class="fas fa-undo"></i> Đặt lại
+                    </button>
+                </div>
+
+                <p class="admin-result-count" id="adminResultCount"></p>
+
+                <!-- Bảng sự kiện -->
+                <div class="admin-event-table-wrap">
+                    <table class="admin-event-table">
+                        <thead>
+                            <tr>
+                                <th>Tên sự kiện</th>
+                                <th>Danh mục</th>
+                                <th>Địa điểm</th>
+                                <th>Thời gian bắt đầu</th>
+                                <th>Đăng ký</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminEventTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align:center;padding:32px;color:#9CA3AF;">
+                                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -423,6 +490,7 @@
         </div>
     </footer>
 
+    <script src="../js/config.js"></script>
     <script src="../js/admin-dashboard.js"></script>
 </body>
 </html>

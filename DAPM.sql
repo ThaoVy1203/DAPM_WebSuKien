@@ -330,6 +330,46 @@ IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_PC_CongViec')
     CREATE INDEX IX_PC_CongViec ON PhanCong(idCongViec);
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_PC_NguoiDung')
     CREATE INDEX IX_PC_NguoiDung ON PhanCong(idNguoiDung);
+-- Thêm cột TrangThai vào bảng NguoiDung (nếu chưa có)
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_NAME = 'NguoiDung' AND COLUMN_NAME = 'TrangThai'
+)
+BEGIN
+    ALTER TABLE NguoiDung ADD TrangThai BIT NOT NULL DEFAULT 1;
+END
+
+-- Đánh dấu migration đã chạy để EF không chạy lại
+INSERT INTO [__EFMigrationsHistory] (MigrationId, ProductVersion)
+VALUES ('20260526000000_AddTrangThaiNguoiDung', '8.0.0');
+
+
+USE QuanLySuKien_DHSPKT;
+
+-- Thêm cột TrangThai nếu chưa có
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_NAME = 'NguoiDung' AND COLUMN_NAME = 'TrangThai'
+)
+BEGIN
+    ALTER TABLE NguoiDung ADD TrangThai BIT NOT NULL DEFAULT 1;
+    PRINT 'Đã thêm cột TrangThai';
+END
+ELSE
+    PRINT 'Cột TrangThai đã tồn tại';
+
+-- Đánh dấu migration đã chạy
+IF NOT EXISTS (
+    SELECT 1 FROM [__EFMigrationsHistory] 
+    WHERE MigrationId = '20260526000000_AddTrangThaiNguoiDung'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] (MigrationId, ProductVersion)
+    VALUES ('20260526000000_AddTrangThaiNguoiDung', '8.0.0');
+    PRINT 'Đã đánh dấu migration';
+END
+
+
 GO
 
 -- DỮ LIỆU MẪU

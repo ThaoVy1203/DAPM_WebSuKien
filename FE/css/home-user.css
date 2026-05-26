@@ -678,3 +678,137 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ===== Thanh tìm kiếm & lọc sự kiện (home-user) ===== */
+.hu-search-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    background: var(--white);
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.hu-search-input-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+}
+
+.hu-search-input-wrap i.fa-search {
+    position: absolute;
+    left: 12px;
+    color: #9CA3AF;
+    font-size: 14px;
+}
+
+.hu-search-input-wrap input {
+    width: 100%;
+    padding: 10px 36px 10px 36px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.hu-search-input-wrap input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13,90,156,0.1);
+}
+
+.hu-search-input-wrap #huClearSearch {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+}
+
+.hu-search-input-wrap #huClearSearch:hover {
+    color: #374151;
+    background: #F3F4F6;
+}
+
+.hu-search-bar select {
+    padding: 10px 14px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    outline: none;
+    min-width: 160px;
+}
+
+.hu-search-bar select:focus {
+    border-color: var(--primary-color);
+}
+
+.hu-btn-reset {
+    padding: 10px 16px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6B7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.hu-btn-reset:hover {
+    background: #F3F4F6;
+    color: var(--text-dark);
+}
+
+.hu-result-count {
+    font-size: 13px;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+
+/* Loading / Empty / Error */
+.hu-loading, .hu-empty, .hu-error {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 20px;
+    color: #6B7280;
+    font-size: 15px;
+}
+
+.hu-loading i { color: var(--primary-color); font-size: 22px; }
+.hu-empty, .hu-error { flex-direction: column; gap: 8px; text-align: center; }
+.hu-empty i, .hu-error i { font-size: 40px; color: #D1D5DB; }
+.hu-error i { color: #FCA5A5; }
+.hu-empty h4, .hu-error h4 { font-size: 16px; color: #374151; margin: 0; }
+.hu-empty p, .hu-error p { font-size: 14px; margin: 0; }
+
+@media (max-width: 768px) {
+    .hu-search-bar { flex-direction: column; }
+    .hu-search-input-wrap { width: 100%; }
+    .hu-search-bar select { width: 100%; }
+    .hu-btn-reset { width: 100%; justify-content: center; }
+}
