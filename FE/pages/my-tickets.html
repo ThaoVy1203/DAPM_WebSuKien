@@ -180,7 +180,7 @@
         <div class="container">
             <div class="page-header" style="margin-bottom:24px;">
                 <h1 style="font-size:24px;font-weight:800;">Vé của tôi</h1>
-                <p style="color:#666;margin-top:4px;">Quản lý vé điện tử, check-in và check-out sự kiện</p>
+                <p style="color:#666;margin-top:4px;">Chọn vé để xem chi tiết, mã QR check-in và check-out tại trang vé</p>
             </div>
 
             <!-- Loading -->
@@ -261,6 +261,9 @@
                     <div class="checkin-section" id="checkinSection">
                         <h3><i class="fas fa-map-marker-alt" style="color:#0D5A9C;margin-right:8px;"></i>Check-in / Check-out</h3>
 
+                        <!-- Thông tin cửa sổ thời gian -->
+                        <div id="checkinTimeInfo" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px;"></div>
+
                         <!-- Timeline -->
                         <div class="checkin-timeline">
                             <div class="checkin-step" id="stepRegister">
@@ -294,7 +297,7 @@
 
                         <p style="font-size:12px;color:#888;text-align:center;margin-top:8px;">
                             <i class="fas fa-info-circle"></i>
-                            Check-in khi đến sự kiện, Check-out khi rời đi
+                            Check-in mở 30 phút trước khi sự kiện bắt đầu
                         </p>
                     </div>
 
@@ -349,6 +352,7 @@
         </div>
     </footer>
 
+    <script src="../js/ticket-business.js"></script>
     <script src="../js/my-tickets.js"></script>
     <script src="../js/header-user.js"></script>
 </body>

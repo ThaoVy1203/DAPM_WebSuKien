@@ -1,6 +1,8 @@
-# Event Management API - Backend
+# Event Management API — Backend
 
-API quản lý sự kiện cho Trường Đại học Sư phạm Kỹ thuật Đà Nẵng
+API quản lý sự kiện cho Trường Đại học Sư phạm Kỹ thuật — Đà Nẵng (UTE).
+
+> Tài liệu tổng thể dự án (frontend, luồng người tham gia, changelog): **[../README.md](../README.md)**
 
 ## Yêu cầu hệ thống
 
@@ -10,16 +12,13 @@ API quản lý sự kiện cho Trường Đại học Sư phạm Kỹ thuật Đ
 
 ## Cài đặt
 
-### 1. Cài đặt .NET 8.0 SDK
-Tải và cài đặt từ: https://dotnet.microsoft.com/download/dotnet/8.0
+### 1. Database
 
-### 2. Cấu hình Database
+Chạy `../DAPM.sql` (và `../FE/DAPM_AlterTable.sql` nếu cần) trong SQL Server Management Studio.
 
-Chạy file `DAPM.sql` trong SQL Server Management Studio để tạo database và dữ liệu mẫu.
+### 2. Connection string
 
-### 3. Cấu hình Connection String
-
-Cập nhật connection string trong `appsettings.json`:
+`BE/aspiCore/appsettings.json`:
 
 ```json
 "ConnectionStrings": {
@@ -27,180 +26,137 @@ Cập nhật connection string trong `appsettings.json`:
 }
 ```
 
-### 4. Khôi phục packages
+### 3. Chạy API
 
 ```bash
 cd BE/aspiCore
 dotnet restore
+dotnet run --launch-profile https
 ```
 
-### 5. Chạy API
+| Môi trường | URL |
+|------------|-----|
+| HTTPS (mặc định profile `https`) | `https://localhost:7160` |
+| HTTP | `http://localhost:5103` |
+| Swagger | `https://localhost:7160/swagger` |
 
-```bash
-dotnet run
-```
-
-API sẽ chạy tại:
-- HTTPS: `https://localhost:7000`
-- HTTP: `http://localhost:5000`
-- Swagger UI: `https://localhost:7000/swagger`
+Frontend (`FE/js/*.js`) đang trỏ `API_BASE = "https://localhost:7160/api"`.
 
 ## Cấu trúc thư mục
 
 ```
 BE/aspiCore/
-├── Controllers/           # API Controllers
+├── Controllers/
 │   ├── SuKienController.cs
 │   ├── NguoiDungController.cs
-│   ├── DangKyController.cs
-│   └── DiaDiemController.cs
-├── Model/                # Entity Models
-│   ├── NguoiDung.cs
-│   ├── VaiTro.cs
-│   ├── VaiTro_NguoiDung.cs
-│   ├── SuKien.cs
-│   ├── DiaDiem.cs
-│   ├── DanhMucSuKien.cs
-│   ├── SuKien_DanhMuc.cs
-│   ├── DangKySuKien.cs
-│   ├── NguoiDung_SuKien.cs
-│   ├── ThongBao.cs
-│   ├── CongViec.cs
-│   └── PhanCong.cs
-├── Dtos/                 # Data Transfer Objects
-│   ├── SuKien/
-│   │   └── SuKienDto.cs
-│   ├── NguoiDung/
-│   │   └── NguoiDungDto.cs
-│   ├── DangKy/
-│   │   └── DangKyDto.cs
-│   ├── DiaDiem/
-│   │   └── DiaDiemDto.cs
-│   ├── DanhMuc/
-│   │   └── DanhMucDto.cs
-│   └── Common/
-│       └── ApiResponse.cs
-├── Services/             # Business Logic
-│   ├── ISuKienService.cs
-│   ├── SuKienService.cs
-│   ├── INguoiDungService.cs
-│   ├── NguoiDungService.cs
-│   ├── IDangKyService.cs
-│   ├── DangKyService.cs
-│   ├── IDiaDiemService.cs
-│   └── DiaDiemService.cs
-├── Data/                 # DbContext
-│   └── ApplicationDBContext.cs
-├── Middlewares/          # Custom Middlewares
-│   └── ExceptionMiddleware.cs
-├── Program.cs            # Entry point
-├── appsettings.json      # Configuration
-└── aspiCore.csproj
+│   ├── AuthController.cs
+│   ├── DangKyController.cs      # Đăng ký, vé, CI/CO, QR
+│   ├── DiaDiemController.cs
+│   ├── ThongBaoController.cs
+│   ├── CongviecController.cs
+│   └── ReportController.cs
+├── Model/
+├── Dtos/
+│   └── DangKy/
+│       ├── DangKyDto.cs
+│       └── QrCheckInDto.cs      # QR BTC scan
+├── Services/
+│   └── DangKyService.cs         # Logic nghiệp vụ đăng ký / CI / CO
+├── Data/ApplicationDBContext.cs
+└── Program.cs
 ```
 
-## API Endpoints
+## API — Đăng ký & vé (`/api/DangKy`)
 
-### Sự kiện (SuKien)
+| Method | Route | Body | Ghi chú |
+|--------|-------|------|---------|
+| POST | `dang-ky` | `{ IdSuKien, IdNguoiDung }` | Kiểm tra trùng, chỗ, thời gian SK |
+| POST | `huy-dang-ky` | `{ IdSuKien, IdNguoiDung }` | Không hủy sau CI / sau khi SK kết thúc |
+| POST | `check-in` | `{ IdSuKien, IdNguoiDung }` | T−30 phút → hết SK; trạng thái **Đã xác nhận** |
+| POST | `check-in-qr` | `{ QrToken }` | BTC quét `UTE-CHECKIN-{id}-{ts}`, TTL 45s |
+| POST | `check-out` | `{ IdSuKien, IdNguoiDung }` | Sau khi SK bắt đầu |
+| POST | `xac-nhan` | `{ IdSuKien, IdNguoiDung }` | BTC: Chờ xác nhận → Đã xác nhận |
+| POST | `tu-choi` | `{ IdSuKien, IdNguoiDung }` | BTC: Chờ xác nhận → Đã hủy |
+| GET | `nguoi-dung/{id}` | — | Vé / đăng ký của user |
+| GET | `su-kien/{id}` | — | Danh sách đăng ký theo SK |
+| GET | `public/{idDangKy}` | — | Tra cứu vé (public) |
 
-- `GET /api/sukien` - Lấy danh sách tất cả sự kiện
-- `GET /api/sukien/{id}` - Lấy chi tiết sự kiện
-- `GET /api/sukien/trang-thai/{trangThai}` - Lấy sự kiện theo trạng thái
-- `POST /api/sukien` - Tạo sự kiện mới
-- `PUT /api/sukien/{id}` - Cập nhật sự kiện
-- `DELETE /api/sukien/{id}` - Xóa sự kiện
+### Trạng thái `DangKySuKien.TrangThai`
 
-### Người dùng (NguoiDung)
+`Chờ xác nhận` → `Đã xác nhận` → `Đã tham gia` (sau check-in) · `Đã hủy` · `Vắng mặt`
 
-- `POST /api/nguoidung/login` - Đăng nhập
-- `POST /api/nguoidung/register` - Đăng ký tài khoản
-- `GET /api/nguoidung` - Lấy danh sách người dùng
-- `GET /api/nguoidung/{id}` - Lấy thông tin người dùng
+### Ví dụ — Check-in QR (BTC)
 
-### Đăng ký (DangKy)
-
-- `POST /api/dangky/dang-ky` - Đăng ký tham gia sự kiện
-- `POST /api/dangky/huy-dang-ky` - Hủy đăng ký
-- `POST /api/dangky/check-in` - Check-in sự kiện
-- `GET /api/dangky/su-kien/{idSuKien}` - Lấy danh sách đăng ký theo sự kiện
-- `GET /api/dangky/nguoi-dung/{idNguoiDung}` - Lấy danh sách đăng ký theo người dùng
-
-### Địa điểm (DiaDiem)
-
-- `GET /api/diadiem` - Lấy danh sách địa điểm
-- `GET /api/diadiem/{id}` - Lấy chi tiết địa điểm
-- `POST /api/diadiem` - Tạo địa điểm mới
-
-## Test API
-
-### Sử dụng Swagger UI
-
-1. Chạy API
-2. Mở trình duyệt: `https://localhost:7000/swagger`
-3. Test các endpoints trực tiếp trên giao diện
-
-### Sử dụng Postman
-
-**Đăng nhập:**
-```
-POST https://localhost:7000/api/nguoidung/login
+```http
+POST https://localhost:7160/api/DangKy/check-in-qr
 Content-Type: application/json
 
 {
-  "maSoSSO": "23115053001",
-  "matKhau": "hashed_pw_1"
+  "QrToken": "UTE-CHECKIN-12-1716634523456"
 }
 ```
 
-**Lấy danh sách sự kiện:**
-```
-GET https://localhost:7000/api/sukien
-```
+### Ví dụ — Đăng ký
 
-**Đăng ký sự kiện:**
-```
-POST https://localhost:7000/api/dangky/dang-ky
+```http
+POST https://localhost:7160/api/DangKy/dang-ky
 Content-Type: application/json
 
 {
-  "idSuKien": 1,
-  "idNguoiDung": "ND001"
+  "IdSuKien": 1,
+  "IdNguoiDung": "ND001"
 }
 ```
 
-## Database Schema
+Response thành công: `{ "Success": true, "Message": "...", "IdDangKy": 5 }`  
+Đăng ký trùng: `Success: false`, kèm `IdDangKy` để client redirect.
 
-Database được tạo từ file `DAPM.sql` với các bảng chính:
+## API — Các module khác (tóm tắt)
 
-- **NguoiDung**: Thông tin người dùng
-- **VaiTro**: Vai trò trong hệ thống
-- **VaiTro_NguoiDung**: Phân quyền người dùng
-- **SuKien**: Thông tin sự kiện
-- **DiaDiem**: Địa điểm tổ chức
-- **DanhMucSuKien**: Danh mục sự kiện
-- **DangKySuKien**: Đăng ký tham gia sự kiện
-- **ThongBao**: Thông báo cho người dùng
-- **CongViec**: Công việc trong sự kiện
-- **PhanCong**: Phân công công việc
+### Sự kiện (`/api/SuKien`)
 
-## CORS Configuration
+- CRUD, lọc theo trạng thái, câu hỏi sự kiện, v.v.
 
-API đã được cấu hình CORS để cho phép frontend kết nối từ mọi origin.
+### Người dùng (`/api/NguoiDung`, `/api/Auth`)
 
-## Lưu ý
+- Đăng nhập, đăng ký, quản lý tài khoản
 
-- Mật khẩu trong database mẫu chưa được hash (chỉ dùng cho development)
-- Cần implement JWT token cho production
-- Cần thêm validation và error handling chi tiết hơn
+### Địa điểm (`/api/DiaDiem`)
+
+- CRUD địa điểm
+
+### Thông báo (`/api/ThongBao`)
+
+- Danh sách, đếm chưa đọc
+
+Chi tiết: mở **Swagger** khi API đang chạy.
+
+## Cập nhật service layer (gần đây)
+
+File **`Services/DangKyService.cs`**:
+
+- `HuyDangKyAsync` — Include `SuKien`, chặn hủy sau check-in / sau `ThoiGianKetThuc`
+- `CheckOutAsync` — chặn check-out trước `ThoiGianBatDau`
+- `CheckInByQrAsync` — parse `UTE-CHECKIN-{id}-{timestamp}`, expiry 45s, cửa sổ T−30
+- `DangKySuKienAsync` — trả `IdDangKy` khi đã đăng ký
+
+## Database
+
+Bảng chính: `NguoiDung`, `SuKien`, `DangKySuKien`, `DiaDiem`, `ThongBao`, `CongViec`, `PhanCong`, `VaiTro`, …
+
+Script: `../DAPM.sql`
+
+## Lưu ý phát triển
+
+- JWT đã cấu hình; một số endpoint `DangKy` vẫn nhận `IdNguoiDung` từ body — cần gắn `[Authorize]` + claim user cho production
+- Mật khẩu mẫu trong DB có thể chưa hash đầy đủ (chỉ dev)
+- Stored procedures trong `DAPM.sql` (`sp_CheckInSuKien`, …) **không** được gọi từ C# — logic nằm trong `DangKyService`
+- Cột `SuKien.YeuCauXacNhan`: kiểm tra đã map EF sau khi chạy script alter
 
 ## Troubleshooting
 
-### Lỗi kết nối database
+**Lỗi kết nối database** — SQL Server chạy, đúng connection string, đã chạy `DAPM.sql`.
 
-Kiểm tra:
-1. SQL Server đã chạy chưa
-2. Connection string đúng chưa
-3. Database đã được tạo chưa (chạy DAPM.sql)
+**Port bận** — Đổi port trong `Properties/launchSettings.json` hoặc dừng process `aspiCore`.
 
-### Lỗi port đã được sử dụng
-
-Thay đổi port trong `Properties/launchSettings.json` hoặc dừng process đang sử dụng port.
+**Build: file locked** — Dừng API đang chạy (VS / terminal) rồi `dotnet build` lại.

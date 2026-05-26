@@ -23,22 +23,22 @@ document.addEventListener("DOMContentLoaded", async function () {
 // USER INFO
 // ==========================
 function loadUserInfo() {
-    // login.js lưu vào key "userData" (không phải "user")
     const raw = localStorage.getItem("userData");
     if (!raw) return;
 
     try {
         const user = JSON.parse(raw);
 
-        // Tên người dùng
-        const nameEl = document.getElementById("userName");
-        if (nameEl) nameEl.textContent = user.hoTen || "Người dùng";
+        // Hỗ trợ cả PascalCase (BE trả) và camelCase
+        const hoTen = user.HoTen || user.hoTen || "Người dùng";
 
-        // Avatar
+        const nameEl = document.getElementById("userName");
+        if (nameEl) nameEl.textContent = hoTen;
+
         const avatarEl = document.getElementById("userAvatar");
         if (avatarEl) {
-            const name = encodeURIComponent(user.hoTen || "User");
-            avatarEl.src = user.anhDaiDien
+            const name = encodeURIComponent(hoTen);
+            avatarEl.src = user.AnhDaiDien || user.anhDaiDien
                 || `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff`;
             avatarEl.onerror = function () {
                 this.src = `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff`;
@@ -161,16 +161,20 @@ function renderFeaturedEvents(events, container) {
     // Chỉ hiển thị tối đa 3 sự kiện nổi bật
     container.innerHTML = "";
     events.slice(0, 3).forEach(event => {
-        const startDate = event.thoiGianBatDau
-            ? new Date(event.thoiGianBatDau).toLocaleDateString("vi-VN")
+        const idSuKien = event.IdSuKien ?? event.idSuKien;
+        const tenSuKien = event.TenSuKien ?? event.tenSuKien ?? "Chưa có tên";
+        const batDau = event.ThoiGianBatDau ?? event.thoiGianBatDau;
+        const ketThuc = event.ThoiGianKetThuc ?? event.thoiGianKetThuc;
+        const startDate = batDau
+            ? new Date(batDau).toLocaleDateString("vi-VN")
             : "Chưa có";
-        const endDate = event.thoiGianKetThuc
-            ? new Date(event.thoiGianKetThuc).toLocaleDateString("vi-VN")
+        const endDate = ketThuc
+            ? new Date(ketThuc).toLocaleDateString("vi-VN")
             : "";
         const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
 
-        const diaDiem = event.tenDiaDiem || event.diaDiem?.tenDiaDiem || "Đang cập nhật";
-        const trangThai = event.trangThai || "";
+        const diaDiem = event.TenDiaDiem ?? event.tenDiaDiem ?? event.DiaDiem?.TenDiaDiem ?? "Đang cập nhật";
+        const trangThai = event.TrangThai ?? event.trangThai ?? "";
         const badgeClass = getBadgeClass(trangThai);
         const badgeText = trangThai || "Sự kiện";
         const isFeatured = events.indexOf(event) === 0 ? "featured" : "";
@@ -179,12 +183,12 @@ function renderFeaturedEvents(events, container) {
             <div class="event-card ${isFeatured}">
                 <div class="event-badge ${badgeClass}">${escapeHtml(badgeText)}</div>
                 <div class="event-card-content">
-                    <h3>${escapeHtml(event.tenSuKien || "Chưa có tên")}</h3>
+                    <h3>${escapeHtml(tenSuKien)}</h3>
                     <div class="event-meta">
                         <span><i class="far fa-calendar"></i> ${dateStr}</span>
                         <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</span>
                     </div>
-                    <a href="event-detail.html?id=${event.idSuKien}" class="btn-view-detail">Xem chi tiết</a>
+                    <a href="event-detail.html?id=${idSuKien}" class="btn-view-detail">Xem chi tiết</a>
                 </div>
             </div>`;
     });

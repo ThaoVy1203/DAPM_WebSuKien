@@ -35,10 +35,12 @@
             const avatarEl = document.getElementById("userAvatar");
             const qaAvatarEl = document.getElementById("qaUserAvatar");
 
-            if (nameEl) nameEl.textContent = user.hoTen || "Người dùng";
+            // Hỗ trợ cả PascalCase (BE trả) và camelCase
+            const hoTen = user.HoTen || user.hoTen || "Người dùng";
+            if (nameEl) nameEl.textContent = hoTen;
 
-            const encodedName = encodeURIComponent(user.hoTen || "User");
-            const avatarSrc = user.anhDaiDien
+            const encodedName = encodeURIComponent(hoTen);
+            const avatarSrc = user.AnhDaiDien || user.anhDaiDien
                 || `https://ui-avatars.com/api/?name=${encodedName}&background=0D5A9C&color=fff`;
 
             if (avatarEl) {

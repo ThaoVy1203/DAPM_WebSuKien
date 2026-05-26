@@ -151,6 +151,8 @@ function renderEventInfo(event) {
     }
 
     // ── Kiểm tra điều kiện cho phép đăng ký ──────────────────────────────────
+    const now = new Date();
+
     // a. Sự kiện chưa được duyệt
     const notApproved = trangThai && !["Đã duyệt", "Đang diễn ra"].includes(trangThai);
     if (notApproved) {
@@ -167,8 +169,15 @@ function renderEventInfo(event) {
     }
 
     // c. Sự kiện đã kết thúc
-    if (event.thoiGianKetThuc && new Date(event.thoiGianKetThuc) < new Date()) {
+    if (event.thoiGianKetThuc && new Date(event.thoiGianKetThuc) < now) {
         showFormError("Sự kiện này đã <strong>kết thúc</strong>. Không thể đăng ký.");
+        disableForm();
+        return;
+    }
+
+    // d. Sự kiện đã bắt đầu (đang diễn ra) — không cho đăng ký mới
+    if (event.thoiGianBatDau && new Date(event.thoiGianBatDau) <= now) {
+        showFormError("Sự kiện đã <strong>bắt đầu</strong>. Không thể đăng ký mới.");
         disableForm();
         return;
     }
@@ -291,7 +300,7 @@ function showAlreadyRegisteredPanel(reg) {
             <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
 
                 <!-- Xem vé & QR (quan trọng nhất) -->
-                <a href="my-tickets.html?dangKyId=${idDangKy}"
+                <a href="ticket-detail.html?id=${idDangKy}"
                    style="
                        padding:12px 24px; background:linear-gradient(135deg,#0D5A9C,#1976D2);
                        color:white; border-radius:10px; text-decoration:none;
@@ -535,7 +544,7 @@ function showSuccessState(idDangKy) {
     const actionsEl = success.querySelector(".success-actions");
     if (actionsEl) {
         actionsEl.innerHTML = `
-            <a href="my-tickets.html${idDangKy ? `?dangKyId=${idDangKy}` : ''}" class="btn-primary-sm">
+            <a href="${idDangKy ? `ticket-detail.html?id=${idDangKy}` : 'my-tickets.html'}" class="btn-primary-sm">
                 <i class="fas fa-qrcode"></i> Xem vé & QR Check-in
             </a>
             <a href="events.html" class="btn-outline">
