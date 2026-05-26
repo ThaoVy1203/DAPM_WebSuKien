@@ -593,6 +593,51 @@ body {
     color: var(--error-color);
 }
 
+.status-badge.confirmed {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.status-badge.pending {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-badge.cancelled {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.td-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.btn-btc-approve,
+.btn-btc-reject {
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-btc-approve {
+    background: #D1FAE5;
+    color: #059669;
+}
+
+.btn-btc-reject {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.activity-status-badge.error .status-text {
+    color: var(--error-color);
+}
+
 .btn-more {
     background: none;
     border: none;

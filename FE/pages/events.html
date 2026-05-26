@@ -126,8 +126,10 @@
                     <div class="filter-section">
                         <h4>Trạng thái</h4>
                         <div class="status-buttons">
-                            <button class="status-btn active">Sắp diễn ra</button>
-                            <button class="status-btn">Đã đóng</button>
+                            <button class="status-btn active" data-status="open">Đang mở đăng ký</button>
+                            <button class="status-btn" data-status="ongoing">Đang diễn ra</button>
+                            <button class="status-btn" data-status="ended">Đã kết thúc</button>
+                            <button class="status-btn" data-status="all">Tất cả</button>
                         </div>
                     </div>
 
@@ -142,92 +144,23 @@
                             <h2>Sự kiện sinh viên</h2>
                             <p>Khám phá và tham gia các hoạt động ngoại khóa tại UTE</p>
                         </div>
-                        <div class="results-count">Kết quả: 3 sự kiện</div>
+                        <div class="results-count" id="resultsCount">Đang tải...</div>
                     </div>
 
-                    <!-- Event Card 1 - Hội thảo Chuyển đổi số 2025 -->
-                    <div class="event-card">
-                        <div class="event-image">
-                            <img src="../images/event1.png" alt="Event" onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=Event'">
-                            <span class="event-badge hoi-thao">HỘI THẢO</span>
-                        </div>
-                        <div class="event-content">
-                            <div class="event-header">
-                                <h3>Hội thảo Chuyển đổi số 2025</h3>
-                                <span class="event-date-badge">15/11</span>
-                            </div>
-                            <p class="event-description">Hội thảo về xu hướng chuyển đổi số trong giáo dục đại học</p>
-                            <div class="event-meta">
-                                <span><i class="far fa-clock"></i> 08:00 - 17:00</span>
-                                <span><i class="fas fa-map-marker-alt"></i> Hội trường A</span>
-                                <span><i class="fas fa-users"></i> Tối đa: 300 SV</span>
-                                <span><i class="fas fa-building"></i> Đã duyệt</span>
-                            </div>
-                            <div class="event-actions">
-                                <button class="btn-secondary">Đã duyệt</button>
-                                <button class="btn-primary" onclick="window.location.href='register-event.html?id=1'">Đăng ký ngay</button>
-                            </div>
-                        </div>
+                    <!-- Loading state -->
+                    <div id="eventsLoading" style="text-align:center;padding:60px;color:#666;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:12px;color:#0D5A9C;"></i>
+                        Đang tải sự kiện...
                     </div>
 
-                    <!-- Event Card 2 - Ngày hội Tình nguyện Mùa Hè Xanh -->
-                    <div class="event-card">
-                        <div class="event-image">
-                            <img src="../images/event2.png" alt="Event" onerror="this.src='https://via.placeholder.com/400x250/10B981/FFFFFF?text=Event'">
-                            <span class="event-badge tinh-nguyen">TÌNH NGUYỆN</span>
-                        </div>
-                        <div class="event-content">
-                            <div class="event-header">
-                                <h3>Ngày hội Tình nguyện Mùa Hè Xanh</h3>
-                                <span class="event-date-badge">20/07</span>
-                            </div>
-                            <p class="event-description">Chiến dịch tình nguyện hè hỗ trợ cộng đồng</p>
-                            <div class="event-meta">
-                                <span><i class="far fa-clock"></i> 20-25/07/2025</span>
-                                <span><i class="fas fa-map-marker-alt"></i> Sân khấu ngoài trời</span>
-                                <span><i class="fas fa-users"></i> Tối đa: 500 SV</span>
-                                <span><i class="fas fa-building"></i> Đã duyệt</span>
-                            </div>
-                            <div class="event-actions">
-                                <button class="btn-secondary">Đã duyệt</button>
-                                <button class="btn-primary" onclick="window.location.href='register-event.html?id=2'">Đăng ký ngay</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Event Card 3 - Workshop Kỹ năng thuyết trình -->
-                    <div class="event-card">
-                        <div class="event-image">
-                            <img src="../images/event3.png" alt="Event" onerror="this.src='https://via.placeholder.com/400x250/1976D2/FFFFFF?text=Event'">
-                            <span class="event-badge workshop">WORKSHOP</span>
-                        </div>
-                        <div class="event-content">
-                            <div class="event-header">
-                                <h3>Workshop Kỹ năng thuyết trình chuyên nghiệp</h3>
-                                <span class="event-date-badge">05/12</span>
-                            </div>
-                            <p class="event-description">Rèn luyện kỹ năng thuyết trình và giao tiếp</p>
-                            <div class="event-meta">
-                                <span><i class="far fa-clock"></i> 13:30 - 17:00</span>
-                                <span><i class="fas fa-map-marker-alt"></i> Phòng hội thảo B1</span>
-                                <span><i class="fas fa-users"></i> Tối đa: 80 SV</span>
-                                <span><i class="fas fa-building"></i> Chờ duyệt</span>
-                            </div>
-                            <div class="event-actions">
-                                <button class="btn-secondary">Chờ duyệt</button>
-                                <button class="btn-notify">
-                                    <i class="fas fa-bell"></i>
-                                    Nhận thông báo khi được duyệt
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Events container (filled by JS) -->
+                    <div id="eventsContainer"></div>
 
                     <!-- Pagination -->
-                    <div class="pagination">
-                        <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
-                        <button class="page-btn active">1</button>
-                        <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                    <div class="pagination" id="paginationBar" style="display:none;">
+                        <button class="page-btn" id="btnPrevPage"><i class="fas fa-chevron-left"></i></button>
+                        <span id="pageInfo" style="padding:8px 16px;font-size:14px;color:#666;"></span>
+                        <button class="page-btn" id="btnNextPage"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </section>
 
@@ -350,6 +283,7 @@
         </div>
     </footer>
 
+    <script src="../js/ticket-business.js"></script>
     <script src="../js/events.js"></script>
     <script src="../js/header-user.js"></script>
 </body>

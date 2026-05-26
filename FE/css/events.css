@@ -938,3 +938,21 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Badge trạng thái sự kiện (động từ API) ── */
+.event-badge.badge-approved  { background: #059669; color: white; }
+.event-badge.badge-ongoing   { background: #1976D2; color: white; }
+.event-badge.badge-ended     { background: #6b7280; color: white; }
+.event-badge.badge-cancelled { background: #ef4444; color: white; }
+.event-badge.badge-pending   { background: #f59e0b; color: white; }
+
+/* ── Status buttons bộ lọc ── */
+.status-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.status-btn {
+    padding: 6px 12px; border: 1.5px solid #e5e7eb;
+    border-radius: 20px; background: white; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: #555;
+    transition: all 0.2s;
+}
+.status-btn:hover { border-color: #0D5A9C; color: #0D5A9C; }
+.status-btn.active { background: #0D5A9C; color: white; border-color: #0D5A9C; }

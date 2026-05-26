@@ -36,6 +36,14 @@ namespace aspiCore.Model
         [MaxLength(20)]
         public string TrangThai { get; set; } = "Nháp";
 
+        /// <summary>
+        /// true = BTC phải duyệt thủ công từng đăng ký (Chờ xác nhận → Đã xác nhận)
+        /// false (mặc định) = tự động xác nhận ngay khi đăng ký
+        /// Cần chạy DAPM_AlterTable.sql để thêm cột này vào DB trước khi bỏ [NotMapped]
+        /// </summary>
+        [NotMapped]
+        public bool YeuCauXacNhan { get; set; } = false;
+
         [MaxLength(5)]
         public string? CapPheDuyet { get; set; }
 

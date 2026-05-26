@@ -13,12 +13,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     loadWelcomeInfo();
 
-    // Load song song để nhanh hơn
+    // Load đăng ký trước, sau đó tính thống kê từ dữ liệu đã có
     await Promise.all([
         loadAllMyRegistrations(),
-        loadNotifications(),
-        loadStats()
+        loadNotifications()
     ]);
+
+    // Thống kê tính từ allMyRegistrations đã load
+    loadStats();
 
     currentCalMonth = new Date();
     renderCalendar(currentCalMonth);
@@ -33,8 +35,10 @@ function loadWelcomeInfo() {
     if (!raw) return;
     try {
         const user = JSON.parse(raw);
+        // Hỗ trợ cả PascalCase (BE trả) và camelCase
+        const hoTen = user.HoTen || user.hoTen || "bạn";
         const nameEl = document.getElementById("welcomeName");
-        if (nameEl) nameEl.textContent = `Xin chào, ${user.hoTen || "bạn"}`;
+        if (nameEl) nameEl.textContent = `Xin chào, ${hoTen}`;
     } catch (e) { /* bỏ qua */ }
 }
 
@@ -42,42 +46,67 @@ function loadWelcomeInfo() {
 async function loadAllMyRegistrations() {
     const token = localStorage.getItem("token");
     try {
-        // Gọi không có filter trangThai — lấy hết rồi lọc phía FE
-        const res = await fetch(`${API_BASE}/DangKySuKien/my`, {
+        // Lấy idNguoiDung từ userData (BE trả PascalCase)
+        const raw = localStorage.getItem("userData");
+        if (!raw) throw new Error("Chưa đăng nhập");
+        const user = JSON.parse(raw);
+        const idNguoiDung = user.IdNguoiDung || user.idNguoiDung || user.id;
+        if (!idNguoiDung) throw new Error("Không xác định được tài khoản");
+
+        // Endpoint đúng: GET /api/DangKy/nguoi-dung/{idNguoiDung}
+        const res = await fetch(`${API_BASE}/DangKy/nguoi-dung/${idNguoiDung}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
-        allMyRegistrations = Array.isArray(data) ? data : (data.items || data.data || []);
+        const raw2 = Array.isArray(data) ? data : (data.items || data.data || []);
 
-        // Lọc sự kiện sắp tới (chưa hủy, chưa kết thúc)
+        // Chuẩn hóa PascalCase → camelCase
+        allMyRegistrations = raw2.map(item => ({
+            idDangKy:         item.IdDangKy         ?? item.idDangKy,
+            idSuKien:         item.IdSuKien         ?? item.idSuKien,
+            tenSuKien:        item.TenSuKien        ?? item.tenSuKien        ?? "Sự kiện",
+            trangThai:        item.TrangThai        ?? item.trangThai        ?? "",
+            thoiGianDangKy:   item.ThoiGianDangKy   ?? item.thoiGianDangKy,
+            thoiGianCheckin:  item.ThoiGianCheckin  ?? item.thoiGianCheckin  ?? null,
+            thoiGianCheckout: item.ThoiGianCheckout ?? item.thoiGianCheckout ?? null,
+            thoiGianBatDau:   item.ThoiGianBatDau   ?? item.thoiGianBatDau   ?? null,
+            thoiGianKetThuc:  item.ThoiGianKetThuc  ?? item.thoiGianKetThuc  ?? null,
+            tenDiaDiem:       item.TenDiaDiem       ?? item.tenDiaDiem        ?? "",
+        }));
+
+        // Lọc sự kiện sắp tới: chưa hủy, chưa vắng mặt, thời gian chưa qua
         const upcoming = allMyRegistrations.filter(item => {
-            const ts = item.trangThai || "";
+            const ts = item.trangThai;
             if (ts === "Đã hủy" || ts === "Vắng mặt") return false;
-            // Kiểm tra thời gian sự kiện còn trong tương lai
-            const ngay = item.thoiGianBatDau || item.suKien?.thoiGianBatDau;
-            if (!ngay) return true; // Không có ngày → vẫn hiện
+            const ngay = item.thoiGianBatDau;
+            if (!ngay) return true;
             return new Date(ngay) >= new Date();
         });
 
         // Cập nhật welcome message
         const msgEl = document.getElementById("welcomeMsg");
         if (msgEl) {
-            msgEl.textContent = upcoming.length > 0
-                ? `Bạn có ${upcoming.length} sự kiện sắp diễn ra.`
-                : "Bạn chưa có sự kiện nào sắp tới.";
+            if (upcoming.length > 0) {
+                msgEl.textContent = `Bạn có ${upcoming.length} sự kiện sắp diễn ra.`;
+            } else {
+                const total = allMyRegistrations.filter(i => i.trangThai !== "Đã hủy").length;
+                msgEl.textContent = total > 0
+                    ? `Bạn đã đăng ký ${total} sự kiện.`
+                    : "Bạn chưa có sự kiện nào. Hãy khám phá ngay!";
+            }
         }
 
         // Cập nhật stat card
         const statValue = document.querySelector(".stat-value");
-        if (statValue) statValue.textContent = upcoming.length;
+        if (statValue) statValue.textContent = allMyRegistrations.filter(i => i.trangThai !== "Đã hủy").length;
 
-        // Render danh sách vé sắp tới
-        renderUpcomingEvents(upcoming);
+        // Render danh sách vé (tất cả trạng thái, không chỉ sắp tới)
+        renderUpcomingEvents(allMyRegistrations.filter(i => i.trangThai !== "Đã hủy"));
 
-        // Tạo tập hợp ngày có sự kiện để đánh dấu trên lịch
+        // Đánh dấu ngày có sự kiện trên lịch
         buildEventDatesSet(allMyRegistrations);
 
     } catch (e) {
@@ -97,18 +126,17 @@ function buildEventDatesSet(registrations) {
     eventDatesSet.clear();
     registrations.forEach(item => {
         if (item.trangThai === "Đã hủy") return;
-        const ngay = item.thoiGianBatDau || item.suKien?.thoiGianBatDau;
+        const ngay = item.thoiGianBatDau; // đã chuẩn hóa camelCase
         if (ngay) {
             const d = new Date(ngay);
             const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
             eventDatesSet.add(key);
         }
     });
-    // Re-render lịch nếu đã khởi tạo
     if (currentCalMonth) renderCalendar(currentCalMonth);
 }
 
-// ── RENDER DANH SÁCH VÉ SẮP TỚI ──────────────────────────────────
+// ── RENDER DANH SÁCH VÉ ───────────────────────────────────────────
 function renderUpcomingEvents(items) {
     const list = document.querySelector(".events-list");
     if (!list) return;
@@ -116,90 +144,101 @@ function renderUpcomingEvents(items) {
     if (!items || items.length === 0) {
         list.innerHTML = `<div style="text-align:center;padding:24px;color:#999;font-size:14px;">
             <i class="fas fa-calendar-times" style="font-size:24px;display:block;margin-bottom:8px;"></i>
-            Chưa có sự kiện nào sắp tới.
+            Chưa có sự kiện nào.
             <br><a href="events.html" style="color:#0D5A9C;font-weight:600;text-decoration:none;margin-top:8px;display:inline-block;">Khám phá sự kiện →</a>
         </div>`;
         return;
     }
 
     list.innerHTML = "";
-    // Sắp xếp theo ngày gần nhất
+
+    // Sắp xếp: sắp tới lên đầu, đã qua xuống dưới
     const sorted = [...items].sort((a, b) => {
-        const da = new Date(a.thoiGianBatDau || a.suKien?.thoiGianBatDau || 0);
-        const db = new Date(b.thoiGianBatDau || b.suKien?.thoiGianBatDau || 0);
-        return da - db;
+        const da = new Date(a.thoiGianBatDau || 0);
+        const db = new Date(b.thoiGianBatDau || 0);
+        const now = new Date();
+        // Sự kiện tương lai lên trước
+        const aFuture = da >= now;
+        const bFuture = db >= now;
+        if (aFuture && !bFuture) return -1;
+        if (!aFuture && bFuture) return 1;
+        return aFuture ? da - db : db - da; // tương lai: gần nhất trước; quá khứ: mới nhất trước
     });
 
-    sorted.slice(0, 4).forEach(item => {
-        const tenSuKien = item.tenSuKien || item.suKien?.tenSuKien || "Sự kiện";
-        const diaDiem   = item.tenDiaDiem || item.suKien?.diaDiem?.tenDiaDiem || "Đang cập nhật";
-        const ngay      = item.thoiGianBatDau || item.suKien?.thoiGianBatDau;
+    // Config badge theo trạng thái
+    const statusCfg = {
+        "Chờ xác nhận": { bg:"#fef3c7", color:"#92400e", icon:"fa-clock",        label:"Chờ xác nhận" },
+        "Đã xác nhận":  { bg:"#d1fae5", color:"#065f46", icon:"fa-check-circle",  label:"Đã xác nhận" },
+        "Đã tham gia":  { bg:"#dbeafe", color:"#1e40af", icon:"fa-star",          label:"Đã tham gia" },
+        "Vắng mặt":     { bg:"#f3f4f6", color:"#6b7280", icon:"fa-user-times",    label:"Vắng mặt" },
+    };
+
+    sorted.forEach(item => {
+        const tenSuKien = item.tenSuKien || "Sự kiện";
+        const diaDiem   = item.tenDiaDiem || "Đang cập nhật";
+        const ngay      = item.thoiGianBatDau;
         const date      = ngay ? new Date(ngay) : null;
-        const idSuKien  = item.idSuKien || item.suKien?.idSuKien || "";
         const idDangKy  = item.idDangKy || "";
         const trangThai = item.trangThai || "";
 
-        // Màu date box theo trạng thái
-        const isToday = date && isDateToday(date);
-        const boxClass = isToday ? "event-date-box orange" : "event-date-box";
+        const cfg = statusCfg[trangThai] || { bg:"#f3f4f6", color:"#6b7280", icon:"fa-info-circle", label: trangThai };
 
-        // Badge trạng thái
-        const badgeColors = {
-            "Đã xác nhận":  "#059669",
-            "Chờ xác nhận": "#d97706",
-            "Đã tham gia":  "#1d4ed8"
-        };
-        const badgeColor = badgeColors[trangThai] || "#6b7280";
+        // Màu date box
+        const isToday   = date && isDateToday(date);
+        const isPast    = date && date < new Date();
+        const boxStyle  = isToday
+            ? "background:#ef4444;color:white;"
+            : isPast
+                ? "background:#e5e7eb;color:#6b7280;"
+                : "background:#0D5A9C;color:white;";
 
-        list.innerHTML += `
-            <div class="event-item">
-                <div class="${boxClass}">
-                    <div class="date-month">${date ? date.toLocaleString("vi-VN", { month:"short" }).toUpperCase() : "--"}</div>
-                    <div class="date-day">${date ? date.getDate() : "--"}</div>
-                </div>
-                <div class="event-info">
-                    <h4>${escapeHtml(tenSuKien)}</h4>
-                    <p><i class="fas fa-map-marker-alt" style="color:#0D5A9C;margin-right:4px;"></i>${escapeHtml(diaDiem)}</p>
-                    <span style="font-size:11px;font-weight:600;color:${badgeColor};">${trangThai}</span>
-                </div>
-                <a href="my-tickets.html${idDangKy ? '?dangKyId='+idDangKy : ''}" class="btn-view">Xem vé</a>
-            </div>`;
+        const monthStr = date
+            ? date.toLocaleString("vi-VN", { month:"short" }).replace("thg ","Th").toUpperCase()
+            : "--";
+        const dayStr = date ? date.getDate() : "--";
+
+        const el = document.createElement("div");
+        el.className = "event-item";
+        el.innerHTML = `
+            <div class="event-date-box" style="${boxStyle}border-radius:10px;min-width:52px;text-align:center;padding:8px 6px;">
+                <div class="date-month" style="font-size:10px;font-weight:700;letter-spacing:0.5px;">${monthStr}</div>
+                <div class="date-day" style="font-size:22px;font-weight:800;line-height:1.1;">${dayStr}</div>
+            </div>
+            <div class="event-info" style="flex:1;min-width:0;">
+                <h4 style="font-size:14px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(tenSuKien)}</h4>
+                <p style="font-size:12px;color:#666;margin-bottom:4px;">
+                    <i class="fas fa-map-marker-alt" style="color:#0D5A9C;margin-right:4px;"></i>${escapeHtml(diaDiem)}
+                </p>
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:${cfg.bg};color:${cfg.color};">
+                    <i class="fas ${cfg.icon}"></i> ${cfg.label}
+                </span>
+            </div>
+            <a href="${idDangKy ? 'ticket-detail.html?id='+idDangKy : 'my-tickets.html'}" class="btn-view"
+               style="white-space:nowrap;font-size:12px;padding:6px 12px;">
+                <i class="fas fa-ticket-alt"></i> Xem vé
+            </a>`;
+        list.appendChild(el);
     });
 }
 
 // ── LOAD THỐNG KÊ ─────────────────────────────────────────────────
 async function loadStats() {
-    const token = localStorage.getItem("token");
-    try {
-        // Lấy lịch sử tham gia để tính số sự kiện đã tham gia
-        const res = await fetch(`${API_BASE}/DangKySuKien/my`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (!res.ok) return;
+    // Thống kê được tính từ allMyRegistrations sau khi load xong
+    // Hàm này chỉ cập nhật UI — gọi sau loadAllMyRegistrations
+    const attended = allMyRegistrations.filter(i => i.trangThai === "Đã tham gia").length;
+    const total    = allMyRegistrations.filter(i => i.trangThai !== "Đã hủy").length;
 
-        const data = await res.json();
-        const items = Array.isArray(data) ? data : (data.items || data.data || []);
+    const statDetail = document.querySelector(".stat-detail");
+    if (statDetail) statDetail.textContent = `${attended} sự kiện đã tham gia`;
 
-        const attended = items.filter(i => i.trangThai === "Đã tham gia").length;
-        const total    = items.filter(i => i.trangThai !== "Đã hủy").length;
+    const drl = Math.min(attended * 5, 100);
+    const progressFill  = document.querySelector(".progress-fill");
+    const progressValue = document.querySelector(".stat-progress .progress-value");
+    if (progressFill)  progressFill.style.width = `${drl}%`;
+    if (progressValue) progressValue.textContent = `${drl} / 100`;
 
-        // Cập nhật stat card
-        const statDetail = document.querySelector(".stat-detail");
-        if (statDetail) statDetail.textContent = `${attended} sự kiện đã tham gia`;
-
-        // Cập nhật progress bar (giả sử mỗi sự kiện = 5 điểm, tối đa 100)
-        const drl = Math.min(attended * 5, 100);
-        const progressFill = document.querySelector(".progress-fill");
-        const progressValue = document.querySelector(".stat-progress .progress-value");
-        if (progressFill) progressFill.style.width = `${drl}%`;
-        if (progressValue) progressValue.textContent = `${drl} / 100`;
-
-        const statGrowth = document.querySelector(".stat-growth");
-        if (statGrowth) statGrowth.textContent = `${total} sự kiện đã đăng ký`;
-
-    } catch (e) {
-        console.warn("Không load được thống kê:", e.message);
-    }
+    const statGrowth = document.querySelector(".stat-growth");
+    if (statGrowth) statGrowth.textContent = `${total} sự kiện đã đăng ký`;
 }
 
 // ── LOAD THÔNG BÁO SIDEBAR ────────────────────────────────────────
@@ -326,7 +365,7 @@ function renderCalendar(date) {
 function showEventsOnDate(dateKey) {
     const eventsOnDate = allMyRegistrations.filter(item => {
         if (item.trangThai === "Đã hủy") return false;
-        const ngay = item.thoiGianBatDau || item.suKien?.thoiGianBatDau;
+        const ngay = item.thoiGianBatDau; // camelCase đã chuẩn hóa
         if (!ngay) return false;
         const d = new Date(ngay);
         const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -335,8 +374,10 @@ function showEventsOnDate(dateKey) {
 
     if (eventsOnDate.length === 0) return;
 
-    const names = eventsOnDate.map(e => `• ${e.tenSuKien || e.suKien?.tenSuKien || "Sự kiện"}`).join("\n");
-    alert(`Sự kiện ngày ${dateKey.split("-").reverse().join("/")}:\n\n${names}`);
+    const lines = eventsOnDate.map(e =>
+        `• ${e.tenSuKien || "Sự kiện"} [${e.trangThai}]`
+    ).join("\n");
+    alert(`Sự kiện ngày ${dateKey.split("-").reverse().join("/")}:\n\n${lines}`);
 }
 
 // ── ĐIỀU HƯỚNG LỊCH ───────────────────────────────────────────────

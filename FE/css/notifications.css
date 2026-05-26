@@ -1,5 +1,12 @@
 /* Notifications Page Styles */
 
+/* Đồng bộ font Inter với toàn hệ thống */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #1a1a2e;
+    background-color: #f5f7fa;
+}
+
 /* Header Styles */
 .header {
     background: white;

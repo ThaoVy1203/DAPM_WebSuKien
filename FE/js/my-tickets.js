@@ -9,7 +9,7 @@
  *   PUT  /api/DangKySuKien/{idDangKy}/huy           — Hủy đăng ký (set trangThai='Đã hủy')
  *
  * QR Code logic:
- *   - Mã QR mã hóa: "UTE-CHECKIN-{idDangKy}-{idSuKien}-{timestamp}"
+ *   - Mã QR: "UTE-CHECKIN-{idDangKy}-{timestamp}" (refresh 45s)
  *   - Tự động làm mới sau 45 giây (token ngắn hạn)
  *   - Dùng api.qrserver.com để generate ảnh QR (không cần thư viện)
  *
@@ -23,10 +23,11 @@
 const API_BASE = "https://localhost:7160/api";
 
 // ─── State toàn cục ───────────────────────────────────────────────────────────
-let allTickets      = [];       // Mảng tất cả đăng ký của user
-let selectedTicket  = null;     // Vé đang được chọn xem
-let qrTimer         = null;     // setInterval đếm ngược QR
-let qrSeconds       = 45;       // Giây còn lại trước khi QR tự làm mới
+let allTickets      = [];
+let selectedTicket  = null;
+let qrTimer         = null;
+let qrSeconds       = 45;
+let checkinTimer    = null;  // Timer cập nhật nút check-in theo thời gian thực
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async function () {
@@ -40,17 +41,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     const dangKyId  = params.get("dangKyId");
 
     if (dangKyId) {
-        // BE trả PascalCase: IdDangKy
-        const target = allTickets.find(t =>
-            String(t.IdDangKy || t.idDangKy) === String(dangKyId)
-        );
-        if (target) {
-            selectTicket(target);
-        } else if (allTickets.length > 0) {
-            selectTicket(getDefaultTicket());
-        }
-    } else if (allTickets.length > 0) {
-        selectTicket(getDefaultTicket());
+        window.location.replace(TicketBiz.ticketDetailUrl(dangKyId));
+        return;
     }
 });
 
@@ -104,7 +96,7 @@ async function loadMyTickets() {
         const raw  = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         // Chuẩn hóa về camelCase để code phía dưới dùng thống nhất
-        allTickets = raw.map(normalizeTicket);
+        allTickets = raw.map(t => TicketBiz.normalizeTicket(t));
 
         if (allTickets.length === 0) {
             showState("empty");
@@ -126,24 +118,6 @@ async function loadMyTickets() {
  * Chuẩn hóa response từ BE (PascalCase) về camelCase
  * để phần còn lại của code dùng nhất quán
  */
-function normalizeTicket(t) {
-    return {
-        idDangKy:         t.IdDangKy         ?? t.idDangKy,
-        idSuKien:         t.IdSuKien         ?? t.idSuKien,
-        tenSuKien:        t.TenSuKien        ?? t.tenSuKien        ?? "",
-        idNguoiDung:      t.IdNguoiDung      ?? t.idNguoiDung      ?? "",
-        hoTenNguoiDung:   t.HoTenNguoiDung   ?? t.hoTenNguoiDung   ?? "",
-        trangThai:        t.TrangThai        ?? t.trangThai        ?? "Chờ xác nhận",
-        thoiGianDangKy:   t.ThoiGianDangKy   ?? t.thoiGianDangKy,
-        thoiGianCheckin:  t.ThoiGianCheckin  ?? t.thoiGianCheckin  ?? null,
-        thoiGianCheckout: t.ThoiGianCheckout ?? t.thoiGianCheckout ?? null,
-        // Thông tin sự kiện (nếu BE join)
-        thoiGianBatDau:   t.ThoiGianBatDau   ?? t.thoiGianBatDau   ?? null,
-        thoiGianKetThuc:  t.ThoiGianKetThuc  ?? t.thoiGianKetThuc  ?? null,
-        tenDiaDiem:       t.TenDiaDiem       ?? t.tenDiaDiem        ?? "",
-    };
-}
-
 // ─── RENDER DANH SÁCH VÉ ─────────────────────────────────────────────────────
 function renderTicketsList() {
     const list = document.getElementById("ticketsList");
@@ -181,7 +155,10 @@ function renderTicketsList() {
             </div>
             <span class="ticket-item-badge ${getBadgeClass(trangThai)}">${escapeHtml(trangThai)}</span>
         `;
-        item.addEventListener("click", () => selectTicket(ticket));
+        item.addEventListener("click", () => {
+            // Navigate sang trang chi tiết vé riêng
+            window.location.href = TicketBiz.ticketDetailUrl(ticket.idDangKy);
+        });
         list.appendChild(item);
     });
 }
@@ -238,7 +215,10 @@ function selectTicket(ticket) {
     // Thông tin người tham gia từ localStorage
     try {
         const user = JSON.parse(localStorage.getItem("userData") || "{}");
-        setText("ticketAttendee", `${user.hoTen || "Người dùng"} — ${user.maSoSSO || ""}`);
+        // Hỗ trợ cả PascalCase (BE trả) và camelCase
+        const hoTen   = user.HoTen   || user.hoTen   || "Người dùng";
+        const maSoSSO = user.MaSoSSO || user.maSoSSO || "";
+        setText("ticketAttendee", `${hoTen}${maSoSSO ? " — " + maSoSSO : ""}`);
     } catch (e) {/* bỏ qua */}
 
     // ── Cập nhật các thành phần UI ───────────────────────────────────────────
@@ -251,6 +231,14 @@ function selectTicket(ticket) {
     // Bắt đầu (lại) đếm ngược QR
     if (shouldShowQR(trangThai)) {
         startQRCountdown(ticket);
+    }
+
+    // Timer cập nhật nút check-in mỗi 30 giây (để tự mở khi đến giờ)
+    if (checkinTimer) clearInterval(checkinTimer);
+    if (trangThai === "Đã xác nhận" && !ticket.thoiGianCheckin) {
+        checkinTimer = setInterval(() => {
+            if (selectedTicket) renderCheckinButtons(selectedTicket);
+        }, 30000); // cập nhật mỗi 30 giây
     }
 }
 
@@ -278,7 +266,7 @@ function updateStatusBar(trangThai) {
 // ─── QR CODE ─────────────────────────────────────────────────────────────────
 /** Chỉ hiện QR khi trạng thái phù hợp để check-in */
 function shouldShowQR(trangThai) {
-    return ["Đã xác nhận", "Chờ xác nhận", "Đã tham gia"].includes(trangThai);
+    return TicketBiz.canShowQr(trangThai);
 }
 
 /**
@@ -327,15 +315,7 @@ function renderQRSection(ticket) {
 
 /** Tạo chuỗi dữ liệu nhúng vào QR */
 function buildQRData(ticket) {
-    // Format: UTE|CHECKIN|{idDangKy}|{idSuKien}|{timestamp}
-    // BE sẽ parse và xác thực: idDangKy, idSuKien, timestamp (chống replay attack)
-    return [
-        "UTE",
-        "CHECKIN",
-        ticket.idDangKy,
-        ticket.idSuKien || (ticket.suKien?.idSuKien) || 0,
-        Date.now()
-    ].join("|");
+    return TicketBiz.buildQrPayload(ticket.idDangKy);
 }
 
 // ─── QR COUNTDOWN ─────────────────────────────────────────────────────────────
@@ -346,7 +326,7 @@ function buildQRData(ticket) {
 function startQRCountdown(ticket) {
     // Dừng timer cũ
     if (qrTimer) clearInterval(qrTimer);
-    qrSeconds = 45;
+    qrSeconds = TicketBiz.QR_REFRESH_SEC;
     setText("qrCountdown", qrSeconds);
 
     qrTimer = setInterval(() => {
@@ -356,7 +336,7 @@ function startQRCountdown(ticket) {
         if (qrSeconds <= 0) {
             // Auto-refresh QR
             renderQRSection(ticket);
-            qrSeconds = 45;
+            qrSeconds = TicketBiz.QR_REFRESH_SEC;
         }
     }, 1000);
 }
@@ -365,7 +345,7 @@ function startQRCountdown(ticket) {
 function refreshQR() {
     if (!selectedTicket) return;
     renderQRSection(selectedTicket);
-    qrSeconds = 45;
+    qrSeconds = TicketBiz.QR_REFRESH_SEC;
     setText("qrCountdown", qrSeconds);
     showToast("Đã làm mới mã QR.", "info");
 }
@@ -415,45 +395,101 @@ function renderCheckinTimeline(ticket) {
 
 // ─── NÚT CHECK-IN / CHECK-OUT ────────────────────────────────────────────────
 /**
- * Logic enable/disable:
- *   Check-in:  enable khi trangThai = 'Đã xác nhận' VÀ chưa check-in
- *   Check-out: enable khi đã check-in VÀ chưa check-out
+ * Logic check-in đúng:
+ *   - trangThai = "Đã xác nhận"
+ *   - Chưa check-in
+ *   - Thời gian hiện tại >= thoiGianBatDau - 30 phút (cho phép check-in sớm 30')
+ *   - Thời gian hiện tại <= thoiGianKetThuc (sự kiện chưa kết thúc)
+ *
+ * Logic check-out:
+ *   - Đã check-in
+ *   - Chưa check-out
+ *   - Thời gian hiện tại >= thoiGianBatDau (sự kiện đã bắt đầu)
  */
 function renderCheckinButtons(ticket) {
     const btnCI = document.getElementById("btnCheckin");
     const btnCO = document.getElementById("btnCheckout");
     if (!btnCI || !btnCO) return;
 
-    const trangThai    = ticket.trangThai || "";
-    const checkedIn    = !!ticket.thoiGianCheckin;
-    const checkedOut   = !!ticket.thoiGianCheckout;
+    const trangThai  = ticket.trangThai || "";
+    const checkedIn  = !!ticket.thoiGianCheckin;
+    const checkedOut = !!ticket.thoiGianCheckout;
+    const now        = new Date();
+
+    // Phân tích thời gian sự kiện
+    const batDau  = ticket.thoiGianBatDau  ? new Date(ticket.thoiGianBatDau)  : null;
+    const ketThuc = ticket.thoiGianKetThuc ? new Date(ticket.thoiGianKetThuc) : null;
+
+    // Cửa sổ check-in: từ 30 phút trước khi bắt đầu đến khi kết thúc
+    const checkInOpen  = batDau  ? new Date(batDau.getTime() - 30 * 60 * 1000) : null;
+    const checkInClose = ketThuc ? ketThuc : null;
+
+    const inCheckInWindow = checkInOpen && checkInClose
+        ? (now >= checkInOpen && now <= checkInClose)
+        : checkInOpen
+            ? now >= checkInOpen
+            : true; // Không có thời gian → cho phép (fallback)
+
+    const eventStarted = batDau ? now >= batDau : true;
 
     // ── Nút Check-in ─────────────────────────────────────────────────────────
-    const canCheckin = trangThai === "Đã xác nhận" && !checkedIn;
+    const canCheckin = trangThai === "Đã xác nhận" && !checkedIn && inCheckInWindow;
     btnCI.className  = `btn-checkin check-in${canCheckin ? "" : " disabled"}`;
     btnCI.disabled   = !canCheckin;
 
     if (checkedIn) {
         btnCI.innerHTML = '<i class="fas fa-check"></i> ĐÃ CHECK-IN';
     } else if (trangThai === "Chờ xác nhận") {
-        btnCI.innerHTML = '<i class="fas fa-clock"></i> CHỜ XÁC NHẬN';
-    } else if (!canCheckin) {
-        btnCI.innerHTML = '<i class="fas fa-lock"></i> CHECK-IN';
+        btnCI.innerHTML = '<i class="fas fa-clock"></i> CHỜ BTC XÁC NHẬN';
+    } else if (trangThai === "Đã hủy" || trangThai === "Vắng mặt") {
+        btnCI.innerHTML = '<i class="fas fa-ban"></i> KHÔNG THỂ CHECK-IN';
+    } else if (checkInOpen && now < checkInOpen) {
+        // Tính thời gian còn lại đến khi mở check-in
+        const minutesLeft = Math.ceil((checkInOpen - now) / 60000);
+        const hoursLeft   = Math.floor(minutesLeft / 60);
+        const minsLeft    = minutesLeft % 60;
+        const timeStr     = hoursLeft > 0 ? `${hoursLeft}h${minsLeft}p` : `${minsLeft} phút`;
+        btnCI.innerHTML   = `<i class="fas fa-hourglass-half"></i> MỞ SAU ${timeStr}`;
+    } else if (checkInClose && now > checkInClose) {
+        btnCI.innerHTML = '<i class="fas fa-times-circle"></i> ĐÃ HẾT GIỜ CHECK-IN';
     } else {
         btnCI.innerHTML = '<i class="fas fa-sign-in-alt"></i> CHECK-IN';
     }
 
     // ── Nút Check-out ────────────────────────────────────────────────────────
-    const canCheckout = checkedIn && !checkedOut;
+    const canCheckout = checkedIn && !checkedOut && eventStarted;
     btnCO.className   = `btn-checkin check-out${canCheckout ? "" : " disabled"}`;
     btnCO.disabled    = !canCheckout;
 
     if (checkedOut) {
         btnCO.innerHTML = '<i class="fas fa-check"></i> ĐÃ CHECK-OUT';
-    } else if (!canCheckout && !checkedIn) {
-        btnCO.innerHTML = '<i class="fas fa-lock"></i> CHECK-OUT';
+    } else if (!checkedIn) {
+        btnCO.innerHTML = '<i class="fas fa-lock"></i> CHECK-OUT (cần check-in trước)';
     } else {
         btnCO.innerHTML = '<i class="fas fa-sign-out-alt"></i> CHECK-OUT';
+    }
+
+    // ── Hiện thông tin cửa sổ thời gian ─────────────────────────────────────
+    const infoEl = document.getElementById("checkinTimeInfo");
+    if (infoEl && batDau) {
+        if (checkInOpen && now < checkInOpen) {
+            infoEl.style.display = "block";
+            infoEl.style.background = "#fffbeb";
+            infoEl.style.color = "#92400e";
+            infoEl.innerHTML = `<i class="fas fa-clock"></i> Check-in mở lúc <strong>${formatTimeHM(checkInOpen)}</strong> ngày <strong>${batDau.toLocaleDateString("vi-VN")}</strong>`;
+        } else if (inCheckInWindow) {
+            infoEl.style.display = "block";
+            infoEl.style.background = "#f0fff4";
+            infoEl.style.color = "#276749";
+            infoEl.innerHTML = `<i class="fas fa-door-open"></i> Check-in đang mở — Sự kiện bắt đầu lúc <strong>${formatTimeHM(batDau)}</strong>`;
+        } else if (checkInClose && now > checkInClose) {
+            infoEl.style.display = "block";
+            infoEl.style.background = "#fff5f5";
+            infoEl.style.color = "#c53030";
+            infoEl.innerHTML = `<i class="fas fa-door-closed"></i> Sự kiện đã kết thúc lúc <strong>${formatTimeHM(checkInClose)}</strong>`;
+        } else {
+            infoEl.style.display = "none";
+        }
     }
 }
 
@@ -461,8 +497,7 @@ function renderCheckinButtons(ticket) {
 function renderCancelButton(ticket) {
     const btn = document.getElementById("btnCancelTicket");
     if (!btn) return;
-    const canCancel = ["Đã xác nhận", "Chờ xác nhận"].includes(ticket.trangThai);
-    btn.style.display = canCancel ? "flex" : "none";
+    btn.style.display = TicketBiz.canCancel(ticket) ? "flex" : "none";
 }
 
 // ─── THỰC HIỆN CHECK-IN ──────────────────────────────────────────────────────

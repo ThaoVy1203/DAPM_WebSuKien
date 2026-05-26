@@ -33,20 +33,40 @@ async function loadHistory(page = 1) {
     }
 
     try {
-        // Endpoint lấy lịch sử đăng ký sự kiện của người dùng hiện tại
-        const res = await fetch(`${API_BASE}/DangKySuKien/my?page=${page}&pageSize=10`, {
+        // Lấy idNguoiDung từ userData (BE trả PascalCase)
+        const raw = localStorage.getItem("userData");
+        if (!raw) { window.location.href = "login.html"; return; }
+        const user = JSON.parse(raw);
+        const idNguoiDung = user.IdNguoiDung || user.idNguoiDung || user.id;
+        if (!idNguoiDung) throw new Error("Không xác định được tài khoản");
+
+        // Endpoint đúng: GET /api/DangKy/nguoi-dung/{idNguoiDung}
+        const res = await fetch(`${API_BASE}/DangKy/nguoi-dung/${idNguoiDung}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
-        // API có thể trả về mảng hoặc { items: [...], total: N }
-        historyData = Array.isArray(data) ? data : (data.items || data.data || []);
-        currentPage = page;
+        // API trả về mảng trực tiếp (PascalCase từ BE)
+        const raw2 = Array.isArray(data) ? data : (data.items || data.data || []);
 
+        // Chuẩn hóa về camelCase
+        historyData = raw2.map(item => ({
+            idDangKy:         item.IdDangKy         ?? item.idDangKy,
+            idSuKien:         item.IdSuKien         ?? item.idSuKien,
+            tenSuKien:        item.TenSuKien        ?? item.tenSuKien        ?? "Chưa có tên",
+            trangThai:        item.TrangThai        ?? item.trangThai        ?? "-",
+            thoiGianDangKy:   item.ThoiGianDangKy   ?? item.thoiGianDangKy,
+            thoiGianCheckin:  item.ThoiGianCheckin  ?? item.thoiGianCheckin  ?? null,
+            thoiGianCheckout: item.ThoiGianCheckout ?? item.thoiGianCheckout ?? null,
+            tenDiaDiem:       item.TenDiaDiem       ?? item.tenDiaDiem       ?? "-",
+            thoiGianBatDau:   item.ThoiGianBatDau   ?? item.thoiGianBatDau   ?? null,
+        }));
+
+        currentPage = page;
         renderHistoryTable(historyData);
-        updateStats(data);
+        updateStats(historyData);
 
     } catch (e) {
         console.error("Lỗi load lịch sử:", e);
@@ -75,13 +95,15 @@ function renderHistoryTable(data) {
 
     tbody.innerHTML = "";
     data.forEach(item => {
-        // Hỗ trợ cả cấu trúc từ view vw_LichSuThamGia và DangKySuKien
-        const tenSuKien = item.tenSuKien || item.suKien?.tenSuKien || "Chưa có tên";
-        const ngayThamGia = item.thoiGianDangKy || item.thoiGianCheckin
-            ? new Date(item.thoiGianDangKy || item.thoiGianCheckin).toLocaleDateString("vi-VN")
+        const tenSuKien   = item.tenSuKien || "Chưa có tên";
+        const diaDiem     = item.tenDiaDiem || "-";
+        const trangThai   = item.trangThai || "-";
+        const ngayDangKy  = item.thoiGianDangKy
+            ? new Date(item.thoiGianDangKy).toLocaleDateString("vi-VN")
             : "-";
-        const trangThai = item.trangThai || "-";
-        const diaDiem = item.tenDiaDiem || item.suKien?.diaDiem?.tenDiaDiem || "-";
+        const ngayCheckin = item.thoiGianCheckin
+            ? new Date(item.thoiGianCheckin).toLocaleString("vi-VN", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
+            : "-";
 
         const statusClass = getStatusClass(trangThai);
 
@@ -91,15 +113,20 @@ function renderHistoryTable(data) {
                 <div style="font-weight:600;color:#1a1a2e;">${escapeHtml(tenSuKien)}</div>
                 <div style="font-size:12px;color:#888;">${escapeHtml(diaDiem)}</div>
             </td>
-            <td>${ngayThamGia}</td>
-            <td>${escapeHtml(item.vaiTroTrongSuKien || "Người tham gia")}</td>
+            <td>${ngayDangKy}</td>
+            <td>${escapeHtml("Người tham gia")}</td>
             <td><span class="status-badge ${statusClass}" style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;">${escapeHtml(trangThai)}</span></td>
-            <td>-</td>
+            <td>${ngayCheckin}</td>
             <td>
-                <a href="event-detail.html?id=${item.idSuKien || item.suKien?.idSuKien || ''}"
-                   style="color:#0D5A9C;text-decoration:none;font-size:13px;font-weight:500;">
+                <a href="event-detail.html?id=${item.idSuKien || ''}"
+                   style="color:#0D5A9C;text-decoration:none;font-size:13px;font-weight:500;margin-right:8px;">
                     <i class="fas fa-eye"></i> Xem
                 </a>
+                ${item.idDangKy && ["Đã xác nhận", "Chờ xác nhận", "Đã tham gia"].includes(trangThai) ? `
+                <a href="ticket-detail.html?id=${item.idDangKy}"
+                   style="color:#059669;text-decoration:none;font-size:13px;font-weight:500;">
+                    <i class="fas fa-qrcode"></i> Vé
+                </a>` : ""}
             </td>`;
         tbody.appendChild(row);
     });
@@ -119,15 +146,12 @@ function getStatusClass(trangThai) {
 // ==========================
 // CẬP NHẬT THỐNG KÊ
 // ==========================
-function updateStats(data) {
-    const items = Array.isArray(data) ? data : (data.items || data.data || []);
-    const total = Array.isArray(data) ? data.length : (data.total || items.length);
+function updateStats(items) {
+    const total    = items.length;
+    const attended = items.filter(i => i.trangThai === "Đã tham gia").length;
 
     const statNumbers = document.querySelectorAll(".stat-number");
     if (statNumbers[0]) statNumbers[0].textContent = total;
-
-    // Đếm số đã tham gia
-    const attended = items.filter(i => i.trangThai === "Đã tham gia").length;
     if (statNumbers[1]) statNumbers[1].textContent = attended;
 }
 
