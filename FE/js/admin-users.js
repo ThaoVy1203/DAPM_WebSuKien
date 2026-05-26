@@ -113,6 +113,7 @@ function applyFilters() {
                 ctsv:    'CanBoPheDuyetCap1',
                 bgh:     'CanBoPheDuyetCap2',
                 user:    'NguoiThamGia',
+                teacher: 'GiangVien',
             };
             const target = roleMap[roleFilter];
             if (target && !(user.vaiTros || []).includes(target)) return false;
@@ -294,7 +295,7 @@ async function editUser(userId) {
         const rf = document.getElementById('userRole');
         if (rf && user.vaiTros?.length > 0) {
             const map = {
-                Admin:'admin', NguoiThamGia:'user',
+                Admin:'admin', NguoiThamGia:'user', GiangVien:'teacher',
                 TruongBanToChuc:'btc', ThanhVienBanToChuc:'btc_member',
                 CanBoPheDuyetCap1:'ctsv', CanBoPheDuyetCap2:'bgh',
             };
@@ -348,7 +349,7 @@ async function saveUser() {
             if (!res.ok) { alert(`Lỗi: ${data?.message || data?.title || JSON.stringify(data)}`); return; }
 
             // Gán vai trò
-            const roleIdMap = { admin:1, user:2, btc:3, btc_member:4, ctsv:5, bgh:6 };
+            const roleIdMap = { admin:1, user:2, btc:3, btc_member:4, ctsv:5, bgh:6, teacher:7 };
             const idVaiTro  = roleIdMap[document.getElementById('userRole')?.value || ''];
             if (idVaiTro) {
                 await fetch(`${API_CONFIG.BASE_URL}/NguoiDung/${idNguoiDung}/vai-tro`, {
