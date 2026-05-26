@@ -1,108 +1,160 @@
-// BGH Reports Page JavaScript
+// bgh-reports.js - Báo cáo tổng thể BGH
 
-// Export report
-function exportReport() {
-    console.log('Exporting report...');
-    alert('Đang xuất báo cáo...');
-    // TODO: Implement export functionality
+const API_BASE_URL = 'http://localhost:5103/api';
+
+// ==================== KHỞI TẠO ====================
+document.addEventListener('DOMContentLoaded', function () {
+    initializeCharts();
+    setupLogout();
+    setupPeriodFilter();
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userNameEl = document.querySelector('.user-name');
+    const userRoleEl = document.querySelector('.user-role');
+    if (userNameEl && user.hoTen) userNameEl.textContent = user.hoTen;
+    if (userRoleEl) userRoleEl.textContent = 'Cán bộ phê duyệt cấp 2';
+});
+
+// ==================== TOAST THÔNG BÁO ====================
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; top: 80px; right: 20px; z-index: 10000;
+        padding: 15px 20px; border-radius: 8px; color: white; font-weight: 500;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2); min-width: 300px; font-size: 15px;
+    `;
+    toast.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.transition = 'all 0.4s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-30px)';
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
 }
 
-// Initialize charts when page loads
-document.addEventListener('DOMContentLoaded', function() {
+// ==================== XUẤT BÁO CÁO EXCEL ====================
+async function exportReport() {
+    await xuatExcelVoiRetry(1);
+}
+
+async function xuatExcelVoiRetry(lanThu) {
+    const btn = document.querySelector('.btn-secondary[onclick="exportReport()"]');
+    
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xuất...';
+        }
+
+        const response = await fetch(`${API_BASE_URL}/BaoCao/xuat-excel-bgh`);
+
+        if (!response.ok) throw new Error(`Lỗi server: ${response.status}`);
+
+        const blob = await response.blob();
+        if (blob.size === 0) throw new Error('File rỗng');
+
+        // Tải file trước
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `BaoCao_BGH_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Hiển thị toast (không dùng alert)
+        showToast('✅ Xuất Excel thành công!<br>File đã được tải về thư mục Downloads.');
+
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+
+    } catch (err) {
+        console.error('Export Error:', err);
+        showToast('❌ Không thể xuất Excel: ' + err.message, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-file-export"></i> Xuất báo cáo';
+        }
+    }
+}
+
+// ==================== LỌC KỲ BÁO CÁO ====================
+function setupPeriodFilter() {
+    const periodSelect = document.getElementById('reportPeriod');
+    if (periodSelect) {
+        periodSelect.addEventListener('change', function () {
+            console.log('Kỳ báo cáo:', this.value);
+        });
+    }
+}
+
+// ==================== BIỂU ĐỒ ====================
+function initializeCharts() {
     initApprovalTrendChart();
     initEventTypeChart();
     initBudgetChart();
     initProcessingTimeChart();
-});
+}
 
-// Approval Trend Chart
 function initApprovalTrendChart() {
     const ctx = document.getElementById('approvalTrendChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['T7/2024', 'T8/2024', 'T9/2024', 'T10/2024', 'T11/2024', 'T12/2024'],
+            labels: ['T7/2024','T8/2024','T9/2024','T10/2024','T11/2024','T12/2024'],
             datasets: [
                 {
                     label: 'Đã duyệt',
-                    data: [28, 32, 30, 35, 33, 35],
+                    data: [28,32,30,35,33,35],
                     borderColor: '#059669',
-                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                    tension: 0.4,
-                    fill: true
+                    backgroundColor: 'rgba(5,150,105,0.1)',
+                    tension: 0.4, fill: true
                 },
                 {
                     label: 'Từ chối',
-                    data: [5, 4, 6, 3, 4, 3],
+                    data: [5,4,6,3,4,3],
                     borderColor: '#dc2626',
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                    tension: 0.4,
-                    fill: true
+                    backgroundColor: 'rgba(220,38,38,0.1)',
+                    tension: 0.4, fill: true
                 }
             ]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                title: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 10
-                    }
-                }
-            }
+            responsive: true, maintainAspectRatio: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 10 } } }
         }
     });
 }
 
-// Event Type Distribution Chart
 function initEventTypeChart() {
     const ctx = document.getElementById('eventTypeChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Hội thảo', 'Workshop', 'Thi đấu', 'Văn nghệ', 'Khác'],
+            labels: ['Hội thảo','Workshop','Thi đấu','Văn nghệ','Khác'],
             datasets: [{
-                data: [35, 25, 20, 15, 5],
-                backgroundColor: [
-                    '#3b82f6',
-                    '#8b5cf6',
-                    '#f59e0b',
-                    '#ec4899',
-                    '#6b7280'
-                ],
-                borderWidth: 2,
-                borderColor: '#fff'
+                data: [35,25,20,15,5],
+                backgroundColor: ['#3b82f6','#8b5cf6','#f59e0b','#ec4899','#6b7280'],
+                borderWidth: 2, borderColor: '#fff'
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: true,
+            responsive: true, maintainAspectRatio: true,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                },
+                legend: { position: 'bottom' },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} (${percentage}%)`;
+                            const total = context.dataset.data.reduce((a,b) => a+b, 0);
+                            const pct = ((context.parsed / total) * 100).toFixed(1);
+                            return `${context.label}: ${context.parsed} (${pct}%)`;
                         }
                     }
                 }
@@ -111,91 +163,58 @@ function initEventTypeChart() {
     });
 }
 
-// Budget Distribution Chart
 function initBudgetChart() {
     const ctx = document.getElementById('budgetChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['< 50tr', '50-100tr', '100-150tr', '150-200tr', '> 200tr'],
+            labels: ['< 50tr','50-100tr','100-150tr','150-200tr','> 200tr'],
             datasets: [{
                 label: 'Số lượng sự kiện',
-                data: [8, 12, 10, 5, 3],
-                backgroundColor: [
-                    '#10b981',
-                    '#3b82f6',
-                    '#f59e0b',
-                    '#ef4444',
-                    '#8b5cf6'
-                ],
+                data: [8,12,10,5,3],
+                backgroundColor: ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6'],
                 borderWidth: 0
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 2
-                    }
-                }
-            }
+            responsive: true, maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 2 } } }
         }
     });
 }
 
-// Processing Time Chart
 function initProcessingTimeChart() {
     const ctx = document.getElementById('processingTimeChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['< 1h', '1-2h', '2-3h', '3-4h', '> 4h'],
+            labels: ['< 1h','1-2h','2-3h','3-4h','> 4h'],
             datasets: [{
                 label: 'Số lượng hồ sơ',
-                data: [5, 18, 10, 4, 1],
+                data: [5,18,10,4,1],
                 backgroundColor: '#059669',
                 borderWidth: 0
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 5
-                    }
-                }
-            }
+            responsive: true, maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 5 } } }
         }
     });
 }
 
-// Period filter change
-document.addEventListener('DOMContentLoaded', function() {
-    const periodSelect = document.getElementById('reportPeriod');
-    if (periodSelect) {
-        periodSelect.addEventListener('change', function() {
-            console.log('Period changed to:', this.value);
-            // TODO: Reload data based on selected period
+// ==================== ĐĂNG XUẤT ====================
+function setupLogout() {
+    document.querySelectorAll('.nav-item.danger').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
         });
-    }
-});
+    });
+}

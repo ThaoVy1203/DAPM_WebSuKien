@@ -344,15 +344,18 @@ async function exportExcel(idSuKien, tenSuKien) {
         }
 
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
+        const objectUrl = URL.createObjectURL(blob);
+        link.href = objectUrl;
         link.download = `BaoCao_${tenSuKien.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`;
         
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-
+        
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        
         alert('✅ Xuất Excel thành công!');
+        
     } catch (err) {
         console.error('Export error:', err);
         alert('❌ Không thể xuất Excel: ' + err.message);

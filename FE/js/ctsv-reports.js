@@ -1,11 +1,140 @@
-// CTSV Reports JavaScript
+// ctsv-reports.js - Báo cáo thống kê CTSV
 
-// Initialize charts when page loads
-document.addEventListener('DOMContentLoaded', function() {
+const API_BASE_URL = 'http://localhost:5103/api';
+
+// ==================== KHỞI TẠO ====================
+document.addEventListener('DOMContentLoaded', function () {
     initializeCharts();
+    setupLogout();
+
+    // Cập nhật tên user từ localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userNameEl = document.querySelector('.user-name');
+    const userRoleEl = document.querySelector('.user-role');
+    if (userNameEl && user.hoTen) userNameEl.textContent = user.hoTen;
+    if (userRoleEl && user.vaiTros?.length > 0) {
+        userRoleEl.textContent = 'Cán bộ phê duyệt cấp 1';
+    }
 });
 
-// Initialize all charts
+// ==================== XUẤT EXCEL ====================
+async function exportReport() {
+    try {
+        const btn = document.querySelector('.btn-primary');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xuất...';
+        }
+
+        const response = await fetch(`${API_BASE_URL}/BaoCao/xuat-excel-ctsv`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+        });
+
+        if (!response.ok) {
+            const errText = await response.text().catch(() => '');
+            throw new Error(`Lỗi server (${response.status}): ${errText}`);
+        }
+
+        const blob = await response.blob();
+        if (blob.size === 0) throw new Error('File trả về rỗng');
+
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `BaoCao_CTSV_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+        alert('✅ Xuất Excel thành công!');
+    } catch (err) {
+        console.error('Export error:', err);
+        alert('❌ Không thể xuất Excel: ' + err.message);
+    } finally {
+        const btn = document.querySelector('.btn-primary');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-file-export"></i> Xuất Excel';
+        }
+    }
+}
+
+// ==================== IN BÁO CÁO ====================
+function printReport() {
+    // Ẩn các phần không cần in
+    const sidebar = document.querySelector('.sidebar');
+    const header = document.querySelector('.header');
+    const headerActions = document.querySelector('.header-actions');
+    const footer = document.querySelector('.footer');
+
+    // Thêm tiêu đề in
+    const printTitle = document.createElement('div');
+    printTitle.id = 'print-title';
+    printTitle.style.cssText = `
+        display: none;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #059669;
+    `;
+    printTitle.innerHTML = `
+        <h1 style="font-size:20px; font-weight:700; color:#059669; margin:0 0 4px 0;">
+            BÁO CÁO THỐNG KÊ HOẠT ĐỘNG SỰ KIỆN
+        </h1>
+        <p style="font-size:13px; color:#6B7280; margin:0;">
+            Trường Đại học Sư phạm Kỹ thuật Đà Nẵng &nbsp;|&nbsp; 
+            Ngày in: ${new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+    `;
+    document.querySelector('.main-content').prepend(printTitle);
+
+    // CSS in ấn
+    const printStyle = document.createElement('style');
+    printStyle.id = 'print-style';
+    printStyle.textContent = `
+        @media print {
+            #print-title { display: block !important; }
+            .header, .sidebar, .header-actions,
+            .footer, .period-select, .btn-secondary, .btn-primary,
+            .search-bar { display: none !important; }
+            .main-container { display: block !important; }
+            .main-content { padding: 0 !important; margin: 0 !important; }
+            body { font-size: 12px; }
+            .stat-card { break-inside: avoid; }
+            .chart-card { break-inside: avoid; page-break-inside: avoid; }
+            .stats-table table { font-size: 11px; }
+            canvas { max-height: 200px !important; }
+        }
+    `;
+    document.head.appendChild(printStyle);
+
+    window.print();
+
+    // Dọn dẹp sau khi in
+    setTimeout(() => {
+        document.getElementById('print-title')?.remove();
+        document.getElementById('print-style')?.remove();
+    }, 1000);
+}
+
+// ==================== THAY ĐỔI KỲ BÁO CÁO ====================
+function changePeriod() {
+    const period = document.getElementById('periodSelect').value;
+    const labels = {
+        month: 'tháng này',
+        quarter: 'quý này',
+        year: 'năm nay',
+        custom: 'tùy chỉnh'
+    };
+    console.log('Chuyển kỳ báo cáo:', period);
+    // Trong thực tế sẽ gọi API lọc theo kỳ
+}
+
+// ==================== BIỂU ĐỒ ====================
 function initializeCharts() {
     createEventTrendChart();
     createEventTypeChart();
@@ -13,369 +142,125 @@ function initializeCharts() {
     createApprovalTimeChart();
 }
 
-// Event Trend Chart (Line Chart)
 function createEventTrendChart() {
     const ctx = document.getElementById('eventTrendChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+            labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
             datasets: [
                 {
                     label: 'Đã duyệt',
-                    data: [8, 12, 10, 15, 11, 14, 13, 16, 12, 18, 15, 17],
+                    data: [8,12,10,15,11,14,13,16,12,18,15,17],
                     borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true
+                    backgroundColor: 'rgba(16,185,129,0.1)',
+                    tension: 0.4, fill: true
                 },
                 {
                     label: 'Từ chối',
-                    data: [2, 1, 3, 2, 2, 1, 2, 1, 3, 2, 1, 2],
+                    data: [2,1,3,2,2,1,2,1,3,2,1,2],
                     borderColor: '#EF4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    tension: 0.4,
-                    fill: true
+                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    tension: 0.4, fill: true
                 }
             ]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + ' sự kiện';
-                        }
-                    }
-                }
-            },
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 5
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
+                y: { beginAtZero: true, ticks: { stepSize: 5 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                x: { grid: { display: false } }
             }
         }
     });
 }
 
-// Event Type Chart (Doughnut Chart)
 function createEventTypeChart() {
     const ctx = document.getElementById('eventTypeChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Hội thảo', 'Workshop', 'Thi đấu', 'Văn nghệ'],
+            labels: ['Hội thảo','Workshop','Thi đấu','Văn nghệ'],
             datasets: [{
-                data: [42, 35, 28, 22],
-                backgroundColor: [
-                    '#3B82F6',
-                    '#8B5CF6',
-                    '#F59E0B',
-                    '#EC4899'
-                ],
+                data: [42,35,28,22],
+                backgroundColor: ['#3B82F6','#8B5CF6','#F59E0B','#EC4899'],
                 borderWidth: 0
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        font: {
-                            size: 13
-                        },
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((context.parsed / total) * 100).toFixed(1);
-                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                        }
-                    }
+                    labels: { padding: 20, font: { size: 13 }, usePointStyle: true, pointStyle: 'circle' }
                 }
             }
         }
     });
 }
 
-// Budget Chart (Bar Chart)
 function createBudgetChart() {
     const ctx = document.getElementById('budgetChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Hội thảo', 'Workshop', 'Thi đấu', 'Văn nghệ'],
+            labels: ['Hội thảo','Workshop','Thi đấu','Văn nghệ'],
             datasets: [{
-                label: 'Ngân sách (tỷ đồng)',
-                data: [4.2, 2.1, 3.36, 2.84],
-                backgroundColor: [
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(139, 92, 246, 0.8)',
-                    'rgba(245, 158, 11, 0.8)',
-                    'rgba(236, 72, 153, 0.8)'
-                ],
-                borderColor: [
-                    '#3B82F6',
-                    '#8B5CF6',
-                    '#F59E0B',
-                    '#EC4899'
-                ],
-                borderWidth: 2,
-                borderRadius: 8
+                data: [4.2,2.1,3.36,2.84],
+                backgroundColor: ['rgba(59,130,246,0.8)','rgba(139,92,246,0.8)','rgba(245,158,11,0.8)','rgba(236,72,153,0.8)'],
+                borderColor: ['#3B82F6','#8B5CF6','#F59E0B','#EC4899'],
+                borderWidth: 2, borderRadius: 8
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        label: function(context) {
-                            return 'Ngân sách: ' + context.parsed.y + ' tỷ đồng';
-                        }
-                    }
-                }
-            },
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value + ' tỷ';
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
+                y: { beginAtZero: true, ticks: { callback: v => v + ' tỷ' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                x: { grid: { display: false } }
             }
         }
     });
 }
 
-// Approval Time Chart (Horizontal Bar Chart)
 function createApprovalTimeChart() {
     const ctx = document.getElementById('approvalTimeChart');
     if (!ctx) return;
-
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Hội thảo', 'Workshop', 'Thi đấu', 'Văn nghệ'],
+            labels: ['Hội thảo','Workshop','Thi đấu','Văn nghệ'],
             datasets: [{
-                label: 'Thời gian (giờ)',
-                data: [2.8, 2.2, 2.5, 2.6],
-                backgroundColor: 'rgba(5, 150, 105, 0.8)',
+                data: [2.8,2.2,2.5,2.6],
+                backgroundColor: 'rgba(5,150,105,0.8)',
                 borderColor: '#059669',
-                borderWidth: 2,
-                borderRadius: 8
+                borderWidth: 2, borderRadius: 8
             }]
         },
         options: {
             indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        label: function(context) {
-                            return 'Thời gian: ' + context.parsed.x + ' giờ';
-                        }
-                    }
-                }
-            },
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value + 'h';
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                y: {
-                    grid: {
-                        display: false
-                    }
-                }
+                x: { beginAtZero: true, ticks: { callback: v => v + 'h' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                y: { grid: { display: false } }
             }
         }
     });
 }
 
-// Change Period
-function changePeriod() {
-    const period = document.getElementById('periodSelect').value;
-    console.log('Changing period to:', period);
-    
-    // In real implementation, reload data based on selected period
-    alert('Đang tải dữ liệu cho kỳ: ' + period);
-    
-    // Reload charts with new data
-    // initializeCharts();
-}
-
-// Export Report
-function exportReport() {
-    console.log('Exporting report to Excel');
-    alert('Đang xuất báo cáo ra file Excel...');
-    
-    // In real implementation, call API to generate Excel file
-}
-
-// Print Report
-function printReport() {
-    console.log('Printing report');
-    window.print();
-}
-
-// Format number with thousand separator
-function formatNumber(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-// Format currency
-function formatCurrency(num) {
-    if (num >= 1000000000) {
-        return (num / 1000000000).toFixed(1) + ' tỷ';
-    } else if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + ' triệu';
-    } else {
-        return formatNumber(num);
-    }
-}
-
-// Search functionality
-const searchInput = document.querySelector('.search-bar input');
-if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        console.log('Searching for:', searchTerm);
-        
-        // In real implementation, filter data based on search term
+// ==================== ĐĂNG XUẤT ====================
+function setupLogout() {
+    document.querySelectorAll('.nav-item.danger').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
     });
 }
-
-// Animate numbers on scroll
-function animateValue(element, start, end, duration) {
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const value = Math.floor(progress * (end - start) + start);
-        element.textContent = formatNumber(value);
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        }
-    };
-    window.requestAnimationFrame(step);
-}
-
-// Observe stat cards and animate when visible
-const observerOptions = {
-    threshold: 0.5,
-    rootMargin: '0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const statNumber = entry.target.querySelector('.stat-number');
-            if (statNumber && !statNumber.classList.contains('animated')) {
-                statNumber.classList.add('animated');
-                const text = statNumber.textContent;
-                const number = parseInt(text.replace(/[^0-9]/g, ''));
-                if (!isNaN(number)) {
-                    statNumber.textContent = '0';
-                    animateValue(statNumber, 0, number, 1000);
-                }
-            }
-        }
-    });
-}, observerOptions);
-
-// Observe all stat cards
-document.querySelectorAll('.stat-card').forEach(card => {
-    observer.observe(card);
-});
