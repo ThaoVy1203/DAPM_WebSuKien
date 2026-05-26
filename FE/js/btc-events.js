@@ -1,354 +1,305 @@
-// Events Management JavaScript
+// BTC Events Management
 
-// Global variables
+// ── State ──────────────────────────────────────────────────────────────────
 let currentEventId = null;
-let allBtcEvents = [];      // Cache toàn bộ event cards
+let allBtcEvents   = [];   // cache tất cả .event-card trong DOM
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    // Cache tất cả event cards ban đầu
+// ── Khởi tạo ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    // Cache cards SAU khi DOM render xong
     allBtcEvents = [...document.querySelectorAll('.event-card')];
 
     initializeFilterTabs();
-    initializeBudgetCalculation();
     initializeSearch();
+    initializeBudgetCalculation();
 });
 
-// ===== Tìm kiếm & Lọc cho BTC =====
-
+// ── Tìm kiếm realtime ──────────────────────────────────────────────────────
 function initializeSearch() {
-    const searchInput = document.querySelector('.search-bar input');
+    const input    = document.querySelector('.search-bar input');
     const clearBtn = document.getElementById('btnClearSearch');
-    if (!searchInput) return;
+    if (!input) return;
 
-    let debounceTimer;
-    searchInput.addEventListener('input', () => {
-        clearTimeout(debounceTimer);
-        // Hiện/ẩn nút xóa
-        if (clearBtn) clearBtn.style.display = searchInput.value ? 'flex' : 'none';
-        debounceTimer = setTimeout(applyBtcSearch, 300);
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        if (clearBtn) clearBtn.style.display = input.value ? 'flex' : 'none';
+        timer = setTimeout(applyBtcSearch, 300);
     });
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { clearTimeout(debounceTimer); applyBtcSearch(); }
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  { clearTimeout(timer); applyBtcSearch(); }
+        if (e.key === 'Escape') { input.value = ''; if (clearBtn) clearBtn.style.display = 'none'; applyBtcSearch(); }
     });
-
-    // Nút xóa tìm kiếm
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-            searchInput.value = '';
+            input.value = '';
             clearBtn.style.display = 'none';
             applyBtcSearch();
-            searchInput.focus();
+            input.focus();
         });
     }
 }
 
+// ── Hàm lọc chính ──────────────────────────────────────────────────────────
 function applyBtcSearch() {
-    const keyword = (document.querySelector('.search-bar input')?.value || '').trim().toLowerCase();
-    const activeTab = document.querySelector('.tab-btn.active');
-    const activeStatus = activeTab ? activeTab.dataset.status : 'all';
+    // Re-cache nếu cần (trường hợp cards được render sau)
+    if (allBtcEvents.length === 0) {
+        allBtcEvents = [...document.querySelectorAll('.event-card')];
+    }
 
+    const keyword      = (document.querySelector('.search-bar input')?.value || '').trim().toLowerCase();
+    const activeTab    = document.querySelector('.tab-btn.active');
+    const activeStatus = activeTab?.dataset.status || 'all';
+
+    let visible = 0;
     allBtcEvents.forEach(card => {
-        const title = (card.querySelector('.event-title')?.textContent || '').toLowerCase();
+        const title    = (card.querySelector('.event-title')?.textContent    || '').toLowerCase();
         const location = (card.querySelector('.event-location span')?.textContent || '').toLowerCase();
-        const date = (card.querySelector('.event-date span')?.textContent || '').toLowerCase();
+        const date     = (card.querySelector('.event-date span')?.textContent || '').toLowerCase();
+        const status   = card.dataset.status || '';
 
-        const matchKeyword = !keyword || title.includes(keyword) || location.includes(keyword) || date.includes(keyword);
-        const matchStatus = activeStatus === 'all' || card.dataset.status === activeStatus;
+        const matchKw     = !keyword || title.includes(keyword) || location.includes(keyword) || date.includes(keyword);
+        const matchStatus = activeStatus === 'all' || status === activeStatus;
 
-        card.style.display = matchKeyword && matchStatus ? 'block' : 'none';
+        const show = matchKw && matchStatus;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
     });
 
-    updateBtcResultCount();
+    updateBtcResultCount(visible);
 }
 
-function updateBtcResultCount() {
-    const visible = allBtcEvents.filter(c => c.style.display !== 'none').length;
-    let counter = document.querySelector('.btc-result-count');
-    if (!counter) {
-        counter = document.createElement('p');
-        counter.className = 'btc-result-count';
-        const grid = document.querySelector('.events-grid');
-        if (grid) grid.before(counter);
-    }
-    counter.textContent = `Hiển thị ${visible} / ${allBtcEvents.length} sự kiện`;
-    counter.style.cssText = 'font-size:13px;color:#6B7280;margin-bottom:12px;';
-}
-
-// Filter Tabs — cập nhật để kết hợp với tìm kiếm
+// ── Filter Tabs ─────────────────────────────────────────────────────────────
 function initializeFilterTabs() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            applyBtcSearch(); // Áp dụng cả tìm kiếm + tab
+            applyBtcSearch();
         });
     });
 }
 
-// Modal Functions
+// ── Toggle Filter Panel ─────────────────────────────────────────────────────
+function toggleBtcFilterPanel() {
+    const panel = document.getElementById('btcFilterPanel');
+    const btn   = document.getElementById('btnToggleFilter');
+    if (!panel) return;
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (btn) btn.classList.toggle('active', !isOpen);
+}
+window.toggleBtcFilterPanel = toggleBtcFilterPanel;
+
+function applyBtcPanelFilter() {
+    if (allBtcEvents.length === 0) allBtcEvents = [...document.querySelectorAll('.event-card')];
+
+    const trangThai = document.getElementById('btcFilterTrangThai')?.value || '';
+    const tuNgay    = document.getElementById('btcFilterTuNgay')?.value    || '';
+    const denNgay   = document.getElementById('btcFilterDenNgay')?.value   || '';
+    const keyword   = (document.querySelector('.search-bar input')?.value  || '').trim().toLowerCase();
+
+    let visible = 0;
+    allBtcEvents.forEach(card => {
+        const title    = (card.querySelector('.event-title')?.textContent    || '').toLowerCase();
+        const location = (card.querySelector('.event-location span')?.textContent || '').toLowerCase();
+        const dateText = (card.querySelector('.event-date span')?.textContent || '');
+        const status   = card.dataset.status || '';
+
+        const matchKw     = !keyword   || title.includes(keyword) || location.includes(keyword);
+        const matchStatus = !trangThai || status === trangThai;
+
+        let matchDate = true;
+        if (tuNgay || denNgay) {
+            const m = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (m) {
+                const d = new Date(`${m[3]}-${m[2]}-${m[1]}`);
+                if (tuNgay  && d < new Date(tuNgay))  matchDate = false;
+                if (denNgay && d > new Date(denNgay)) matchDate = false;
+            }
+        }
+
+        const show = matchKw && matchStatus && matchDate;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    updateBtcResultCount(visible);
+}
+window.applyBtcPanelFilter = applyBtcPanelFilter;
+
+function resetBtcPanelFilter() {
+    ['btcFilterTrangThai','btcFilterTuNgay','btcFilterDenNgay'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const inp = document.querySelector('.search-bar input');
+    if (inp) inp.value = '';
+    const clearBtn = document.getElementById('btnClearSearch');
+    if (clearBtn) clearBtn.style.display = 'none';
+    allBtcEvents.forEach(c => c.style.display = '');
+    updateBtcResultCount(allBtcEvents.length);
+}
+window.resetBtcPanelFilter = resetBtcPanelFilter;
+
+// ── Số kết quả ──────────────────────────────────────────────────────────────
+function updateBtcResultCount(count) {
+    let el = document.querySelector('.btc-result-count');
+    if (!el) {
+        el = document.createElement('p');
+        el.className = 'btc-result-count';
+        el.style.cssText = 'font-size:13px;color:#6B7280;margin-bottom:12px;';
+        document.querySelector('.events-grid')?.before(el);
+    }
+    const total = allBtcEvents.length;
+    el.textContent = `Hiển thị ${count} / ${total} sự kiện`;
+}
+
+// ── Modal Tạo / Sửa / Xem ──────────────────────────────────────────────────
 function openCreateEventModal() {
-    const modal = document.getElementById('eventModal');
-    const modalTitle = document.getElementById('modalTitle');
-    
-    modalTitle.textContent = 'Tạo sự kiện mới';
+    document.getElementById('modalTitle').textContent = 'Tạo sự kiện mới';
     document.getElementById('eventForm').reset();
     currentEventId = null;
-    
-    modal.classList.add('active');
+    enableFormFields();
+    document.getElementById('eventModal').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
+window.openCreateEventModal = openCreateEventModal;
 
 function openEditEventModal(eventId) {
-    const modal = document.getElementById('eventModal');
-    const modalTitle = document.getElementById('modalTitle');
-    
-    modalTitle.textContent = 'Chỉnh sửa sự kiện';
+    document.getElementById('modalTitle').textContent = 'Chỉnh sửa sự kiện';
     currentEventId = eventId;
-    
-    // Enable all form fields
     enableFormFields();
-    
-    // Load event data (mock data for now)
     loadEventData(eventId);
-    
-    modal.classList.add('active');
+    document.getElementById('eventModal').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
+window.openEditEventModal = openEditEventModal;
 
 function openViewEventModal(eventId) {
-    const modal = document.getElementById('eventModal');
-    const modalTitle = document.getElementById('modalTitle');
-    
-    modalTitle.textContent = 'Chi tiết sự kiện';
+    document.getElementById('modalTitle').textContent = 'Chi tiết sự kiện';
     currentEventId = eventId;
-    
-    // Load event data
     loadEventData(eventId);
-    
-    // Disable all form fields for view mode
     disableFormFields();
-    
-    modal.classList.add('active');
+    document.getElementById('eventModal').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
+window.openViewEventModal = openViewEventModal;
 
 function enableFormFields() {
-    const form = document.getElementById('eventForm');
-    const inputs = form.querySelectorAll('input, select, textarea, button[type="button"]');
-    inputs.forEach(input => {
-        input.disabled = false;
-        input.style.pointerEvents = 'auto';
-    });
-    
-    // Show action buttons
+    document.getElementById('eventForm').querySelectorAll('input,select,textarea,button[type="button"]')
+        .forEach(el => { el.disabled = false; el.style.pointerEvents = 'auto'; });
     document.querySelector('.btn-save-draft').style.display = 'inline-block';
-    document.querySelector('.btn-submit').style.display = 'inline-block';
+    document.querySelector('.btn-submit').style.display     = 'inline-block';
 }
 
 function disableFormFields() {
-    const form = document.getElementById('eventForm');
-    const inputs = form.querySelectorAll('input, select, textarea, button[type="button"]');
-    inputs.forEach(input => {
-        input.disabled = true;
-        input.style.pointerEvents = 'none';
-    });
-    
-    // Hide action buttons
+    document.getElementById('eventForm').querySelectorAll('input,select,textarea,button[type="button"]')
+        .forEach(el => { el.disabled = true; el.style.pointerEvents = 'none'; });
     document.querySelector('.btn-save-draft').style.display = 'none';
-    document.querySelector('.btn-submit').style.display = 'none';
+    document.querySelector('.btn-submit').style.display     = 'none';
 }
 
 function closeEventModal() {
-    const modal = document.getElementById('eventModal');
-    modal.classList.remove('active');
+    document.getElementById('eventModal').classList.remove('active');
     document.body.style.overflow = 'auto';
 }
+window.closeEventModal = closeEventModal;
 
 function loadEventData(eventId) {
-    // Mock data - replace with actual API call
-    const mockData = {
-        1: {
-            name: 'Hội thảo Công nghệ Thường niên 2024',
-            category: 'seminar',
-            location: 'a1-101',
-            date: '2024-12-15',
-            time: '09:00',
-            description: 'Hội thảo về các xu hướng công nghệ mới nhất'
-        }
+    const mock = {
+        1: { name:'Hội thảo Công nghệ Thường niên 2024', category:'seminar', location:'a1-101', date:'2024-12-15', time:'09:00', description:'Hội thảo về các xu hướng công nghệ mới nhất' }
     };
-
-    const data = mockData[eventId];
-    if (data) {
-        document.getElementById('eventName').value = data.name;
-        document.getElementById('eventCategory').value = data.category;
-        document.getElementById('eventLocation').value = data.location;
-        document.getElementById('eventDate').value = data.date;
-        document.getElementById('eventTime').value = data.time;
-        document.getElementById('eventDescription').value = data.description;
-    }
+    const d = mock[eventId];
+    if (!d) return;
+    document.getElementById('eventName').value        = d.name;
+    document.getElementById('eventCategory').value    = d.category;
+    document.getElementById('eventLocation').value    = d.location;
+    document.getElementById('eventDate').value        = d.date;
+    document.getElementById('eventTime').value        = d.time;
+    document.getElementById('eventDescription').value = d.description;
 }
 
-// Confirm Cancel Modal
+// ── Hủy sự kiện ────────────────────────────────────────────────────────────
 function confirmCancelEvent(eventId) {
-    const modal = document.getElementById('confirmModal');
     currentEventId = eventId;
-    modal.classList.add('active');
+    document.getElementById('confirmModal').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
+window.confirmCancelEvent = confirmCancelEvent;
 
 function closeConfirmModal() {
-    const modal = document.getElementById('confirmModal');
-    modal.classList.remove('active');
+    document.getElementById('confirmModal').classList.remove('active');
     document.body.style.overflow = 'auto';
     document.getElementById('cancelReason').value = '';
 }
+window.closeConfirmModal = closeConfirmModal;
 
 function cancelEvent() {
-    const reason = document.getElementById('cancelReason').value;
-    
-    if (!reason.trim()) {
-        alert('Vui lòng nhập lý do hủy sự kiện');
-        return;
-    }
-
-    // Call API to cancel event
-    console.log('Canceling event:', currentEventId, 'Reason:', reason);
-    
-    // Show success message
+    const reason = document.getElementById('cancelReason').value.trim();
+    if (!reason) { alert('Vui lòng nhập lý do hủy sự kiện'); return; }
     alert('Đã hủy sự kiện thành công');
-    
-    // Close modal and reload
     closeConfirmModal();
-    
-    // Remove event card from UI
-    const eventCard = document.querySelector(`.event-card[data-event-id="${currentEventId}"]`);
-    if (eventCard) {
-        eventCard.remove();
-    }
+    const card = document.querySelector(`.event-card[data-event-id="${currentEventId}"]`);
+    if (card) { card.remove(); allBtcEvents = allBtcEvents.filter(c => c !== card); }
 }
+window.cancelEvent = cancelEvent;
 
-// Budget Table Functions
+// ── Budget Table ────────────────────────────────────────────────────────────
 function initializeBudgetCalculation() {
-    const budgetTableBody = document.getElementById('budgetTableBody');
-    
-    if (budgetTableBody) {
-        budgetTableBody.addEventListener('input', function(e) {
-            if (e.target.type === 'number') {
-                calculateRowTotal(e.target.closest('tr'));
-                calculateGrandTotal();
-            }
-        });
-
-        budgetTableBody.addEventListener('click', function(e) {
-            if (e.target.closest('.btn-remove')) {
-                e.target.closest('tr').remove();
-                calculateGrandTotal();
-            }
-        });
-    }
+    const tbody = document.getElementById('budgetTableBody');
+    if (!tbody) return;
+    tbody.addEventListener('input', e => {
+        if (e.target.type === 'number') { calculateRowTotal(e.target.closest('tr')); calculateGrandTotal(); }
+    });
+    tbody.addEventListener('click', e => {
+        if (e.target.closest('.btn-remove')) { e.target.closest('tr').remove(); calculateGrandTotal(); }
+    });
 }
 
 function calculateRowTotal(row) {
-    const quantity = parseFloat(row.querySelector('input[type="number"]:nth-of-type(1)').value) || 0;
-    const unitPrice = parseFloat(row.querySelector('input[type="number"]:nth-of-type(2)').value) || 0;
-    const total = quantity * unitPrice;
-    
-    row.querySelector('.total-cell').textContent = formatCurrency(total);
+    const q = parseFloat(row.querySelector('input[type="number"]:nth-of-type(1)').value) || 0;
+    const p = parseFloat(row.querySelector('input[type="number"]:nth-of-type(2)').value) || 0;
+    row.querySelector('.total-cell').textContent = formatCurrency(q * p);
 }
 
 function calculateGrandTotal() {
-    const rows = document.querySelectorAll('#budgetTableBody tr');
-    let grandTotal = 0;
-    
-    rows.forEach(row => {
-        const quantity = parseFloat(row.querySelector('input[type="number"]:nth-of-type(1)').value) || 0;
-        const unitPrice = parseFloat(row.querySelector('input[type="number"]:nth-of-type(2)').value) || 0;
-        grandTotal += quantity * unitPrice;
+    let total = 0;
+    document.querySelectorAll('#budgetTableBody tr').forEach(row => {
+        const q = parseFloat(row.querySelector('input[type="number"]:nth-of-type(1)').value) || 0;
+        const p = parseFloat(row.querySelector('input[type="number"]:nth-of-type(2)').value) || 0;
+        total += q * p;
     });
-    
-    document.querySelector('.total-amount').textContent = formatCurrency(grandTotal) + ' VNĐ';
+    const el = document.querySelector('.total-amount');
+    if (el) el.textContent = formatCurrency(total) + ' VNĐ';
 }
 
 function addBudgetRow() {
     const tbody = document.getElementById('budgetTableBody');
-    const newRow = document.createElement('tr');
-    
-    newRow.innerHTML = `
+    const row = document.createElement('tr');
+    row.innerHTML = `
         <td><input type="text" placeholder="Tên hạng mục"></td>
         <td><input type="number" value="1"></td>
         <td><input type="number" value="0"></td>
         <td class="total-cell">0</td>
-        <td><button type="button" class="btn-remove"><i class="fas fa-trash"></i></button></td>
-    `;
-    
-    tbody.appendChild(newRow);
+        <td><button type="button" class="btn-remove"><i class="fas fa-trash"></i></button></td>`;
+    tbody.appendChild(row);
 }
+window.addBudgetRow = addBudgetRow;
 
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN').format(amount);
-}
+function formatCurrency(n) { return new Intl.NumberFormat('vi-VN').format(n); }
 
-// Form Submission
-document.getElementById('eventForm')?.addEventListener('submit', function(e) {
+// ── Form submit ─────────────────────────────────────────────────────────────
+document.getElementById('eventForm')?.addEventListener('submit', function (e) {
     e.preventDefault();
-    
-    // Collect form data
-    const formData = {
-        name: document.getElementById('eventName').value,
-        category: document.getElementById('eventCategory').value,
-        location: document.getElementById('eventLocation').value,
-        date: document.getElementById('eventDate').value,
-        time: document.getElementById('eventTime').value,
-        description: document.getElementById('eventDescription').value
-    };
-
-    // Collect budget data
-    const budgetItems = [];
-    document.querySelectorAll('#budgetTableBody tr').forEach(row => {
-        const inputs = row.querySelectorAll('input');
-        budgetItems.push({
-            name: inputs[0].value,
-            quantity: inputs[1].value,
-            unitPrice: inputs[2].value
-        });
-    });
-    formData.budget = budgetItems;
-
-    console.log('Form data:', formData);
-
-    // Call API to save event
-    if (currentEventId) {
-        // Update existing event
-        alert('Đã cập nhật sự kiện thành công');
-    } else {
-        // Create new event
-        alert('Đã tạo sự kiện mới và gửi phê duyệt');
-    }
-
+    alert(currentEventId ? 'Đã cập nhật sự kiện thành công' : 'Đã tạo sự kiện mới và gửi phê duyệt');
     closeEventModal();
 });
 
-// Close modal when clicking outside
-window.addEventListener('click', function(e) {
-    const eventModal = document.getElementById('eventModal');
-    const confirmModal = document.getElementById('confirmModal');
-    
-    if (e.target === eventModal) {
-        closeEventModal();
-    }
-    
-    if (e.target === confirmModal) {
-        closeConfirmModal();
-    }
+// ── Đóng modal khi click ngoài / Escape ────────────────────────────────────
+window.addEventListener('click', e => {
+    if (e.target === document.getElementById('eventModal'))   closeEventModal();
+    if (e.target === document.getElementById('confirmModal')) closeConfirmModal();
 });
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeEventModal();
-        closeConfirmModal();
-    }
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeEventModal(); closeConfirmModal(); }
 });

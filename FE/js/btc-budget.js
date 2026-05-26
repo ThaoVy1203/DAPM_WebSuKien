@@ -7,30 +7,69 @@ let currentBudgetId = null;
 document.addEventListener('DOMContentLoaded', function() {
     initializeBudgetCalculation();
     initializeFilterSelect();
+    initializeSearch();
 });
 
-// Filter Select
+// ── Tìm kiếm header ────────────────────────────────────────────────────────
+function initializeSearch() {
+    const input = document.querySelector('.search-bar input');
+    if (!input) return;
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(applyBudgetSearch, 300);
+    });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  { clearTimeout(timer); applyBudgetSearch(); }
+        if (e.key === 'Escape') { input.value = ''; applyBudgetSearch(); }
+    });
+}
+
+function applyBudgetSearch() {
+    const kw = (document.querySelector('.search-bar input')?.value || '').trim().toLowerCase();
+    const currentFilter = document.querySelector('.filter-select')?.value || 'all';
+    applyBudgetFilter(currentFilter, kw);
+}
+
+// Filter Select — lọc bảng theo trạng thái + từ khóa
 function initializeFilterSelect() {
-    const filterSelect = document.querySelector('.filter-select');
-    
-    if (filterSelect) {
-        filterSelect.addEventListener('change', function() {
-            const filterValue = this.value;
-            const tableRows = document.querySelectorAll('.budget-table tbody tr');
-            
-            tableRows.forEach(row => {
-                const statusBadge = row.querySelector('.status-badge');
-                if (!statusBadge) return;
-                
-                if (filterValue === 'all') {
-                    row.style.display = '';
-                } else {
-                    const status = statusBadge.classList.contains(filterValue);
-                    row.style.display = status ? '' : 'none';
-                }
-            });
+    const sel = document.querySelector('.filter-select');
+    if (sel) {
+        sel.addEventListener('change', function () {
+            const kw = (document.querySelector('.search-bar input')?.value || '').trim().toLowerCase();
+            applyBudgetFilter(this.value, kw);
         });
     }
+}
+
+function applyBudgetFilter(filterValue, keyword) {
+    const rows = document.querySelectorAll('.budget-table tbody tr');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const status  = row.dataset.status || '';
+        const text    = row.textContent.toLowerCase();
+
+        const matchStatus  = filterValue === 'all' || status === filterValue;
+        const matchKeyword = !keyword || text.includes(keyword);
+
+        const show = matchStatus && matchKeyword;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    // Hiện số kết quả
+    let counter = document.getElementById('budgetResultCount');
+    if (!counter) {
+        counter = document.createElement('p');
+        counter.id = 'budgetResultCount';
+        counter.style.cssText = 'font-size:13px;color:#6B7280;margin:8px 0 4px;';
+        document.querySelector('.budget-table-wrapper')?.before(counter);
+    }
+    const total = document.querySelectorAll('.budget-table tbody tr').length;
+    counter.textContent = (filterValue !== 'all' || keyword)
+        ? `Hiển thị ${visible} / ${total} kế hoạch`
+        : '';
 }
 
 // Modal Functions
@@ -439,3 +478,13 @@ document.addEventListener('keydown', function(e) {
         closeBudgetDetailModal();
     }
 });
+
+// Export global functions cho onclick handlers
+window.openCreateBudgetModal  = openCreateBudgetModal;
+window.closeBudgetModal        = closeBudgetModal;
+window.editBudget              = editBudget;
+window.viewBudgetDetail        = viewBudgetDetail;
+window.closeBudgetDetailModal  = closeBudgetDetailModal;
+window.editFromDetail          = editFromDetail;
+window.addBudgetItem           = addBudgetItem;
+window.removeBudgetItem        = removeBudgetItem;

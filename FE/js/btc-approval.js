@@ -9,7 +9,45 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFilterTabs();
     initializeApprovalTypeChange();
     initializeFileUpload();
+    initializeSearch();
 });
+
+// ── Tìm kiếm realtime ──────────────────────────────────────────────────────
+function initializeSearch() {
+    const input = document.querySelector('.search-bar input');
+    if (!input) return;
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(applyApprovalSearch, 300);
+    });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  { clearTimeout(timer); applyApprovalSearch(); }
+        if (e.key === 'Escape') { input.value = ''; applyApprovalSearch(); }
+    });
+}
+
+function applyApprovalSearch() {
+    const kw = (document.querySelector('.search-bar input')?.value || '').trim().toLowerCase();
+    const items = document.querySelectorAll('.approval-item');
+    let visible = 0;
+    items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const show = !kw || text.includes(kw);
+        item.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    // Hiện số kết quả
+    let badge = document.getElementById('approvalSearchBadge');
+    if (!badge) {
+        badge = document.createElement('p');
+        badge.id = 'approvalSearchBadge';
+        badge.style.cssText = 'font-size:13px;color:#6B7280;margin:8px 0 4px;';
+        document.querySelector('.approval-list')?.before(badge);
+    }
+    badge.textContent = kw ? `Tìm thấy ${visible} / ${items.length} yêu cầu cho "${kw}"` : '';
+}
 
 // Filter Tabs
 function initializeFilterTabs() {
@@ -30,10 +68,10 @@ function initializeFilterTabs() {
             // Filter approval items
             approvalItems.forEach(item => {
                 if (filterStatus === 'all') {
-                    item.style.display = 'block';
+                    item.style.display = '';
                 } else {
                     const itemStatus = item.getAttribute('data-status');
-                    item.style.display = itemStatus === filterStatus ? 'block' : 'none';
+                    item.style.display = itemStatus === filterStatus ? '' : 'none';
                 }
             });
         });
@@ -198,9 +236,9 @@ function loadApprovalData(approvalId) {
 
 function saveDraft() {
     const formData = collectFormData();
-    
-    console.log('Saving draft:', formData);
-    
+    if (!formData.title) { alert('Vui lòng nhập tiêu đề yêu cầu'); return; }
+
+    addApprovalToList(formData, 'draft');
     alert('Đã lưu nháp thành công');
     closeApprovalModal();
 }
@@ -345,19 +383,17 @@ document.getElementById('approvalForm')?.addEventListener('submit', function(e) 
 
     console.log('Submitting approval:', formData);
 
-    // Call API to submit approval
+    // Thêm item mới vào danh sách
+    const status = currentApprovalId ? 'pending' : 'pending';
+    addApprovalToList(formData, status);
+
     if (currentApprovalId) {
-        // Update existing approval
         alert('Đã cập nhật và gửi yêu cầu phê duyệt thành công');
     } else {
-        // Create new approval
         alert('Đã gửi yêu cầu phê duyệt thành công');
     }
 
     closeApprovalModal();
-    
-    // Reload page or update UI
-    // location.reload();
 });
 
 // Close modal when clicking outside
@@ -382,6 +418,94 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// ── Thêm item mới vào danh sách ────────────────────────────────────────────
+function addApprovalToList(data, status) {
+    const list = document.querySelector('.approval-list');
+    if (!list) return;
+
+    const typeMap    = { event:'Sự kiện', budget:'Ngân sách', venue:'Địa điểm', other:'Khác' };
+    const approverMap = { bgh:'Ban Giám hiệu', hsv:'Hội Sinh viên', doan:'Đoàn Trường' };
+    const statusMap  = { pending:'Chờ duyệt', draft:'Nháp' };
+    const today      = new Date().toLocaleDateString('vi-VN');
+    const newId      = Date.now(); // id tạm
+
+    const typeLabel     = typeMap[data.type]     || data.type     || 'Khác';
+    const approverLabel = approverMap[data.approver] || data.approver || '';
+    const statusLabel   = statusMap[status]      || status;
+
+    const isDraft = status === 'draft';
+
+    const item = document.createElement('div');
+    item.className = 'approval-item';
+    item.dataset.status = status;
+    item.innerHTML = `
+        <div class="approval-header">
+            <div class="approval-title-section">
+                <h3>${data.title || '(Chưa có tiêu đề)'}</h3>
+                <span class="approval-type ${data.type || 'other'}">${typeLabel}</span>
+            </div>
+            <span class="status-badge ${status}">${statusLabel}</span>
+        </div>
+        <div class="approval-body">
+            <div class="approval-info">
+                <div class="info-item">
+                    <i class="fas fa-user"></i>
+                    <span>${isDraft ? 'Người tạo' : 'Người gửi'}: Nguyễn Văn A</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>${isDraft ? 'Lưu lần cuối' : 'Ngày gửi'}: ${today}</span>
+                </div>
+                ${!isDraft && approverLabel ? `
+                <div class="info-item">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Người duyệt: ${approverLabel}</span>
+                </div>` : ''}
+            </div>
+            <div class="approval-description">
+                <p>${(data.description || '').substring(0, 120)}${(data.description || '').length > 120 ? '...' : ''}</p>
+            </div>
+        </div>
+        <div class="approval-footer">
+            ${isDraft ? `
+                <button class="btn-action-primary" onclick="editApproval(${newId})">
+                    <i class="fas fa-edit"></i> Tiếp tục soạn
+                </button>
+                <button class="btn-action-danger" onclick="this.closest('.approval-item').remove()">
+                    <i class="fas fa-trash"></i> Xóa nháp
+                </button>
+            ` : `
+                <button class="btn-action-secondary" onclick="viewApprovalDetail(${newId})">
+                    <i class="fas fa-eye"></i> Xem chi tiết
+                </button>
+                <button class="btn-action-secondary" onclick="editApproval(${newId})">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+                <button class="btn-action-danger" onclick="cancelApproval(${newId})">
+                    <i class="fas fa-times"></i> Hủy yêu cầu
+                </button>
+            `}
+        </div>
+    `;
+
+    // Thêm vào đầu danh sách
+    list.insertBefore(item, list.firstChild);
+
+    // Cập nhật số liệu stat card
+    updateApprovalStats(status, 1);
+
+    // Scroll đến item mới
+    item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateApprovalStats(status, delta) {
+    const map = { pending: '.pending-stat', draft: '.draft-stat', approved: '.approved-stat', rejected: '.rejected-stat' };
+    const sel = map[status];
+    if (!sel) return;
+    const el = document.querySelector(`${sel} .stat-number`);
+    if (el) el.textContent = parseInt(el.textContent || '0') + delta;
+}
+
 // Filter Select Handler
 const filterSelect = document.querySelector('.filter-select');
 if (filterSelect) {
@@ -394,10 +518,10 @@ if (filterSelect) {
             if (!typeSpan) return;
             
             if (filterValue === 'all') {
-                item.style.display = 'block';
+                item.style.display = '';
             } else {
                 const itemType = typeSpan.classList.contains(filterValue);
-                item.style.display = itemType ? 'block' : 'none';
+                item.style.display = itemType ? '' : 'none';
             }
         });
     });
