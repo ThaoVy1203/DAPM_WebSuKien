@@ -193,15 +193,11 @@ function showRegisteredState(trangThai, idDangKy) {
     if (actions) {
         actions.style.display = "block";
         const btnView = document.getElementById("btnViewTicket");
-        if (btnView) btnView.href = TicketBiz.ticketDetailUrl(idDangKy);
+        if (btnView) btnView.href = `ticket-detail.html?id=${idDangKy}`;
         const btnCancel = document.getElementById("btnCancelReg");
         if (btnCancel) {
-            const ketThuc = currentEvent?.ThoiGianKetThuc ?? currentEvent?.thoiGianKetThuc;
-            btnCancel.style.display = TicketBiz.canCancel({
-                trangThai,
-                thoiGianCheckin: null,
-                thoiGianKetThuc: ketThuc
-            }) ? "" : "none";
+            const canCancel = ["Đã xác nhận","Chờ xác nhận"].includes(trangThai);
+            btnCancel.style.display = canCancel ? "" : "none";
         }
     }
 }

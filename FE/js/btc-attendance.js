@@ -10,6 +10,98 @@ let participantsData = [];
 let currentIdSuKien = null;
 let currentEventInfo = null;
 
+// ─── OFFLINE FALLBACK (QR check-in sync) ──────────────────────────────────
+let offlineQueue = []; // [{ qrToken, scanTimeMs }]
+let confirmedCache = null; // { ids: number[], fetchedAt: number, eventWindow: {start,end} }
+
+function getOfflineQueueKey() {
+    return `btcOfflineQueue_${currentIdSuKien || "unknown"}`;
+}
+
+function getConfirmedCacheKey() {
+    return `btcConfirmedCache_${currentIdSuKien || "unknown"}`;
+}
+
+function updateOfflineQueueCountUI() {
+    const el = document.getElementById("offlineQueueCount");
+    if (!el) return;
+    el.textContent = offlineQueue.length ? `Offline queue: ${offlineQueue.length}` : "";
+}
+
+function loadOfflineQueueFromStorage() {
+    try {
+        const raw = localStorage.getItem(getOfflineQueueKey());
+        offlineQueue = raw ? JSON.parse(raw) : [];
+    } catch {
+        offlineQueue = [];
+    }
+    updateOfflineQueueCountUI();
+}
+
+function saveOfflineQueueToStorage() {
+    try {
+        localStorage.setItem(getOfflineQueueKey(), JSON.stringify(offlineQueue));
+    } catch { /* ignore */ }
+}
+
+function isIdDangKyInConfirmedCache(idDangKy) {
+    if (!confirmedCache || !Array.isArray(confirmedCache.ids)) return false;
+    return confirmedCache.ids.some(x => Number(x) === Number(idDangKy));
+}
+
+function getScanLocalTimeInfo() {
+    // epoch ms (UTC-based) - đủ dùng để backend khôi phục thoiGianCheckin
+    return Date.now();
+}
+
+async function syncOfflineQueue() {
+    if (!currentIdSuKien) return;
+    loadOfflineQueueFromStorage();
+    if (!offlineQueue.length) return;
+
+    // Nếu đang offline thì đừng gọi server
+    if (!navigator.onLine) return;
+
+    // Đồng bộ tuần tự để tránh spam
+    const newQueue = [];
+    for (const item of offlineQueue) {
+        try {
+            const res = await fetch(`${API_BASE}/DangKy/check-in-qr`, {
+                method: "POST",
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    QrToken: item.qrToken,
+                    ScanTimeMs: item.scanTimeMs
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+            const ok = data.Success ?? data.success;
+
+            if (res.ok && ok !== false) {
+                // success: drop khỏi queue
+                pushActivity("Offline check-in", "THÀNH CÔNG");
+            } else {
+                // Lỗi nghiệp vụ: thường không recoverable -> bỏ
+                // (bảo đảm queue không bị kẹt vô hạn)
+                const msg = data.Message || data.message || "Check-in thất bại";
+                pushActivity("Offline check-in", "LỖI");
+                console.warn("Sync queue dropped:", msg);
+            }
+        } catch (e) {
+            // Network error: giữ lại phần chưa gửi
+            newQueue.push(item);
+            break;
+        }
+    }
+
+    offlineQueue = newQueue;
+    saveOfflineQueueToStorage();
+    updateOfflineQueueCountUI();
+
+    // Refresh bảng sau khi sync
+    // (bảng sẽ tự refresh qua setInterval(loadAttendanceData, 30000))
+}
+
 function getIdSuKienFromUrl() {
     const p = new URLSearchParams(window.location.search);
     return p.get("idSuKien") || p.get("id") || localStorage.getItem("btcCurrentSuKien") || null;
@@ -68,8 +160,31 @@ async function loadAttendanceData() {
         const raw = Array.isArray(data) ? data : (data.data || data.items || []);
         participantsData = raw.map(normalizeParticipant);
 
+        // Cache danh sách "Đã xác nhận" để fallback offline
+        try {
+            const confirmedIds = participantsData
+                .filter(p => p.trangThai === "Đã xác nhận")
+                .map(p => p.idDangKy)
+                .filter(id => id !== null && id !== undefined);
+
+            const batDau = currentEventInfo?.thoiGianBatDau || currentEventInfo?.ThoiGianBatDau;
+            const ketThuc = currentEventInfo?.thoiGianKetThuc || currentEventInfo?.ThoiGianKetThuc;
+
+            confirmedCache = {
+                ids: confirmedIds.map(id => parseInt(id, 10)).filter(n => !Number.isNaN(n)),
+                fetchedAt: Date.now(),
+                eventWindow: {
+                    batDau: batDau ? new Date(batDau).toISOString() : null,
+                    ketThuc: ketThuc ? new Date(ketThuc).toISOString() : null
+                }
+            };
+            localStorage.setItem(getConfirmedCacheKey(), JSON.stringify(confirmedCache));
+        } catch (e) { /* cache best-effort */ }
+
         renderParticipantsTable(participantsData);
         updateStats();
+        updateOfflineQueueCountUI();
+        // sync queue được gọi ở chỗ init / interval
     } catch (error) {
         console.error("Lỗi load đăng ký:", error);
         showBtcMessage("Không tải được danh sách đăng ký. Kiểm tra Backend và idSuKien.", "error");
@@ -141,6 +256,8 @@ function mapStatusClass(trangThai) {
         case "Đã tham gia": return "present";
         case "Đã xác nhận": return "confirmed";
         case "Chờ xác nhận": return "pending";
+        case "Chờ chỗ": return "pending";
+        case "Chờ người dùng xác nhận": return "pending";
         case "Vắng mặt": return "absent";
         case "Đã hủy": return "cancelled";
         default: return "";
@@ -149,17 +266,25 @@ function mapStatusClass(trangThai) {
 
 // ─── QR CHECK-IN (BTC) ───────────────────────────────────────────────────────
 async function checkInByQrToken(qrToken) {
-    const token = (qrToken || "").trim();
+    let token = (qrToken || "").trim();
     if (!token) {
         showBtcMessage("Vui lòng dán hoặc quét mã QR.", "error");
         return;
     }
 
+    // Nếu người vận hành chỉ nhập IdDangKy (dạng số) thì tự chuyển sang QR tĩnh để khỏi hết hạn.
+    if (/^\d+$/.test(token) && typeof TicketBiz !== "undefined") {
+        token = TicketBiz.buildStaticQrPayload(parseInt(token, 10));
+    }
+
     try {
+        const scanTimeMs = Date.now();
         const res = await fetch(`${API_BASE}/DangKy/check-in-qr`, {
             method: "POST",
             headers: authHeaders(),
-            body: JSON.stringify({ QrToken: token })
+            body: JSON.stringify({ QrToken: token, ScanTimeMs: scanTimeMs })
+            // ScanTimeMs giúp backend ghi nhận thời gian quét khi đồng bộ offline
+            // (vẫn OK nếu null).
         });
         const data = await res.json().catch(() => ({}));
         const ok = data.Success ?? data.success;
@@ -177,7 +302,34 @@ async function checkInByQrToken(qrToken) {
         }
     } catch (e) {
         console.error(e);
-        showBtcMessage("Không kết nối được máy chủ.", "error");
+        // Offline fallback: lưu vào queue để sync khi có mạng.
+        try {
+            if (!confirmedCache) {
+                const rawCache = localStorage.getItem(getConfirmedCacheKey());
+                confirmedCache = rawCache ? JSON.parse(rawCache) : null;
+            }
+
+            let idDangKy = null;
+            if (/^\d+$/.test(token)) {
+                idDangKy = parseInt(token, 10);
+            } else if (typeof TicketBiz !== "undefined") {
+                const parsed = TicketBiz.parseQrPayload(token);
+                idDangKy = parsed ? parsed.idDangKy : null;
+            }
+
+            if (!confirmedCache || !Array.isArray(confirmedCache.ids) || !isIdDangKyInConfirmedCache(idDangKy)) {
+                showBtcMessage("Không có dữ liệu cache xác nhận. Hãy thử lại khi có mạng hoặc kiểm tra lại cache.", "error");
+                return;
+            }
+
+            offlineQueue.push({ qrToken: token, scanTimeMs: Date.now() });
+            saveOfflineQueueToStorage();
+            updateOfflineQueueCountUI();
+            showBtcMessage("Đã ghi nhận offline. Sẽ tự đồng bộ khi có mạng.", "info");
+            pushActivity("Offline QR check-in", "THÀNH CÔNG");
+        } catch (qErr) {
+            showBtcMessage("Không kết nối được máy chủ và cũng không lưu được offline queue.", "error");
+        }
     }
 }
 
@@ -232,7 +384,8 @@ async function manualCheckIn() {
 
     const trimmed = qr.trim();
     if (/^\d+$/.test(trimmed) && typeof TicketBiz !== "undefined") {
-        await checkInByQrToken(TicketBiz.buildQrPayload(parseInt(trimmed, 10)));
+        // QR tĩnh: không hết hạn (phù hợp offline)
+        await checkInByQrToken(TicketBiz.buildStaticQrPayload(parseInt(trimmed, 10)));
     } else if (/^UTE-CHECKIN-/i.test(trimmed)) {
         await checkInByQrToken(trimmed);
     } else {
@@ -246,7 +399,9 @@ function updateStats() {
     const present = participantsData.filter(p =>
         p.trangThai === "Đã tham gia" || p.thoiGianCheckin
     ).length;
-    const pending = participantsData.filter(p => p.trangThai === "Chờ xác nhận").length;
+    const pending = participantsData.filter(p =>
+        p.trangThai === "Chờ xác nhận" || p.trangThai === "Chờ chỗ" || p.trangThai === "Chờ người dùng xác nhận"
+    ).length;
     const absent = total - present;
 
     const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
@@ -366,6 +521,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (currentIdSuKien) {
         await loadEventInfo(currentIdSuKien);
         await loadAttendanceData();
+        loadOfflineQueueFromStorage();
+        // Đồng bộ queue khi có mạng và theo chu kỳ
+        window.addEventListener("online", syncOfflineQueue);
+        setInterval(syncOfflineQueue, 15000);
+        await syncOfflineQueue(); // xử lý các mục tồn tại ngay nếu đang online
         setInterval(loadAttendanceData, 30000);
     } else {
         const id = prompt("Nhập IdSuKien cho trang điểm danh:");

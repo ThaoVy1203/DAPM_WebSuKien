@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using aspiCore.Model;
 
 namespace aspiCore.Data
@@ -21,6 +21,7 @@ namespace aspiCore.Data
         public DbSet<ThongBao> ThongBaos { get; set; }
         public DbSet<CongViec> CongViecs { get; set; }
         public DbSet<PhanCong> PhanCongs { get; set; }
+        public DbSet<DangKyDanhGia> DangKyDanhGias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -62,6 +63,10 @@ namespace aspiCore.Data
             modelBuilder.Entity<DangKySuKien>()
                 .HasIndex(dk => dk.TrangThai);
 
+            modelBuilder.Entity<DangKyDanhGia>()
+                .HasIndex(dg => dg.IdDangKy)
+                .IsUnique();
+
             modelBuilder.Entity<ThongBao>()
                 .HasIndex(tb => tb.DaDoc);
 
@@ -77,6 +82,12 @@ namespace aspiCore.Data
                 .WithMany(d => d.SuKiens)
                 .HasForeignKey(s => s.IdDiaDiem)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<DangKyDanhGia>()
+                .HasOne(dg => dg.DangKy)
+                .WithOne(dk => dk.DanhGia)
+                .HasForeignKey<DangKyDanhGia>(dg => dg.IdDangKy)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

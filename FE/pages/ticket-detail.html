@@ -251,18 +251,22 @@ body{font-family:'Inter',sans-serif;background:#eef2f7;min-height:100vh;color:#1
         <div id="qrActive">
           <div class="qr-frame">
             <img id="qrImg" src="" alt="QR Code">
+            <img id="qrImgStatic" src="" alt="QR Code tĩnh (offline)" style="display:none;">
             <div class="qr-corner tl"></div>
             <div class="qr-corner tr"></div>
             <div class="qr-corner bl"></div>
             <div class="qr-corner br"></div>
           </div>
-          <div class="qr-countdown-row">
+          <div class="qr-countdown-row" id="qrCountdownRow">
             <i class="fas fa-sync-alt"></i>
             <span>Làm mới sau</span>
             <strong id="qrCountdown">45</strong>s
           </div>
-          <button class="qr-refresh-btn" onclick="refreshQR()">
+          <button class="qr-refresh-btn" id="btnRefreshQR" onclick="refreshQR()">
             <i class="fas fa-sync-alt"></i> Làm mới QR
+          </button>
+          <button class="qr-refresh-btn" id="btnStaticQR" onclick="showStaticQR()" style="margin-top:10px;">
+            <i class="fas fa-shield-alt"></i> QR tĩnh (offline)
           </button>
         </div>
         <div id="qrMsg" style="display:none"></div>

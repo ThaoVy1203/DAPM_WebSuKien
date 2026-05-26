@@ -48,6 +48,7 @@ FE/
 ├── DAPM.sql                # (bản sao/tham chiếu DB)
 ├── DAPM_AlterTable.sql
 ├── DAPM_TestData.sql
+├── DAPM_TestData_Realtime.sql   # Căn SK theo GETDATE (chạy lại được)
 └── README.md               # File này
 ```
 
@@ -75,9 +76,9 @@ Logic nghiệp vụ **vé / QR / hủy / cửa sổ check-in** (người tham gi
 ```text
 events.html → event-detail.html → [register-event.html]
                     ↓
-            my-tickets.html (danh sách)
-                    ↓
-            ticket-detail.html (QR, CI/CO, hủy)
+            my-tickets.html (danh sách tab → chọn vé → chi tiết + QR)
+                    ↓ (tùy chọn)
+            ticket-detail.html (trang vé đầy đủ)
 ```
 
 | File | Script | Chức năng |
@@ -86,7 +87,7 @@ events.html → event-detail.html → [register-event.html]
 | `pages/events.html` | `events.js` | Danh sách, lọc, badge đăng ký |
 | `pages/event-detail.html` | `event-detail.js` | Chi tiết, đăng ký nhanh, hủy |
 | `pages/register-event.html` | `register-event.js` | Form đăng ký đầy đủ |
-| `pages/my-tickets.html` | `my-tickets.js` | Danh sách vé → click sang chi tiết |
+| `pages/my-tickets.html` | `my-tickets.js` | **Tab danh sách** (đang diễn ra / đã đăng ký / đã hủy) → bấm mới hiện chi tiết + QR |
 | `pages/ticket-detail.html` | `ticket-detail.js` | **Vé điện tử, QR 45s, CI/CO** |
 | `pages/history.html` | `history.js` | Lịch sử tham gia |
 | `pages/calender.html` | `calender.js` | Lịch cá nhân |

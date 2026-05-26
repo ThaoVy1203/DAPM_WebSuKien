@@ -2,6 +2,7 @@
 // ticket-detail.js — Chi tiết vé điện tử
 const API_BASE = "https://localhost:7160/api";
 let ticket = null, qrTimer = null, qrSecs = 45, ciTimer = null;
+let qrMode = "dynamic"; // dynamic | static
 
 document.addEventListener("DOMContentLoaded", async () => {
   const token = localStorage.getItem("token");
@@ -88,7 +89,10 @@ function renderAll() {
 const PILLS = {
   "Đã xác nhận": {c:"pill-confirmed",i:"fa-check-circle", l:"Đã xác nhận"},
   "Chờ xác nhận":{c:"pill-pending",  i:"fa-clock",        l:"Chờ xác nhận"},
+  "Chờ chỗ":     {c:"pill-pending",  i:"fa-hourglass-half", l:"Chờ chỗ"},
+  "Chờ người dùng xác nhận": {c:"pill-pending", i:"fa-bell", l:"Mời xác nhận (24h)"},
   "Đã tham gia": {c:"pill-attended", i:"fa-star",         l:"Đã tham gia"},
+  "Hoàn thành":  {c:"pill-attended", i:"fa-check-double", l:"Hoàn thành"},
   "Vắng mặt":    {c:"pill-absent",   i:"fa-user-times",   l:"Vắng mặt"},
   "Đã hủy":      {c:"pill-cancelled",i:"fa-ban",          l:"Đã hủy"},
 };
@@ -125,16 +129,32 @@ function renderQR(t) {
   if (TicketBiz.canShowQr(t.trangThai)) {
     active.style.display = "block"; msg.style.display = "none";
     sub.textContent = "Đưa mã này cho BTC quét tại cổng sự kiện";
-    buildQR(t); startQrTimer(t);
+    qrMode = "dynamic";
+    showDynamicQrUI();
+    buildQR(t);
+    buildStaticQR(t);
+    startQrTimer(t);
   } else if (t.trangThai === "Chờ xác nhận") {
     active.style.display = "none"; msg.style.display = "block";
     msg.className = "qr-msg pending";
     msg.innerHTML = `<i class="fas fa-clock"></i> Đăng ký đang chờ BTC xác nhận. QR sẽ hiện sau khi được duyệt.`;
     stopQrTimer();
-  } else if (t.trangThai === "Đã tham gia") {
+  } else if (t.trangThai === "Chờ chỗ") {
+    active.style.display = "none"; msg.style.display = "block";
+    msg.className = "qr-msg pending";
+    msg.innerHTML = `<i class="fas fa-hourglass-half"></i> Sự kiện đã hết chỗ. Bạn đang chờ. Khi có chỗ, hệ thống sẽ mời xác nhận trong 24h.`;
+    stopQrTimer();
+  } else if (t.trangThai === "Chờ người dùng xác nhận") {
+    active.style.display = "none"; msg.style.display = "block";
+    msg.className = "qr-msg pending";
+    msg.innerHTML = `<i class="fas fa-bell"></i> Bạn vừa được mời xác nhận chỗ. Vui lòng xác nhận trong 24h để nhận QR check-in.`;
+    stopQrTimer();
+  } else if (t.trangThai === "Đã tham gia" || t.trangThai === "Hoàn thành") {
     active.style.display = "none"; msg.style.display = "block";
     msg.className = "qr-msg attended";
-    msg.innerHTML = `<i class="fas fa-check-circle"></i> Đã check-in lúc <strong>${short(t.thoiGianCheckin)}</strong>. Cảm ơn bạn đã tham gia!`;
+    msg.innerHTML = t.trangThai === "Hoàn thành"
+      ? `<i class="fas fa-check-circle"></i> Bạn đã hoàn thành sự kiện lúc <strong>${short(t.thoiGianCheckout)}</strong>.`
+      : `<i class="fas fa-check-circle"></i> Đã check-in lúc <strong>${short(t.thoiGianCheckin)}</strong>. Cảm ơn bạn đã tham gia!`;
     stopQrTimer();
   } else {
     active.style.display = "none"; msg.style.display = "block";
@@ -152,18 +172,68 @@ function buildQR(t) {
   img.onload  = () => { img.style.opacity = "1"; };
   img.onerror = () => { img.src="https://via.placeholder.com/180x180/e2e8f0/555?text=QR"; img.style.opacity="1"; };
 }
+
+function buildStaticQR(t) {
+  const data = TicketBiz.buildStaticQrPayload(t.idDangKy);
+  const url  = TicketBiz.qrImageUrl(data);
+  const img  = document.getElementById("qrImgStatic");
+  if (!img) return;
+  img.style.opacity = "0.4"; img.src = url;
+  img.onload  = () => { img.style.opacity = "1"; };
+  img.onerror = () => { img.src="https://via.placeholder.com/180x180/e2e8f0/555?text=QR"; img.style.opacity="1"; };
+}
+
+function showDynamicQrUI() {
+  const countdownRow = document.getElementById("qrCountdownRow");
+  const btnRefresh   = document.getElementById("btnRefreshQR");
+  const imgDyn       = document.getElementById("qrImg");
+  const imgStatic    = document.getElementById("qrImgStatic");
+  if (countdownRow) countdownRow.style.display = "flex";
+  if (btnRefresh) btnRefresh.style.display = "inline-flex";
+  if (imgDyn) imgDyn.style.display = "block";
+  if (imgStatic) imgStatic.style.display = "none";
+}
+
+function showStaticQrUI() {
+  const countdownRow = document.getElementById("qrCountdownRow");
+  const btnRefresh   = document.getElementById("btnRefreshQR");
+  const imgDyn       = document.getElementById("qrImg");
+  const imgStatic    = document.getElementById("qrImgStatic");
+  if (countdownRow) countdownRow.style.display = "none";
+  if (btnRefresh) btnRefresh.style.display = "none";
+  if (imgDyn) imgDyn.style.display = "none";
+  if (imgStatic) imgStatic.style.display = "block";
+}
+
+function showStaticQR() {
+  if (!ticket || ticket.trangThai !== "Đã xác nhận") return;
+  if (qrMode === "static") return;
+  qrMode = "static";
+  stopQrTimer();
+  showStaticQrUI();
+  const subEl = document.getElementById("qrSub");
+  if (subEl) subEl.textContent = "QR tĩnh dùng offline (không hết hạn 45s).";
+  toast("Đã chuyển sang QR tĩnh (offline).", "info");
+}
 function startQrTimer(t) {
   stopQrTimer(); qrSecs = TicketBiz.QR_REFRESH_SEC; setText("qrCountdown", qrSecs);
   qrTimer = setInterval(() => {
     qrSecs--; setText("qrCountdown", qrSecs);
-    if (qrSecs <= 0) { buildQR(t); qrSecs = TicketBiz.QR_REFRESH_SEC; }
+    if (qrSecs <= 0) {
+      if (qrMode === "dynamic") buildQR(t);
+      qrSecs = TicketBiz.QR_REFRESH_SEC;
+    }
   }, 1000);
 }
 function stopQrTimer() { if (qrTimer) { clearInterval(qrTimer); qrTimer = null; } }
 function refreshQR() {
   if (!ticket || !TicketBiz.canShowQr(ticket.trangThai)) return;
+  if (qrMode !== "dynamic") {
+    toast("Đang dùng QR tĩnh. QR động không làm mới.", "info");
+    return;
+  }
   buildQR(ticket); qrSecs = TicketBiz.QR_REFRESH_SEC; setText("qrCountdown", qrSecs);
-  toast("Đã làm mới mã QR.", "info");
+  toast("Đã làm mới mã QR động.", "info");
 }
 
 function renderCiButtons(t) {
@@ -184,6 +254,12 @@ function renderCiButtons(t) {
   } else if (t.trangThai === "Chờ xác nhận") {
     btnCI.className = "btn-ci ci-off";
     btnCI.innerHTML = `<i class="fas fa-clock"></i> CHỜ BTC XÁC NHẬN`;
+  } else if (t.trangThai === "Chờ chỗ") {
+    btnCI.className = "btn-ci ci-off";
+    btnCI.innerHTML = `<i class="fas fa-hourglass-half"></i> CHỜ CHỖ`;
+  } else if (t.trangThai === "Chờ người dùng xác nhận") {
+    btnCI.className = "btn-ci ci-off";
+    btnCI.innerHTML = `<i class="fas fa-bell"></i> CHỜ XÁC NHẬN (24H)`;
   } else if (["Đã hủy","Vắng mặt"].includes(t.trangThai)) {
     btnCI.className = "btn-ci ci-off";
     btnCI.innerHTML = `<i class="fas fa-ban"></i> KHÔNG THỂ CHECK-IN`;
@@ -268,14 +344,29 @@ async function doCheckout() {
   btn.disabled = true;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang check-out...`;
   try {
+    let diem = null;
+    let nhanXet = "";
+    if (ticket.yeuCauKhaoSatCheckout !== false) {
+      const rawScore = window.prompt("Đánh giá nhanh sự kiện (1-5 sao):", "5");
+      if (rawScore === null) { renderCiButtons(ticket); return; }
+      diem = parseInt(rawScore, 10);
+      if (Number.isNaN(diem) || diem < 1 || diem > 5) {
+        toast("Vui lòng nhập điểm từ 1 đến 5 để check-out.", "error");
+        renderCiButtons(ticket);
+        return;
+      }
+      nhanXet = (window.prompt("Nhận xét ngắn (không bắt buộc):", "") || "").trim();
+    }
+
     const r = await fetch(`${API_BASE}/DangKy/check-out`, {
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},
-      body: JSON.stringify({IdSuKien:ticket.idSuKien, IdNguoiDung:ticket.idNguoiDung})
+      body: JSON.stringify({IdSuKien:ticket.idSuKien, IdNguoiDung:ticket.idNguoiDung, Diem:diem, NhanXet:nhanXet})
     });
     const d = await r.json().catch(()=>({}));
     if (r.ok && (d.Success ?? d.success) !== false) {
       ticket.thoiGianCheckout = d.ThoiGianCheckout || d.thoiGianCheckout || new Date().toISOString();
+      ticket.trangThai = "Hoàn thành";
       renderAll();
       toast("👋 Check-out thành công! Cảm ơn bạn đã tham gia.", "success");
     } else {

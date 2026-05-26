@@ -9,138 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/my-tickets.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* ── Trạng thái vé ── */
-        .ticket-status-bar {
-            display: flex; align-items: center; gap: 10px;
-            padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
-            font-weight: 600; font-size: 14px;
-        }
-        .ticket-status-bar.confirmed  { background:#f0fff4; color:#276749; border:1px solid #9ae6b4; }
-        .ticket-status-bar.attended   { background:#eff6ff; color:#1e40af; border:1px solid #93c5fd; }
-        .ticket-status-bar.pending    { background:#fffbeb; color:#92400e; border:1px solid #fcd34d; }
-        .ticket-status-bar.cancelled  { background:#fff5f5; color:#c53030; border:1px solid #feb2b2; }
-
-        /* ── QR Section ── */
-        .qr-wrapper {
-            background: white; border-radius: 16px;
-            padding: 28px; text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .qr-wrapper h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-        .qr-wrapper p  { color: #666; font-size: 13px; margin-bottom: 20px; }
-        .qr-image-box {
-            display: inline-block; padding: 16px;
-            border: 3px solid #0D5A9C; border-radius: 12px;
-            background: white; margin-bottom: 16px;
-        }
-        .qr-image-box img { width: 200px; height: 200px; display: block; }
-        .qr-countdown {
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-size: 13px; color: #666; margin-bottom: 16px;
-        }
-        .qr-countdown strong { color: #0D5A9C; font-size: 16px; }
-        .qr-ticket-code {
-            font-family: monospace; font-size: 15px; font-weight: 700;
-            letter-spacing: 3px; color: #1a1a2e; background: #f0f2f5;
-            padding: 8px 16px; border-radius: 8px; display: inline-block;
-            margin-bottom: 16px;
-        }
-
-        /* ── Check-in/out buttons ── */
-        .checkin-section {
-            background: white; border-radius: 16px; padding: 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px;
-        }
-        .checkin-section h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-        .checkin-timeline {
-            display: flex; gap: 12px; margin-bottom: 20px;
-        }
-        .checkin-step {
-            flex: 1; text-align: center; padding: 14px 10px;
-            border-radius: 10px; border: 2px solid #e5e7eb;
-            font-size: 13px; font-weight: 600; color: #888;
-        }
-        .checkin-step.done    { border-color: #059669; background: #f0fff4; color: #276749; }
-        .checkin-step.active  { border-color: #0D5A9C; background: #eff6ff; color: #1e40af; }
-        .checkin-step i { display: block; font-size: 20px; margin-bottom: 6px; }
-        .checkin-step .step-time { font-size: 11px; font-weight: 400; margin-top: 4px; color: #666; }
-
-        .btn-checkin {
-            width: 100%; padding: 14px; border: none; border-radius: 10px;
-            font-size: 15px; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.2s; margin-bottom: 10px;
-        }
-        .btn-checkin.check-in  { background: #0D5A9C; color: white; }
-        .btn-checkin.check-out { background: #059669; color: white; }
-        .btn-checkin.disabled  { background: #e5e7eb; color: #aaa; cursor: not-allowed; }
-        .btn-checkin:not(.disabled):hover { opacity: 0.9; transform: translateY(-1px); }
-
-        /* ── Danh sách vé ── */
-        .tickets-list { display: flex; flex-direction: column; gap: 12px; }
-        .ticket-list-item {
-            display: flex; align-items: center; gap: 14px;
-            padding: 14px; background: white; border-radius: 12px;
-            border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s;
-        }
-        .ticket-list-item:hover { border-color: #0D5A9C; box-shadow: 0 2px 8px rgba(13,90,156,0.1); }
-        .ticket-list-item.active { border-color: #0D5A9C; background: #eff6ff; }
-        .ticket-list-item img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
-        .ticket-item-info { flex: 1; }
-        .ticket-item-info h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-        .ticket-item-info p  { font-size: 12px; color: #666; }
-        .ticket-item-badge {
-            padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
-        }
-        .badge-confirmed { background: #d1fae5; color: #065f46; }
-        .badge-attended  { background: #dbeafe; color: #1e40af; }
-        .badge-pending   { background: #fef3c7; color: #92400e; }
-        .badge-cancelled { background: #fee2e2; color: #991b1b; }
-        .badge-absent    { background: #f3f4f6; color: #6b7280; }
-
-        /* ── Empty state ── */
-        .empty-state {
-            text-align: center; padding: 60px 20px; color: #666;
-        }
-        .empty-state i { font-size: 48px; color: #d1d5db; display: block; margin-bottom: 16px; }
-        .empty-state h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .empty-state a {
-            display: inline-block; margin-top: 16px; padding: 12px 24px;
-            background: #0D5A9C; color: white; border-radius: 8px;
-            text-decoration: none; font-weight: 600;
-        }
-
-        /* ── Layout ── */
-        .tickets-layout {
-            display: grid; grid-template-columns: 1fr 380px; gap: 24px;
-            align-items: start;
-        }
-        @media (max-width: 900px) {
-            .tickets-layout { grid-template-columns: 1fr; }
-        }
-
-        /* ── Cancel confirm modal ── */
-        .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 9999;
-            align-items: center; justify-content: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-box {
-            background: white; border-radius: 16px; padding: 32px;
-            max-width: 420px; width: 90%; text-align: center;
-        }
-        .modal-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-        .modal-box p  { color: #666; font-size: 14px; margin-bottom: 24px; }
-        .modal-actions { display: flex; gap: 12px; justify-content: center; }
-        .btn-modal-cancel  { padding: 10px 24px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; cursor: pointer; font-weight: 600; }
-        .btn-modal-confirm { padding: 10px 24px; border: none; border-radius: 8px; background: #ef4444; color: white; cursor: pointer; font-weight: 600; }
-    </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="container">
             <div class="header-wrapper">
@@ -150,24 +20,24 @@
                 <nav class="nav-menu">
                     <a href="home-user.html" class="nav-link">Trang chủ</a>
                     <a href="events.html" class="nav-link">Sự kiện</a>
-                    <a href="calender.html" class="nav-link active">Lịch cá nhân</a>
+                    <a href="calender.html" class="nav-link">Lịch cá nhân</a>
                     <a href="notifications.html" class="nav-link">Thông báo</a>
                 </nav>
                 <div class="header-actions">
-                    <button class="btn-notification" onclick="window.location.href='notifications.html'">
+                    <button class="btn-notification" type="button" onclick="window.location.href='notifications.html'">
                         <i class="fas fa-bell"></i>
                         <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
                     </button>
                     <div class="user-menu" id="userMenuWrapper">
-                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="User" class="user-avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
-                        <span id="userName" style="font-size:14px;font-weight:600;color:#1a1a2e;">...</span>
-                        <i class="fas fa-chevron-down" style="font-size:12px;color:#666;"></i>
-                        <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:210px;z-index:9999;overflow:hidden;">
-                            <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;"></i> Hồ sơ cá nhân</a>
-                            <a href="my-tickets.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;"></i> Vé của tôi</a>
-                            <a href="history.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;"></i> Lịch sử tham gia</a>
-                            <hr style="margin:0;border:none;border-top:1px solid #eee;">
-                            <a href="#" id="logoutBtn" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;"></i> Đăng xuất</a>
+                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="User" class="user-avatar">
+                        <span id="userName">...</span>
+                        <i class="fas fa-chevron-down"></i>
+                        <div id="userDropdown" class="user-dropdown">
+                            <a href="profile.html"><i class="fas fa-user"></i> Hồ sơ cá nhân</a>
+                            <a href="my-tickets.html"><i class="fas fa-ticket-alt"></i> Vé của tôi</a>
+                            <a href="history.html"><i class="fas fa-history"></i> Lịch sử tham gia</a>
+                            <hr>
+                            <a href="#" id="logoutBtn" class="logout-link"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
                         </div>
                     </div>
                 </div>
@@ -175,96 +45,127 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content mt-page">
         <div class="container">
-            <div class="page-header" style="margin-bottom:24px;">
-                <h1 style="font-size:24px;font-weight:800;">Vé của tôi</h1>
-                <p style="color:#666;margin-top:4px;">Chọn vé để xem chi tiết, mã QR check-in và check-out tại trang vé</p>
+            <header class="mt-page-header">
+                <h1>Vé của tôi</h1>
+                <p>Chọn tab và bấm vào vé trong danh sách để xem chi tiết, mã QR và check-in.</p>
+            </header>
+
+            <div id="loadingState" class="mt-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Đang tải vé...</p>
             </div>
 
-            <!-- Loading -->
-            <div id="loadingState" style="text-align:center;padding:60px;color:#666;">
-                <i class="fas fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:12px;"></i>
-                Đang tải vé...
-            </div>
-
-            <!-- Empty state -->
-            <div id="emptyState" class="empty-state" style="display:none;">
+            <div id="emptyState" class="mt-empty" style="display:none;">
                 <i class="fas fa-ticket-alt"></i>
                 <h3>Bạn chưa có vé nào</h3>
                 <p>Đăng ký tham gia sự kiện để nhận vé điện tử</p>
-                <a href="events.html">Khám phá sự kiện</a>
+                <a href="events.html" class="mt-btn-primary">Khám phá sự kiện</a>
             </div>
 
-            <!-- Tickets layout -->
-            <div id="ticketsLayout" class="tickets-layout" style="display:none;">
-                <!-- Left: Danh sách vé -->
-                <div>
-                    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">
-                        <i class="fas fa-list" style="color:#0D5A9C;margin-right:8px;"></i>
-                        Danh sách vé (<span id="ticketCount">0</span>)
-                    </h3>
-                    <div class="tickets-list" id="ticketsList"></div>
-                </div>
-
-                <!-- Right: Chi tiết vé + QR -->
-                <div id="ticketDetail" style="display:none;">
-                    <!-- Trạng thái -->
-                    <div id="ticketStatusBar" class="ticket-status-bar confirmed">
-                        <i class="fas fa-check-circle"></i>
-                        <span id="ticketStatusText">Đã xác nhận</span>
-                    </div>
-
-                    <!-- Thông tin vé -->
-                    <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.1);margin-bottom:20px;">
-                        <h2 id="ticketEventName" style="font-size:18px;font-weight:800;margin-bottom:12px;"></h2>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
-                            <div>
-                                <div style="color:#888;font-weight:600;margin-bottom:2px;">NGÀY</div>
-                                <div id="ticketDate" style="font-weight:600;"></div>
-                            </div>
-                            <div>
-                                <div style="color:#888;font-weight:600;margin-bottom:2px;">GIỜ</div>
-                                <div id="ticketTime" style="font-weight:600;"></div>
-                            </div>
-                            <div style="grid-column:1/-1;">
-                                <div style="color:#888;font-weight:600;margin-bottom:2px;">ĐỊA ĐIỂM</div>
-                                <div id="ticketLocation" style="font-weight:600;"></div>
-                            </div>
-                            <div style="grid-column:1/-1;">
-                                <div style="color:#888;font-weight:600;margin-bottom:2px;">NGƯỜI THAM GIA</div>
-                                <div id="ticketAttendee" style="font-weight:600;"></div>
-                            </div>
+            <div id="ticketsLayout" class="mt-grid" style="display:none;">
+                <!-- Cột 1: Danh sách vé theo tab -->
+                <aside class="mt-list-column">
+                    <div class="mt-list-card">
+                        <h3 class="mt-list-heading"><i class="fas fa-ticket-alt"></i> Danh sách vé</h3>
+                        <div class="mt-tabs" role="tablist">
+                            <button type="button" class="mt-tab active" data-filter="ongoing" role="tab">
+                                Đang diễn ra <span class="mt-tab-count" id="countOngoing">0</span>
+                            </button>
+                            <button type="button" class="mt-tab" data-filter="registered" role="tab">
+                                Đã đăng ký <span class="mt-tab-count" id="countRegistered">0</span>
+                            </button>
+                            <button type="button" class="mt-tab" data-filter="cancelled" role="tab">
+                                Đã hủy <span class="mt-tab-count" id="countCancelled">0</span>
+                            </button>
                         </div>
+                        <div id="ticketsFilterList" class="mt-filter-list"></div>
                     </div>
+                </aside>
 
-                    <!-- QR Code -->
-                    <div class="qr-wrapper" id="qrSection">
+                <!-- Cột 2: Chi tiết vé (ẩn cho đến khi chọn) -->
+                <div class="mt-main" id="ticketDetailPanel">
+                    <div id="ticketDetailPlaceholder" class="mt-detail-placeholder">
+                        <i class="fas fa-hand-pointer"></i>
+                        <h3>Chọn một vé để xem chi tiết</h3>
+                        <p>Bấm vào vé trong danh sách bên trái để xem QR, check-in và thông tin sự kiện.</p>
+                    </div>
+                    <div id="ticketDetailContent" class="mt-detail-content" style="display:none;">
+                    <article class="mt-hero-card">
+                        <div class="mt-hero-media">
+                            <img id="ticketEventImage" src="../images/event1.png" alt="Sự kiện">
+                            <span class="mt-event-badge" id="ticketEventBadge">SẮP DIỄN RA</span>
+                        </div>
+                        <div class="mt-hero-body">
+                            <div class="mt-hero-top">
+                                <h2 id="ticketEventName">—</h2>
+                                <span class="mt-status-icon confirmed" id="ticketStatusIcon" title="Trạng thái vé">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                            </div>
+                            <div class="mt-meta-grid">
+                                <div class="mt-meta-item">
+                                    <span class="mt-meta-label">NGÀY</span>
+                                    <span class="mt-meta-value" id="ticketDate">—</span>
+                                </div>
+                                <div class="mt-meta-item">
+                                    <span class="mt-meta-label">GIỜ</span>
+                                    <span class="mt-meta-value" id="ticketTime">—</span>
+                                </div>
+                                <div class="mt-meta-item mt-meta-full">
+                                    <span class="mt-meta-label">ĐỊA ĐIỂM</span>
+                                    <span class="mt-meta-value" id="ticketLocation">—</span>
+                                </div>
+                            </div>
+                            <div class="mt-user-bar">
+                                <div class="mt-user-avatar" id="ticketUserAvatar">NV</div>
+                                <div class="mt-user-text">
+                                    <strong id="ticketAttendeeName">—</strong>
+                                    <span id="ticketAttendeeMssv">MSSV: —</span>
+                                </div>
+                                <button type="button" class="mt-btn-share" id="btnShareTicket" title="Chia sẻ vé">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                            <button type="button" id="btnCancelTicket" class="mt-btn-cancel">
+                                <i class="fas fa-times-circle"></i> Hủy đăng ký
+                            </button>
+                            <button type="button" id="btnConfirmWaitlist" class="mt-btn-confirm" style="display:none;">
+                                <i class="fas fa-check-circle"></i> Xác nhận chỗ (24h)
+                            </button>
+                            <a href="#" id="linkTicketDetail" class="mt-link-detail">Xem trang vé đầy đủ <i class="fas fa-external-link-alt"></i></a>
+                        </div>
+                    </article>
+
+                    <!-- QR -->
+                    <section class="mt-qr-card" id="qrSection">
                         <h3>Mã QR Check-in</h3>
-                        <p>Đưa mã này cho nhân viên soát vé tại cửa</p>
-                        <div class="qr-image-box">
-                            <img id="qrImage" src="" alt="QR Code">
+                        <p class="mt-qr-sub">Vui lòng đưa mã này cho nhân viên soát vé tại cửa</p>
+                        <div id="qrActivePanel">
+                            <div class="mt-qr-frame">
+                                <img id="qrImage" src="" alt="QR Code">
+                            </div>
+                            <div class="mt-wallet-row">
+                                <button type="button" class="mt-wallet-btn" id="btnAppleWallet">
+                                    <i class="fab fa-apple"></i> Add to Apple Wallet
+                                </button>
+                                <button type="button" class="mt-wallet-btn" id="btnGoogleWallet">
+                                    <i class="fab fa-google"></i> Add to Google Pay
+                                </button>
+                            </div>
+                            <div class="mt-qr-refresh">
+                                <i class="fas fa-info-circle"></i>
+                                Mã vé tự động làm mới sau <strong id="qrCountdown">45</strong>s
+                            </div>
                         </div>
-                        <div class="qr-ticket-code" id="qrTicketCode">---</div>
-                        <div class="qr-countdown">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Mã tự động làm mới sau</span>
-                            <strong id="qrCountdown">45</strong>s
-                        </div>
-                        <button onclick="refreshQR()" style="padding:8px 20px;border:1px solid #0D5A9C;border-radius:8px;background:white;color:#0D5A9C;cursor:pointer;font-weight:600;font-size:13px;">
-                            <i class="fas fa-sync-alt"></i> Làm mới QR
-                        </button>
-                    </div>
+                        <div id="qrStatusPanel" class="mt-qr-status" style="display:none;"></div>
+                    </section>
 
                     <!-- Check-in / Check-out -->
-                    <div class="checkin-section" id="checkinSection">
-                        <h3><i class="fas fa-map-marker-alt" style="color:#0D5A9C;margin-right:8px;"></i>Check-in / Check-out</h3>
-
-                        <!-- Thông tin cửa sổ thời gian -->
-                        <div id="checkinTimeInfo" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px;"></div>
-
-                        <!-- Timeline -->
+                    <section class="mt-ci-card" id="checkinSection">
+                        <h3><i class="fas fa-route"></i> Tiến trình tham gia</h3>
+                        <div id="checkinTimeInfo" class="mt-ci-info" style="display:none;"></div>
                         <div class="checkin-timeline">
                             <div class="checkin-step" id="stepRegister">
                                 <i class="fas fa-user-check"></i>
@@ -282,55 +183,54 @@
                                 <div class="step-time" id="stepCheckoutTime"></div>
                             </div>
                         </div>
-
-                        <!-- Nút Check-in -->
-                        <button class="btn-checkin check-in disabled" id="btnCheckin" onclick="doCheckin()">
-                            <i class="fas fa-sign-in-alt"></i>
-                            CHECK-IN
+                        <button type="button" class="btn-checkin check-in disabled" id="btnCheckin" onclick="doCheckin()">
+                            <i class="fas fa-sign-in-alt"></i> CHECK-IN
                         </button>
-
-                        <!-- Nút Check-out -->
-                        <button class="btn-checkin check-out disabled" id="btnCheckout" onclick="doCheckout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            CHECK-OUT
+                        <button type="button" class="btn-checkin check-out disabled" id="btnCheckout" onclick="doCheckout()">
+                            <i class="fas fa-sign-out-alt"></i> CHECK-OUT
                         </button>
+                        <p class="mt-ci-hint"><i class="fas fa-info-circle"></i> Check-in mở 30 phút trước khi sự kiện bắt đầu</p>
+                    </section>
+                    </div><!-- /ticketDetailContent -->
+                </div>
 
-                        <p style="font-size:12px;color:#888;text-align:center;margin-top:8px;">
-                            <i class="fas fa-info-circle"></i>
-                            Check-in mở 30 phút trước khi sự kiện bắt đầu
-                        </p>
+                <!-- Cột 3: Lịch sử & hỗ trợ -->
+                <aside class="mt-sidebar">
+                    <div class="mt-side-card">
+                        <h3 class="mt-side-title">LỊCH SỬ THAM GIA</h3>
+                        <div id="historyList" class="mt-history-list"></div>
+                        <a href="history.html" class="mt-history-all" id="historyViewAll">Xem tất cả lịch sử</a>
                     </div>
 
-                    <!-- Nút hủy đăng ký -->
-                    <button id="btnCancelTicket" onclick="openCancelModal()"
-                        style="width:100%;padding:12px;border:1px solid #ef4444;border-radius:10px;background:white;color:#ef4444;cursor:pointer;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <i class="fas fa-times-circle"></i> Hủy đăng ký
-                    </button>
-                </div>
+                    <div class="mt-support-card">
+                        <div class="mt-support-icon"><i class="fas fa-question"></i></div>
+                        <h4>Cần hỗ trợ?</h4>
+                        <p>Nếu bạn gặp vấn đề khi soát vé, vui lòng liên hệ bộ phận hỗ trợ sinh viên tại bàn trực sự kiện.</p>
+                        <a href="notifications.html" class="mt-support-btn">Trung tâm hỗ trợ</a>
+                    </div>
+                </aside>
             </div>
         </div>
     </main>
 
-    <!-- Modal xác nhận hủy -->
     <div class="modal-overlay" id="cancelModal">
         <div class="modal-box">
-            <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+            <div class="modal-emoji">⚠️</div>
             <h3>Xác nhận hủy đăng ký</h3>
             <p>Bạn có chắc chắn muốn hủy đăng ký sự kiện này không? Hành động này không thể hoàn tác.</p>
             <div class="modal-actions">
-                <button class="btn-modal-cancel" onclick="closeCancelModal()">Không, giữ lại</button>
-                <button class="btn-modal-confirm" onclick="confirmCancel()">Có, hủy đăng ký</button>
+                <button type="button" class="btn-modal-cancel" onclick="closeCancelModal()">Không, giữ lại</button>
+                <button type="button" class="btn-modal-confirm" onclick="confirmCancel()">Có, hủy đăng ký</button>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
                     <div class="footer-logo">
-                        <img src="../images/logo.png" alt="Logo ĐHSPKT" class="footer-logo-image">
+                        <img src="../images/logo.png" alt="Logo" class="footer-logo-image">
                         <div>
                             <h4>Hệ thống Quản lý Sự kiện - Trường UTE - DN</h4>
                             <p>Trường Đại học Sư phạm Kỹ thuật</p>

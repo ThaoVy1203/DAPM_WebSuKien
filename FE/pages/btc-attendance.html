@@ -115,13 +115,14 @@
             <div class="card" style="margin-bottom:20px;padding:16px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
                 <div style="flex:1;min-width:220px;">
                     <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;">MÃ QR TỪ VÉ NGƯỜI THAM GIA</label>
-                    <input type="text" id="qrTokenInput" placeholder="UTE-CHECKIN-{idDangKy}-{timestamp}"
+                    <input type="text" id="qrTokenInput" placeholder="UTE-CHECKIN-{idDangKy}-{timestamp} hoặc UTE-CHECKIN-S-{idDangKy} (QR tĩnh) hoặc nhập IdDangKy"
                         style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
                 </div>
                 <button type="button" id="btnScanQr" class="btn-manual-checkin" style="margin-top:22px;">
                     <i class="fas fa-check-circle"></i> Xác nhận check-in QR
                 </button>
                 <span id="statPendingCount" style="font-size:13px;color:#92400e;font-weight:600;margin-left:auto;"></span>
+                <span id="offlineQueueCount" style="font-size:13px;color:#0D5A9C;font-weight:700;margin-left:12px;"></span>
             </div>
 
             <!-- Stats and Activity -->

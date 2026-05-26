@@ -60,7 +60,7 @@ namespace aspiCore.Controllers
         }
 
         [HttpPost("check-out")]
-        public async Task<ActionResult<ApiResponse>> CheckOut([FromBody] CheckInDto dto)
+        public async Task<ActionResult<ApiResponse>> CheckOut([FromBody] CheckOutWithFeedbackDto dto)
         {
             var result = await _dangKyService.CheckOutAsync(dto);
             if (!result.Success)
@@ -117,6 +117,18 @@ namespace aspiCore.Controllers
         public async Task<ActionResult<ApiResponse>> TuChoi([FromBody] DangKyDto dto)
         {
             var result = await _dangKyService.TuChoiDangKyAsync(dto);
+            if (!result.Success) return BadRequest(result);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Người dùng xác nhận chỗ trong danh sách chờ (Waitlist).
+        /// POST /api/DangKy/xac-nhan-cho-nguoi  body: { IdSuKien, IdNguoiDung }
+        /// </summary>
+        [HttpPost("xac-nhan-cho-nguoi")]
+        public async Task<ActionResult<ApiResponse>> XacNhanChoNgoi([FromBody] DangKyDto dto)
+        {
+            var result = await _dangKyService.XacNhanChoNgoiAsync(dto);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }

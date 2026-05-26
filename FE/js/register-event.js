@@ -163,24 +163,16 @@ function renderEventInfo(event) {
 
     // b. Hết chỗ
     if (conLai !== null && conLai <= 0) {
-        showFormError("Sự kiện đã <strong>hết chỗ đăng ký</strong>. Bạn không thể đăng ký lúc này.");
-        disableForm();
-        return;
+        showFormError("Sự kiện đã <strong>hết chỗ đăng ký</strong>. Bạn có thể đăng ký vào danh sách chờ (Waitlist).");
     }
 
-    // c. Sự kiện đã kết thúc
+    // c. Sự kiện đã kết thúc — không cho đăng ký
     if (event.thoiGianKetThuc && new Date(event.thoiGianKetThuc) < now) {
         showFormError("Sự kiện này đã <strong>kết thúc</strong>. Không thể đăng ký.");
         disableForm();
         return;
     }
-
-    // d. Sự kiện đã bắt đầu (đang diễn ra) — không cho đăng ký mới
-    if (event.thoiGianBatDau && new Date(event.thoiGianBatDau) <= now) {
-        showFormError("Sự kiện đã <strong>bắt đầu</strong>. Không thể đăng ký mới.");
-        disableForm();
-        return;
-    }
+    // Lưu ý: sự kiện đang diễn ra (batDau <= now <= ketThuc) vẫn cho đăng ký
 }
 
 // ─── KIỂM TRA ĐÃ ĐĂNG KÝ CHƯA ────────────────────────────────────────────────
@@ -250,6 +242,10 @@ function showAlreadyRegisteredPanel(reg) {
                           title: "Bạn đã đăng ký thành công!", sub: "Sử dụng QR trong \"Vé của tôi\" để check-in tại cổng sự kiện." },
         "Chờ xác nhận": { emoji: "⏳", color: "#92400e", bg: "#fffbeb", border: "#fcd34d",
                           title: "Đăng ký đang chờ xác nhận", sub: "Ban tổ chức sẽ xác nhận trong thời gian sớm nhất." },
+        "Chờ chỗ":     { emoji: "⏳", color: "#92400e", bg: "#fffbeb", border: "#fcd34d",
+                          title: "Bạn đang ở danh sách chờ", sub: "Khi có người hủy vé, hệ thống sẽ mời bạn xác nhận trong 24h." },
+        "Chờ người dùng xác nhận": { emoji: "🔔", color: "#92400e", bg: "#fffbeb", border: "#fcd34d",
+                          title: "Bạn vừa được mời xác nhận chỗ", sub: "Vui lòng xác nhận trong 24h để nhận QR check-in." },
         "Đã tham gia":  { emoji: "🎉", color: "#1e40af", bg: "#eff6ff", border: "#93c5fd",
                           title: "Bạn đã tham gia sự kiện này!", sub: "Cảm ơn bạn đã đóng góp cho hoạt động cộng đồng." },
         "Vắng mặt":     { emoji: "😔", color: "#7c3aed", bg: "#f5f3ff", border: "#c4b5fd",
@@ -258,7 +254,7 @@ function showAlreadyRegisteredPanel(reg) {
     const cfg = stateMap[trangThai] || stateMap["Đã xác nhận"];
 
     // Ẩn nút hủy nếu đã tham gia / vắng mặt
-    const showCancel = ["Đã xác nhận", "Chờ xác nhận"].includes(trangThai);
+    const showCancel = ["Đã xác nhận", "Chờ xác nhận", "Chờ chỗ", "Chờ người dùng xác nhận"].includes(trangThai);
 
     formCard.innerHTML = `
         <div style="text-align:center; padding:48px 24px;">
@@ -470,8 +466,9 @@ async function submitRegistration() {
         if (res.ok && ok !== false) {
             // ── Thành công ───────────────────────────────────────────────────
             const idDangKy = data.IdDangKy || data.idDangKy || data.Data?.IdDangKy;
+            const trangThai = data.TrangThai || data.trangThai || "";
             existingRegId  = idDangKy;
-            showSuccessState(idDangKy);
+            showSuccessState(idDangKy, trangThai);
         } else {
             // ── Lỗi từ server ────────────────────────────────────────────────
             if (msg.includes("hết") || msg.includes("full")) {
@@ -513,7 +510,7 @@ async function submitRegistration() {
  *   - Hướng dẫn bước tiếp theo
  *   - Nút: Xem vé & QR | Xem sự kiện khác | Lịch sử tham gia
  */
-function showSuccessState(idDangKy) {
+function showSuccessState(idDangKy, trangThai) {
     const form    = document.getElementById("registerForm");
     const success = document.getElementById("successState");
 
@@ -528,32 +525,68 @@ function showSuccessState(idDangKy) {
     // Cập nhật nội dung success msg
     const msgEl = document.getElementById("successMsg");
     if (msgEl) {
-        msgEl.innerHTML = `
-            Bạn đã đăng ký tham gia <strong>${escapeHtml(tenSuKien)}</strong> thành công!<br>
-            <span style="font-size:13px;color:#666;">
-                Mã đăng ký: <code style="background:#f0f4f8;padding:2px 8px;border-radius:4px;font-weight:700;">${maDangKy}</code>
-            </span><br><br>
-            <span style="font-size:13px;color:#555;">
-                <i class="fas fa-info-circle" style="color:#0D5A9C;"></i>
-                Vui lòng mở <strong>Vé của tôi</strong> → quét QR tại cổng sự kiện để <strong>Check-in</strong>.
-            </span>
-        `;
+        if (trangThai === "Chờ chỗ") {
+            msgEl.innerHTML = `
+                Bạn đã đăng ký <strong>${escapeHtml(tenSuKien)}</strong>.<br>
+                <strong style="color:#92400e;">Danh sách chờ</strong> — mã đăng ký: 
+                <code style="background:#f0f4f8;padding:2px 8px;border-radius:4px;font-weight:700;">${maDangKy}</code>
+                <br><br>
+                <span style="font-size:13px;color:#555;">
+                    Khi có người hủy vé, hệ thống sẽ mời bạn xác nhận trong <strong>24 giờ</strong>.
+                </span>
+            `;
+        } else if (trangThai === "Chờ xác nhận") {
+            msgEl.innerHTML = `
+                Bạn đã đăng ký <strong>${escapeHtml(tenSuKien)}</strong>.<br>
+                <strong style="color:#92400e;">Chờ BTC xác nhận</strong> — mã đăng ký: 
+                <code style="background:#f0f4f8;padding:2px 8px;border-radius:4px;font-weight:700;">${maDangKy}</code>
+                <br><br>
+                <span style="font-size:13px;color:#555;">
+                    Vui lòng theo dõi tại <strong>Vé của tôi</strong>.
+                </span>
+            `;
+        } else {
+            msgEl.innerHTML = `
+                Bạn đã đăng ký tham gia <strong>${escapeHtml(tenSuKien)}</strong> thành công!<br>
+                <span style="font-size:13px;color:#666;">
+                    Mã đăng ký: <code style="background:#f0f4f8;padding:2px 8px;border-radius:4px;font-weight:700;">${maDangKy}</code>
+                </span><br><br>
+                <span style="font-size:13px;color:#555;">
+                    <i class="fas fa-info-circle" style="color:#0D5A9C;"></i>
+                    Vui lòng mở <strong>Vé của tôi</strong> → quét QR tại cổng sự kiện để <strong>Check-in</strong>.
+                </span>
+            `;
+        }
     }
 
     // Cập nhật nút action
     const actionsEl = success.querySelector(".success-actions");
     if (actionsEl) {
-        actionsEl.innerHTML = `
-            <a href="${idDangKy ? `ticket-detail.html?id=${idDangKy}` : 'my-tickets.html'}" class="btn-primary-sm">
-                <i class="fas fa-qrcode"></i> Xem vé & QR Check-in
-            </a>
-            <a href="events.html" class="btn-outline">
-                <i class="fas fa-calendar-alt"></i> Xem sự kiện khác
-            </a>
-            <a href="history.html" class="btn-outline">
-                <i class="fas fa-history"></i> Lịch sử tham gia
-            </a>
-        `;
+        if (trangThai === "Đã xác nhận") {
+            actionsEl.innerHTML = `
+                <a href="${idDangKy ? `ticket-detail.html?id=${idDangKy}` : 'my-tickets.html'}" class="btn-primary-sm">
+                    <i class="fas fa-qrcode"></i> Xem vé & QR Check-in
+                </a>
+                <a href="events.html" class="btn-outline">
+                    <i class="fas fa-calendar-alt"></i> Xem sự kiện khác
+                </a>
+                <a href="history.html" class="btn-outline">
+                    <i class="fas fa-history"></i> Lịch sử tham gia
+                </a>
+            `;
+        } else {
+            actionsEl.innerHTML = `
+                <a href="${idDangKy ? `my-tickets.html?dangKyId=${idDangKy}` : 'my-tickets.html'}" class="btn-primary-sm">
+                    <i class="fas fa-ticket-alt"></i> Vé của tôi
+                </a>
+                <a href="events.html" class="btn-outline">
+                    <i class="fas fa-calendar-alt"></i> Xem sự kiện khác
+                </a>
+                <a href="history.html" class="btn-outline">
+                    <i class="fas fa-history"></i> Lịch sử tham gia
+                </a>
+            `;
+        }
     }
 
     // Scroll lên đầu để nhìn thấy success panel

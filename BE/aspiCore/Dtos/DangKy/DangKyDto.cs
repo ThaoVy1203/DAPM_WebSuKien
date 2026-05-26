@@ -22,6 +22,8 @@ namespace aspiCore.Dtos.DangKy
         // Thông tin sự kiện (join từ SuKien + DiaDiem)
         public DateTime? ThoiGianBatDau { get; set; }
         public DateTime? ThoiGianKetThuc { get; set; }
+        public int GioHuyTruocBatDauPhut { get; set; } = 120;
+        public bool YeuCauKhaoSatCheckout { get; set; } = true;
         public string TenDiaDiem { get; set; } = string.Empty;
         public string AnhBia { get; set; } = string.Empty;
     }
@@ -32,6 +34,12 @@ namespace aspiCore.Dtos.DangKy
         public string IdNguoiDung { get; set; } = string.Empty;
     }
 
+    public class CheckOutWithFeedbackDto : CheckInDto
+    {
+        public byte? Diem { get; set; }
+        public string? NhanXet { get; set; }
+    }
+
     /// <summary>
     /// Response trả về sau khi đăng ký thành công — bao gồm IdDangKy để FE redirect
     /// </summary>
@@ -40,5 +48,6 @@ namespace aspiCore.Dtos.DangKy
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public int? IdDangKy { get; set; }
+        public string TrangThai { get; set; } = string.Empty;
     }
 }

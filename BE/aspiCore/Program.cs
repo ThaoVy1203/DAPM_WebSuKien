@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -25,6 +25,7 @@ builder.Services.AddScoped<IDiaDiemService, DiaDiemService>();
 builder.Services.AddScoped<ICongViecService, CongViecService>();
 builder.Services.AddScoped<IThongBaoService, ThongBaoService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddHostedService<EventLifecycleHostedService>();
 
 // ========== JWT AUTHENTICATION (đọc từ appsettings.json) ==========
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "UTE-Events-SecretKey-2026-For-JWT-Token-VeryLongAndSecure!!!";

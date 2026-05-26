@@ -31,6 +31,11 @@ namespace aspiCore.Model
         [MaxLength(30)]
         public string MatKhauSSO { get; set; } = string.Empty;
 
+        [NotMapped]
+        public int SoVangMatLienTiep { get; set; } = 0;
+        [NotMapped]
+        public DateTime? KhoaDangKyDen { get; set; }
+
         public ICollection<VaiTro_NguoiDung> VaiTro_NguoiDungs { get; set; } = new List<VaiTro_NguoiDung>();
         public ICollection<SuKien> SuKiensTao { get; set; } = new List<SuKien>();
         public ICollection<DangKySuKien> DangKySuKiens { get; set; } = new List<DangKySuKien>();

@@ -4,5 +4,8 @@ namespace aspiCore.Dtos.DangKy
     public class QrCheckInDto
     {
         public string QrToken { get; set; } = string.Empty;
+        // Offline fallback: kiosk lưu lại thời gian quét (epoch ms).
+        // Nếu null thì backend dùng DateTime.Now.
+        public long? ScanTimeMs { get; set; }
     }
 }

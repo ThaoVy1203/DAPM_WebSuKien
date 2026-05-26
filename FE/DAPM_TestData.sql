@@ -3,6 +3,11 @@
 -- MỤC ĐÍCH: Thêm dữ liệu mẫu phong phú để test chức năng
 --           Đăng ký sự kiện + Check-in/Check-out QR
 -- CHẠY SAU: DAPM.sql (database đã tồn tại)
+--
+-- SAU KHI CHẠY FILE NÀY, chạy thêm:
+--   DAPM_TestData_Realtime.sql
+-- để căn thời gian sự kiện theo GETDATE() (đang diễn ra,
+-- cửa sổ T-30, vắng mặt, ...). Có thể chạy lại Realtime bất cứ lúc nào.
 -- ============================================================
 
 USE QuanLySuKien_DHSPKT;

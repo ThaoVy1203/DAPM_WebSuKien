@@ -22,12 +22,24 @@
 
 const API_BASE = "https://localhost:7160/api";
 
+const EVENT_IMAGES = [
+    "../images/event1.png",
+    "../images/event2.png",
+    "../images/event3.png",
+    "../images/UTE Tech Showcase.png",
+    "../images/Skills Talk.png",
+    "../images/Culture Festival.png",
+    "../images/Workshop.png",
+    "../images/Festival.png"
+];
+
 // ─── State toàn cục ───────────────────────────────────────────────────────────
 let allTickets      = [];
 let selectedTicket  = null;
+let currentFilter   = "ongoing";  // ongoing | registered | cancelled
 let qrTimer         = null;
 let qrSeconds       = 45;
-let checkinTimer    = null;  // Timer cập nhật nút check-in theo thời gian thực
+let checkinTimer    = null;
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async function () {
@@ -35,24 +47,192 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (!token) { window.location.href = "login.html"; return; }
 
     await loadMyTickets();
+    setupPageListeners();
 
-    // Nếu URL có dangKyId → auto-select vé đó (từ register-event.html redirect)
-    const params    = new URLSearchParams(window.location.search);
-    const dangKyId  = params.get("dangKyId");
+    const params   = new URLSearchParams(window.location.search);
+    const dangKyId = params.get("dangKyId") || params.get("id");
 
-    if (dangKyId) {
-        window.location.replace(TicketBiz.ticketDetailUrl(dangKyId));
-        return;
+    if (allTickets.length > 0) {
+        initTicketListUI();
+        const target = dangKyId
+            ? allTickets.find(t => String(t.idDangKy) === String(dangKyId))
+            : null;
+        if (target) {
+            const tab = getTicketCategory(target);
+            switchFilter(tab);
+            selectTicket(target);
+        } else {
+            hideDetailPanel();
+        }
     }
 });
 
+function setupPageListeners() {
+    document.getElementById("btnCancelTicket")?.addEventListener("click", openCancelModal);
+    document.getElementById("btnConfirmWaitlist")?.addEventListener("click", doConfirmWaitlist);
+    document.getElementById("btnShareTicket")?.addEventListener("click", shareTicket);
+    document.getElementById("btnAppleWallet")?.addEventListener("click", () => {
+        showToast("Tính năng Apple Wallet đang phát triển.", "info");
+    });
+    document.getElementById("btnGoogleWallet")?.addEventListener("click", () => {
+        showToast("Tính năng Google Pay đang phát triển.", "info");
+    });
+    document.querySelectorAll(".mt-tab").forEach(tab => {
+        tab.addEventListener("click", () => switchFilter(tab.dataset.filter));
+    });
+}
+
+// ─── PHÂN LOẠI VÉ ────────────────────────────────────────────────────────────
+function isEventOngoing(ticket) {
+    const now = new Date();
+    const batDau = ticket.thoiGianBatDau ? new Date(ticket.thoiGianBatDau) : null;
+    const ketThuc = ticket.thoiGianKetThuc ? new Date(ticket.thoiGianKetThuc) : null;
+    if (!batDau) return false;
+    if (ketThuc) return now >= batDau && now <= ketThuc;
+    return now >= batDau;
+}
+
+function getTicketCategory(ticket) {
+    if (ticket.trangThai === "Đã hủy") return "cancelled";
+    if (isEventOngoing(ticket)) return "ongoing";
+    if (["Chờ chỗ", "Chờ người dùng xác nhận", "Chờ xác nhận", "Đã xác nhận", "Đã tham gia", "Hoàn thành", "Vắng mặt"].includes(ticket.trangThai)) {
+        return "registered";
+    }
+    return "registered";
+}
+
+function getTicketsByFilter(filter) {
+    if (filter === "cancelled") {
+        return allTickets.filter(t => t.trangThai === "Đã hủy");
+    }
+    if (filter === "ongoing") {
+        return allTickets.filter(t => t.trangThai !== "Đã hủy" && isEventOngoing(t));
+    }
+    // Đã đăng ký: còn hiệu lực, chưa hủy, sự kiện chưa kết thúc hoặc sắp diễn ra
+    const now = new Date();
+    return allTickets.filter(t => {
+        if (t.trangThai === "Đã hủy") return false;
+        if (isEventOngoing(t)) return false; // hiển thị ở tab Đang diễn ra
+        const ketThuc = t.thoiGianKetThuc ? new Date(t.thoiGianKetThuc) : null;
+        const chuaKetThuc = !ketThuc || ketThuc >= now;
+        return ["Chờ chỗ", "Chờ người dùng xác nhận", "Chờ xác nhận", "Đã xác nhận"].includes(t.trangThai) && chuaKetThuc;
+    });
+}
+
+function updateFilterCounts() {
+    const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+    set("countOngoing", getTicketsByFilter("ongoing").length);
+    set("countRegistered", getTicketsByFilter("registered").length);
+    set("countCancelled", getTicketsByFilter("cancelled").length);
+}
+
+function switchFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll(".mt-tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.filter === filter);
+    });
+    renderTicketFilterList();
+    const list = getTicketsByFilter(filter);
+    const stillInList = selectedTicket && list.some(t => t.idDangKy === selectedTicket.idDangKy);
+    if (!stillInList) hideDetailPanel();
+}
+
+function initTicketListUI() {
+    updateFilterCounts();
+    renderTicketFilterList();
+}
+
+function renderTicketFilterList() {
+    const el = document.getElementById("ticketsFilterList");
+    if (!el) return;
+
+    const list = getTicketsByFilter(currentFilter);
+    const emptyMsgs = {
+        ongoing: "Không có sự kiện đang diễn ra",
+        registered: "Chưa có vé đăng ký sắp tới",
+        cancelled: "Chưa có vé đã hủy"
+    };
+
+    if (!list.length) {
+        el.innerHTML = `<div class="mt-list-empty"><i class="fas fa-inbox"></i>${emptyMsgs[currentFilter] || "Không có vé"}</div>`;
+        return;
+    }
+
+    const sorted = [...list].sort((a, b) => {
+        const da = a.thoiGianBatDau ? new Date(a.thoiGianBatDau) : 0;
+        const db = b.thoiGianBatDau ? new Date(b.thoiGianBatDau) : 0;
+        return currentFilter === "cancelled" ? db - da : da - db;
+    });
+
+    el.innerHTML = "";
+    sorted.forEach((ticket, idx) => {
+        const ngay = ticket.thoiGianBatDau ? new Date(ticket.thoiGianBatDau) : null;
+        const meta = ngay
+            ? ngay.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
+            : "—";
+        const img = EVENT_IMAGES[(ticket.idSuKien || idx) % EVENT_IMAGES.length];
+        const badge = getFilterBadge(ticket);
+
+        const item = document.createElement("div");
+        item.className = "mt-filter-item";
+        item.dataset.id = ticket.idDangKy;
+        if (selectedTicket && String(selectedTicket.idDangKy) === String(ticket.idDangKy)) {
+            item.classList.add("active");
+        }
+        item.innerHTML = `
+            <img class="mt-filter-thumb" src="${img}" alt=""
+                 onerror="this.src='https://via.placeholder.com/48/0D5A9C/fff?text=SK'">
+            <div class="mt-filter-info">
+                <div class="mt-filter-title">${escapeHtml(ticket.tenSuKien || "Sự kiện")}</div>
+                <div class="mt-filter-meta">${escapeHtml(meta)} · ${escapeHtml(ticket.tenDiaDiem || "")}</div>
+            </div>
+            <span class="mt-filter-badge ${badge.cls}">${escapeHtml(badge.text)}</span>`;
+        item.addEventListener("click", () => selectTicket(ticket));
+        el.appendChild(item);
+    });
+}
+
+function getFilterBadge(ticket) {
+    if (isEventOngoing(ticket) && ticket.trangThai !== "Đã hủy") {
+        return { cls: "ongoing", text: "LIVE" };
+    }
+    const map = {
+        "Chờ chỗ": { cls: "pending", text: "Chờ chỗ" },
+        "Chờ người dùng xác nhận": { cls: "pending", text: "Mời xác nhận (24h)" },
+        "Đã xác nhận": { cls: "confirmed", text: "Đã xác nhận" },
+        "Chờ xác nhận": { cls: "pending", text: "Chờ duyệt" },
+        "Đã tham gia": { cls: "attended", text: "Đã tham gia" },
+        "Hoàn thành": { cls: "attended", text: "Hoàn thành" },
+        "Đã hủy": { cls: "cancelled", text: "Đã hủy" },
+        "Vắng mặt": { cls: "cancelled", text: "Vắng mặt" }
+    };
+    return map[ticket.trangThai] || { cls: "pending", text: ticket.trangThai };
+}
+
+function showDetailPanel() {
+    const ph = document.getElementById("ticketDetailPlaceholder");
+    const ct = document.getElementById("ticketDetailContent");
+    if (ph) ph.style.display = "none";
+    if (ct) ct.style.display = "block";
+}
+
+function hideDetailPanel() {
+    selectedTicket = null;
+    if (qrTimer) { clearInterval(qrTimer); qrTimer = null; }
+    if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
+    const ph = document.getElementById("ticketDetailPlaceholder");
+    const ct = document.getElementById("ticketDetailContent");
+    if (ph) ph.style.display = "block";
+    if (ct) ct.style.display = "none";
+    document.querySelectorAll(".mt-filter-item").forEach(el => el.classList.remove("active"));
+}
+
 /** Chọn vé mặc định: ưu tiên vé chưa hủy, chưa tham gia (cần check-in) */
 function getDefaultTicket() {
-    const get = (t, k1, k2) => t[k1] ?? t[k2];
     return (
-        allTickets.find(t => get(t,"TrangThai","trangThai") === "Đã xác nhận") ||
-        allTickets.find(t => get(t,"TrangThai","trangThai") === "Chờ xác nhận") ||
-        allTickets.find(t => get(t,"TrangThai","trangThai") !== "Đã hủy") ||
+        allTickets.find(t => t.trangThai === "Đã xác nhận") ||
+        allTickets.find(t => t.trangThai === "Chờ xác nhận") ||
+        allTickets.find(t => t.trangThai !== "Đã hủy") ||
         allTickets[0]
     );
 }
@@ -104,8 +284,6 @@ async function loadMyTickets() {
         }
 
         showState("content");
-        document.getElementById("ticketCount").textContent = allTickets.length;
-        renderTicketsList();
 
     } catch (e) {
         console.error("Lỗi load vé:", e);
@@ -118,49 +296,85 @@ async function loadMyTickets() {
  * Chuẩn hóa response từ BE (PascalCase) về camelCase
  * để phần còn lại của code dùng nhất quán
  */
-// ─── RENDER DANH SÁCH VÉ ─────────────────────────────────────────────────────
-function renderTicketsList() {
-    const list = document.getElementById("ticketsList");
-    if (!list) return;
-    list.innerHTML = "";
+// ─── SIDEBAR: LỊCH SỬ ────────────────────────────────────────────────────────
+function renderSidebars() {
+    renderHistorySidebar();
+}
 
-    // Sắp xếp: vé còn hiệu lực (chưa hủy/tham gia) lên trên
-    const sorted = [...allTickets].sort((a, b) => {
-        const order = { "Đã xác nhận": 0, "Chờ xác nhận": 1, "Đã tham gia": 2, "Vắng mặt": 3, "Đã hủy": 4 };
-        return (order[a.trangThai] ?? 5) - (order[b.trangThai] ?? 5);
+function renderHistorySidebar() {
+    const el = document.getElementById("historyList");
+    const countEl = document.getElementById("historyViewAll");
+    if (!el) return;
+
+    const past = allTickets
+        .filter(t => {
+            const end = t.thoiGianKetThuc ? new Date(t.thoiGianKetThuc) : null;
+            return t.trangThai === "Đã tham gia" || t.trangThai === "Hoàn thành" || t.trangThai === "Vắng mặt"
+                || (end && end < new Date());
+        })
+        .sort((a, b) => {
+            const da = a.thoiGianBatDau ? new Date(a.thoiGianBatDau) : 0;
+            const db = b.thoiGianBatDau ? new Date(b.thoiGianBatDau) : 0;
+            return db - da;
+        })
+        .slice(0, 4);
+
+    if (countEl) {
+        countEl.textContent = `Xem tất cả lịch sử (${allTickets.length})`;
+    }
+
+    if (!past.length) {
+        el.innerHTML = '<p class="mt-side-empty">Chưa có lịch sử tham gia</p>';
+        return;
+    }
+
+    el.innerHTML = "";
+    past.forEach(ticket => {
+        const ngay = ticket.thoiGianBatDau ? new Date(ticket.thoiGianBatDau) : null;
+        const dateStr = ngay
+            ? ngay.toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()
+            : "—";
+        let badgeClass = "other";
+        let badgeText = ticket.trangThai;
+        if (ticket.trangThai === "Đã tham gia" || ticket.trangThai === "Hoàn thành") {
+            badgeClass = "attended";
+            badgeText = ticket.trangThai === "Hoàn thành" ? "HOÀN THÀNH" : "ĐÃ THAM GIA";
+        } else if (ticket.thoiGianKetThuc && new Date(ticket.thoiGianKetThuc) < new Date()) {
+            badgeClass = "ended";
+            badgeText = "ĐÃ KẾT THÚC";
+        }
+
+        const row = document.createElement("div");
+        row.className = "mt-history-item";
+        row.innerHTML = `
+            <div class="mt-history-icon"><i class="fas fa-clock"></i></div>
+            <div>
+                <div class="mt-history-date">${escapeHtml(dateStr)}</div>
+                <div class="mt-history-title">${escapeHtml(ticket.tenSuKien || "Sự kiện")}</div>
+                <span class="mt-history-badge ${badgeClass}">${escapeHtml(badgeText)}</span>
+            </div>`;
+        row.style.cursor = "pointer";
+        row.addEventListener("click", () => selectTicket(ticket));
+        el.appendChild(row);
     });
+}
 
-    sorted.forEach(ticket => {
-        const tenSuKien = ticket.tenSuKien || ticket.suKien?.tenSuKien || "Sự kiện";
-        const ngay      = ticket.thoiGianBatDau || ticket.suKien?.thoiGianBatDau;
-        const dateStr   = ngay ? new Date(ngay).toLocaleDateString("vi-VN") : "Chưa có";
-        const diaDiem   = ticket.tenDiaDiem || ticket.suKien?.diaDiem?.tenDiaDiem || "";
-        const trangThai = ticket.trangThai || "Chờ xác nhận";
+function getEventTimingBadge(ticket) {
+    const now = new Date();
+    const batDau = ticket.thoiGianBatDau ? new Date(ticket.thoiGianBatDau) : null;
+    const ketThuc = ticket.thoiGianKetThuc ? new Date(ticket.thoiGianKetThuc) : null;
+    if (ketThuc && now > ketThuc) return { text: "ĐÃ KẾT THÚC", cls: "ended" };
+    if (batDau && now >= batDau && (!ketThuc || now <= ketThuc)) return { text: "ĐANG DIỄN RA", cls: "ongoing" };
+    return { text: "SẮP DIỄN RA", cls: "" };
+}
 
-        const item = document.createElement("div");
-        item.className = "ticket-list-item";
-        item.dataset.id = ticket.idDangKy;
-        item.innerHTML = `
-            <img src="https://via.placeholder.com/60x60/0D5A9C/FFFFFF?text=SK" alt="${escapeHtml(tenSuKien)}"
-                 onerror="this.src='https://via.placeholder.com/60x60/0D5A9C/FFFFFF?text=SK'">
-            <div class="ticket-item-info">
-                <h4>${escapeHtml(tenSuKien)}</h4>
-                <p>
-                    <i class="fas fa-calendar" style="color:#0D5A9C;margin-right:4px;"></i>${dateStr}
-                    ${diaDiem ? `<span style="margin-left:10px;">
-                        <i class="fas fa-map-marker-alt" style="color:#0D5A9C;margin-right:4px;"></i>
-                        ${escapeHtml(diaDiem)}
-                    </span>` : ""}
-                </p>
-            </div>
-            <span class="ticket-item-badge ${getBadgeClass(trangThai)}">${escapeHtml(trangThai)}</span>
-        `;
-        item.addEventListener("click", () => {
-            // Navigate sang trang chi tiết vé riêng
-            window.location.href = TicketBiz.ticketDetailUrl(ticket.idDangKy);
-        });
-        list.appendChild(item);
-    });
+function getStatusIconClass(trangThai) {
+    if (trangThai === "Đã xác nhận") return "confirmed";
+    if (trangThai === "Chờ xác nhận") return "pending";
+    if (trangThai === "Chờ chỗ") return "pending";
+    if (trangThai === "Chờ người dùng xác nhận") return "pending";
+    if (trangThai === "Đã tham gia") return "attended";
+    return "cancelled";
 }
 
 // ─── CHỌN VÉ ĐỂ XEM CHI TIẾT ────────────────────────────────────────────────
@@ -174,31 +388,39 @@ function renderTicketsList() {
  * 6. Nút Hủy đăng ký (chỉ hiện khi có thể hủy)
  */
 function selectTicket(ticket) {
+    if (!ticket) return;
     selectedTicket = ticket;
+    showDetailPanel();
 
-    // Highlight item trong danh sách
-    document.querySelectorAll(".ticket-list-item").forEach(el => {
+    document.querySelectorAll(".mt-filter-item").forEach(el => {
         el.classList.toggle("active", String(el.dataset.id) === String(ticket.idDangKy));
     });
 
-    // Hiện panel chi tiết
-    const detailPanel = document.getElementById("ticketDetail");
-    if (detailPanel) detailPanel.style.display = "block";
+    const tenSuKien = ticket.tenSuKien || "Sự kiện";
+    const ngayBD    = ticket.thoiGianBatDau;
+    const ngayKT    = ticket.thoiGianKetThuc;
+    const diaDiem   = ticket.tenDiaDiem || "Đang cập nhật";
+    const trangThai = ticket.trangThai || "Chờ xác nhận";
 
-    // ── Lấy dữ liệu ──────────────────────────────────────────────────────────
-    const tenSuKien = ticket.tenSuKien || ticket.suKien?.tenSuKien || "Sự kiện";
-    const ngayBD    = ticket.thoiGianBatDau  || ticket.suKien?.thoiGianBatDau;
-    const ngayKT    = ticket.thoiGianKetThuc || ticket.suKien?.thoiGianKetThuc;
-    const diaDiem   = ticket.tenDiaDiem      || ticket.suKien?.diaDiem?.tenDiaDiem || "Đang cập nhật";
-    const trangThai = ticket.trangThai       || "Chờ xác nhận";
+    const imgEl = document.getElementById("ticketEventImage");
+    if (imgEl) {
+        imgEl.src = EVENT_IMAGES[(ticket.idSuKien || 0) % EVENT_IMAGES.length];
+        imgEl.onerror = () => { imgEl.src = "https://via.placeholder.com/220/0D5A9C/fff?text=Event"; };
+    }
 
-    // ── Điền thông tin vé ────────────────────────────────────────────────────
+    const badge = getEventTimingBadge(ticket);
+    const badgeEl = document.getElementById("ticketEventBadge");
+    if (badgeEl) {
+        badgeEl.textContent = badge.text;
+        badgeEl.className = "mt-event-badge" + (badge.cls ? " " + badge.cls : "");
+    }
+
     setText("ticketEventName", tenSuKien);
 
     if (ngayBD) {
         const startDate = new Date(ngayBD);
         setText("ticketDate", startDate.toLocaleDateString("vi-VN", {
-            weekday: "long", year: "numeric", month: "long", day: "numeric"
+            day: "numeric", month: "long", year: "numeric"
         }));
         const endDate = ngayKT ? new Date(ngayKT) : null;
         setText("ticketTime",
@@ -208,59 +430,77 @@ function selectTicket(ticket) {
         );
     } else {
         setText("ticketDate", "Chưa có thông tin");
-        setText("ticketTime", "");
+        setText("ticketTime", "—");
     }
     setText("ticketLocation", diaDiem);
 
-    // Thông tin người tham gia từ localStorage
     try {
         const user = JSON.parse(localStorage.getItem("userData") || "{}");
-        // Hỗ trợ cả PascalCase (BE trả) và camelCase
-        const hoTen   = user.HoTen   || user.hoTen   || "Người dùng";
-        const maSoSSO = user.MaSoSSO || user.maSoSSO || "";
-        setText("ticketAttendee", `${hoTen}${maSoSSO ? " — " + maSoSSO : ""}`);
-    } catch (e) {/* bỏ qua */}
+        const hoTen   = user.HoTen   || user.hoTen   || ticket.hoTenNguoiDung || "Người dùng";
+        const maSoSSO = user.MaSoSSO || user.maSoSSO || ticket.idNguoiDung || "";
+        const initials = hoTen.split(" ").filter(Boolean).map(w => w[0]).join("").substring(0, 2).toUpperCase();
+        setText("ticketAttendeeName", hoTen);
+        setText("ticketAttendeeMssv", `MSSV: ${maSoSSO}`);
+        const av = document.getElementById("ticketUserAvatar");
+        if (av) av.textContent = initials || "NV";
+    } catch (e) { /* bỏ qua */ }
 
-    // ── Cập nhật các thành phần UI ───────────────────────────────────────────
-    updateStatusBar(trangThai);
+    const iconEl = document.getElementById("ticketStatusIcon");
+    if (iconEl) {
+        iconEl.className = `mt-status-icon ${getStatusIconClass(trangThai)}`;
+        const icons = {
+            "Đã xác nhận": "fa-check-circle",
+            "Chờ xác nhận": "fa-clock",
+            "Chờ chỗ": "fa-hourglass-half",
+            "Chờ người dùng xác nhận": "fa-bell",
+            "Đã tham gia": "fa-star",
+            "Hoàn thành": "fa-check-double",
+            "Vắng mặt": "fa-user-times",
+            "Đã hủy": "fa-ban"
+        };
+        iconEl.innerHTML = `<i class="fas ${icons[trangThai] || "fa-info-circle"}"></i>`;
+    }
+
+    const linkDetail = document.getElementById("linkTicketDetail");
+    if (linkDetail) linkDetail.href = TicketBiz.ticketDetailUrl(ticket.idDangKy);
+
     renderQRSection(ticket);
     renderCheckinTimeline(ticket);
     renderCheckinButtons(ticket);
     renderCancelButton(ticket);
+    renderWaitlistConfirmButton(ticket);
+    renderSidebars();
+    updateFilterCounts();
+    renderTicketFilterList();
 
-    // Bắt đầu (lại) đếm ngược QR
     if (shouldShowQR(trangThai)) {
         startQRCountdown(ticket);
+    } else if (qrTimer) {
+        clearInterval(qrTimer);
+        qrTimer = null;
     }
 
-    // Timer cập nhật nút check-in mỗi 30 giây (để tự mở khi đến giờ)
     if (checkinTimer) clearInterval(checkinTimer);
     if (trangThai === "Đã xác nhận" && !ticket.thoiGianCheckin) {
         checkinTimer = setInterval(() => {
             if (selectedTicket) renderCheckinButtons(selectedTicket);
-        }, 30000); // cập nhật mỗi 30 giây
+        }, 30000);
+    }
+
+    if (window.innerWidth <= 1100) {
+        document.getElementById("ticketDetailPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 }
 
-// ─── STATUS BAR ──────────────────────────────────────────────────────────────
-const STATUS_CONFIG = {
-    "Đã xác nhận":  { cls: "confirmed",  icon: "fa-check-circle",   label: "Đã xác nhận — Sẵn sàng check-in tại sự kiện" },
-    "Chờ xác nhận": { cls: "pending",    icon: "fa-clock",           label: "Đang chờ ban tổ chức xác nhận đăng ký" },
-    "Đã tham gia":  { cls: "attended",   icon: "fa-star",            label: "Đã tham gia sự kiện thành công" },
-    "Vắng mặt":     { cls: "cancelled",  icon: "fa-user-times",      label: "Vắng mặt — Không có mặt tại sự kiện" },
-    "Đã hủy":       { cls: "cancelled",  icon: "fa-ban",             label: "Đã hủy đăng ký" }
-};
-
-function updateStatusBar(trangThai) {
-    const bar  = document.getElementById("ticketStatusBar");
-    const text = document.getElementById("ticketStatusText");
-    if (!bar || !text) return;
-
-    const cfg = STATUS_CONFIG[trangThai] || {
-        cls: "pending", icon: "fa-info-circle", label: trangThai
-    };
-    bar.className = `ticket-status-bar ${cfg.cls}`;
-    bar.innerHTML = `<i class="fas ${cfg.icon}"></i><span>${cfg.label}</span>`;
+function shareTicket() {
+    if (!selectedTicket) return;
+    const url = TicketBiz.ticketDetailUrl(selectedTicket.idDangKy);
+    const full = new URL(url, window.location.href).href;
+    if (navigator.share) {
+        navigator.share({ title: selectedTicket.tenSuKien || "Vé UTE Events", url: full });
+    } else {
+        navigator.clipboard.writeText(full).then(() => showToast("Đã sao chép link vé.", "info"));
+    }
 }
 
 // ─── QR CODE ─────────────────────────────────────────────────────────────────
@@ -278,39 +518,56 @@ function shouldShowQR(trangThai) {
  */
 function renderQRSection(ticket) {
     const section = document.getElementById("qrSection");
+    const activePanel = document.getElementById("qrActivePanel");
+    const statusPanel = document.getElementById("qrStatusPanel");
     if (!section) return;
 
     const trangThai = ticket.trangThai || "";
-
-    if (!shouldShowQR(trangThai)) {
-        section.style.display = "none";
-        return;
-    }
     section.style.display = "block";
 
-    // Tạo QR data: encode thông tin vé + timestamp để mỗi lần refresh là khác nhau
-    const qrData = buildQRData(ticket);
-    const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?` +
-        `size=200x200&` +
-        `data=${encodeURIComponent(qrData)}&` +
-        `bgcolor=ffffff&color=0D5A9C&margin=10`;
+    if (shouldShowQR(trangThai)) {
+        if (activePanel) activePanel.style.display = "block";
+        if (statusPanel) statusPanel.style.display = "none";
 
-    const qrImg = document.getElementById("qrImage");
-    if (qrImg) {
-        qrImg.src = "";  // reset để trigger loading
-        qrImg.style.opacity = "0.5";
-        qrImg.src = qrUrl;
-        qrImg.onload = () => { qrImg.style.opacity = "1"; };
-        qrImg.onerror = () => {
-            qrImg.style.opacity = "1";
-            // Fallback: hiện placeholder
-            qrImg.src = "https://via.placeholder.com/200x200/e2e8f0/555?text=QR+Error";
-        };
+        const qrData = buildQRData(ticket);
+        const qrUrl = TicketBiz.qrImageUrl(qrData);
+        const qrImg = document.getElementById("qrImage");
+        if (qrImg) {
+            qrImg.style.opacity = "0.5";
+            qrImg.src = qrUrl;
+            qrImg.onload = () => { qrImg.style.opacity = "1"; };
+            qrImg.onerror = () => {
+                qrImg.style.opacity = "1";
+                qrImg.src = "https://via.placeholder.com/200/e2e8f0/555?text=QR";
+            };
+        }
+        return;
     }
 
-    // Hiện mã vé text
-    const code = `UTE-${String(ticket.idDangKy).padStart(6, "0")}`;
-    setText("qrTicketCode", code);
+    if (activePanel) activePanel.style.display = "none";
+    if (statusPanel) {
+        statusPanel.style.display = "block";
+        if (trangThai === "Chờ xác nhận") {
+            statusPanel.className = "mt-qr-status pending";
+            statusPanel.innerHTML = '<i class="fas fa-clock"></i> Đăng ký đang chờ BTC xác nhận. QR sẽ hiện sau khi được duyệt.';
+        } else if (trangThai === "Chờ chỗ") {
+            statusPanel.className = "mt-qr-status pending";
+            statusPanel.innerHTML = '<i class="fas fa-hourglass-half"></i> Sự kiện đã hết chỗ. Bạn đang chờ. Khi có chỗ, hệ thống sẽ mời bạn xác nhận trong 24h.';
+        } else if (trangThai === "Chờ người dùng xác nhận") {
+            statusPanel.className = "mt-qr-status pending";
+            statusPanel.innerHTML = '<i class="fas fa-bell"></i> Bạn vừa được mời xác nhận chỗ. Vui lòng xác nhận trong 24h để nhận QR check-in.';
+        } else if (trangThai === "Đã tham gia" || trangThai === "Hoàn thành") {
+            statusPanel.className = "mt-qr-status attended";
+            const t = ticket.thoiGianCheckin ? formatDDMM(ticket.thoiGianCheckin) : "";
+            const co = ticket.thoiGianCheckout ? formatDDMM(ticket.thoiGianCheckout) : "";
+            statusPanel.innerHTML = trangThai === "Hoàn thành"
+                ? `<i class="fas fa-check-circle"></i> Bạn đã hoàn thành sự kiện${co ? " lúc " + co : ""}.`
+                : `<i class="fas fa-check-circle"></i> Đã check-in${t ? " lúc " + t : ""}. Cảm ơn bạn đã tham gia!`;
+        } else {
+            statusPanel.className = "mt-qr-status cancelled";
+            statusPanel.innerHTML = `<i class="fas fa-ban"></i> Vé không còn hiệu lực (${escapeHtml(trangThai)}).`;
+        }
+    }
 }
 
 /** Tạo chuỗi dữ liệu nhúng vào QR */
@@ -441,6 +698,10 @@ function renderCheckinButtons(ticket) {
         btnCI.innerHTML = '<i class="fas fa-check"></i> ĐÃ CHECK-IN';
     } else if (trangThai === "Chờ xác nhận") {
         btnCI.innerHTML = '<i class="fas fa-clock"></i> CHỜ BTC XÁC NHẬN';
+    } else if (trangThai === "Chờ chỗ") {
+        btnCI.innerHTML = '<i class="fas fa-hourglass-half"></i> CHỜ CHỖ';
+    } else if (trangThai === "Chờ người dùng xác nhận") {
+        btnCI.innerHTML = '<i class="fas fa-bell"></i> CHỜ XÁC NHẬN (24H)';
     } else if (trangThai === "Đã hủy" || trangThai === "Vắng mặt") {
         btnCI.innerHTML = '<i class="fas fa-ban"></i> KHÔNG THỂ CHECK-IN';
     } else if (checkInOpen && now < checkInOpen) {
@@ -500,6 +761,71 @@ function renderCancelButton(ticket) {
     btn.style.display = TicketBiz.canCancel(ticket) ? "flex" : "none";
 }
 
+/** Hiện / ẩn nút xác nhận chỗ (Waitlist) */
+function renderWaitlistConfirmButton(ticket) {
+    const btn = document.getElementById("btnConfirmWaitlist");
+    if (!btn) return;
+    btn.style.display = (ticket && ticket.trangThai === "Chờ người dùng xác nhận") ? "flex" : "none";
+}
+
+async function doConfirmWaitlist() {
+    if (!selectedTicket) return;
+    if (selectedTicket.trangThai !== "Chờ người dùng xác nhận") {
+        showToast("Trạng thái yêu cầu xác nhận không hợp lệ.", "error");
+        return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) { window.location.href = "login.html"; return; }
+
+    const btn = document.getElementById("btnConfirmWaitlist");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/DangKy/xac-nhan-cho-nguoi`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                IdSuKien: selectedTicket.idSuKien,
+                IdNguoiDung: selectedTicket.idNguoiDung
+            })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        const ok = data.Success ?? data.success;
+        const msg = data.Message || data.message || "Xác nhận không thành công.";
+
+        if (res.ok && ok !== false) {
+            // Update local state (backend là source of truth, nhưng UI cần phản hồi ngay)
+            selectedTicket.trangThai = "Đã xác nhận";
+            selectedTicket.thoiGianDangKy = new Date().toISOString();
+            selectedTicket.thoiGianHuy = null;
+            selectedTicket.thoiGianCheckin = null;
+            selectedTicket.thoiGianCheckout = null;
+
+            syncTicketInArray(selectedTicket);
+            selectTicket(selectedTicket);
+            showToast("✅ Đã xác nhận chỗ. QR đã sẵn sàng.", "success");
+        } else {
+            showToast(msg, "error");
+        }
+    } catch (e) {
+        console.error("Lỗi xác nhận chỗ:", e);
+        showToast("Không thể kết nối đến máy chủ.", "error");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Xác nhận chỗ (24h)';
+        }
+    }
+}
+
 // ─── THỰC HIỆN CHECK-IN ──────────────────────────────────────────────────────
 /**
  * PUT /api/DangKySuKien/{idDangKy}/checkin
@@ -556,17 +882,7 @@ async function doCheckin() {
             syncTicketInArray(selectedTicket);
 
             // Cập nhật toàn bộ UI
-            updateStatusBar("Đã tham gia");
-            renderCheckinTimeline(selectedTicket);
-            renderCheckinButtons(selectedTicket);
-            renderCancelButton(selectedTicket);
-
-            // Cập nhật badge trong danh sách
-            updateListBadge(selectedTicket.idDangKy, "Đã tham gia");
-
-            // Ẩn QR sau khi đã check-in (nếu muốn; tùy UX)
-            // Giữ QR để check-out nếu cần
-            // renderQRSection(selectedTicket);
+            refreshTicketUI();
 
             showToast("✅ Check-in thành công! Chào mừng bạn đến sự kiện.", "success");
 
@@ -618,6 +934,29 @@ async function doCheckout() {
     }
 
     try {
+        let diem = null;
+        let nhanXet = "";
+        if (selectedTicket.yeuCauKhaoSatCheckout !== false) {
+            const rawScore = window.prompt("Đánh giá nhanh sự kiện (1-5 sao):", "5");
+            if (rawScore === null) {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> CHECK-OUT';
+                }
+                return;
+            }
+            diem = parseInt(rawScore, 10);
+            if (Number.isNaN(diem) || diem < 1 || diem > 5) {
+                showToast("Vui lòng nhập điểm từ 1 đến 5 để check-out.", "error");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> CHECK-OUT';
+                }
+                return;
+            }
+            nhanXet = (window.prompt("Nhận xét ngắn (không bắt buộc):", "") || "").trim();
+        }
+
         // POST /api/DangKy/check-out  body: { IdSuKien, IdNguoiDung }
         const res = await fetch(`${API_BASE}/DangKy/check-out`, {
             method: "POST",
@@ -627,7 +966,9 @@ async function doCheckout() {
             },
             body: JSON.stringify({
                 IdSuKien:    selectedTicket.idSuKien,
-                IdNguoiDung: selectedTicket.idNguoiDung
+                IdNguoiDung: selectedTicket.idNguoiDung,
+                Diem: diem,
+                NhanXet: nhanXet
             })
         });
 
@@ -638,19 +979,11 @@ async function doCheckout() {
             // ── Thành công ───────────────────────────────────────────────────
             const now = data.ThoiGianCheckout || data.thoiGianCheckout || new Date().toISOString();
             selectedTicket.thoiGianCheckout = now;
+            selectedTicket.trangThai = "Hoàn thành";
 
             syncTicketInArray(selectedTicket);
 
-            renderCheckinTimeline(selectedTicket);
-            renderCheckinButtons(selectedTicket);
-
-            // Ẩn QR sau khi hoàn tất check-out
-            const qrSection = document.getElementById("qrSection");
-            if (qrSection) qrSection.style.display = "none";
-
-            // Dừng đếm ngược QR
-            if (qrTimer) { clearInterval(qrTimer); qrTimer = null; }
-
+            refreshTicketUI();
             showToast("👋 Check-out thành công! Cảm ơn bạn đã tham gia.", "success");
 
         } else {
@@ -727,24 +1060,8 @@ async function confirmCancel() {
 
             syncTicketInArray(selectedTicket);
 
-            // Cập nhật UI
-            updateStatusBar("Đã hủy");
-            renderCheckinButtons(selectedTicket);
-            renderCancelButton(selectedTicket);
-
-            // Ẩn QR
-            const qrSection = document.getElementById("qrSection");
-            if (qrSection) qrSection.style.display = "none";
-
-            // Dừng đếm ngược
-            if (qrTimer) { clearInterval(qrTimer); qrTimer = null; }
-
-            // Cập nhật badge
-            updateListBadge(selectedTicket.idDangKy, "Đã hủy");
-
-            // Cập nhật timeline
-            renderCheckinTimeline(selectedTicket);
-
+            switchFilter("cancelled");
+            refreshTicketUI();
             showToast("Đã hủy đăng ký thành công.", "success");
 
         } else {
@@ -776,16 +1093,28 @@ function showState(state) {
 
     if (loading) loading.style.display = state === "loading" ? "block" : "none";
     if (empty)   empty.style.display   = state === "empty"   ? "block" : "none";
-    if (content) content.style.display = state === "content" ? "grid"  : "none";
+    if (content) content.style.display = state === "content" ? "grid" : "none";
 }
 
-/** Cập nhật badge trong danh sách vé trái */
-function updateListBadge(idDangKy, trangThai) {
-    const item  = document.querySelector(`.ticket-list-item[data-id="${idDangKy}"]`);
-    const badge = item?.querySelector(".ticket-item-badge");
-    if (!badge) return;
-    badge.className  = `ticket-item-badge ${getBadgeClass(trangThai)}`;
-    badge.textContent = escapeHtml(trangThai);
+function refreshTicketUI() {
+    updateFilterCounts();
+    renderTicketFilterList();
+    if (!selectedTicket) return;
+    const t = allTickets.find(x => x.idDangKy === selectedTicket.idDangKy) || selectedTicket;
+    selectedTicket = t;
+    const iconEl = document.getElementById("ticketStatusIcon");
+    if (iconEl) {
+        iconEl.className = `mt-status-icon ${getStatusIconClass(t.trangThai)}`;
+    }
+    renderQRSection(t);
+    renderCheckinTimeline(t);
+    renderCheckinButtons(t);
+    renderCancelButton(t);
+    renderWaitlistConfirmButton(t);
+    renderSidebars();
+    document.querySelectorAll(".mt-filter-item").forEach(el => {
+        el.classList.toggle("active", String(el.dataset.id) === String(t.idDangKy));
+    });
 }
 
 /** Đồng bộ selectedTicket về mảng allTickets */
@@ -795,17 +1124,6 @@ function syncTicketInArray(ticket) {
 }
 
 // ─── HELPERS: Format & style ──────────────────────────────────────────────────
-
-function getBadgeClass(trangThai) {
-    const map = {
-        "Đã xác nhận":  "badge-confirmed",
-        "Chờ xác nhận": "badge-pending",
-        "Đã tham gia":  "badge-attended",
-        "Vắng mặt":     "badge-absent",
-        "Đã hủy":       "badge-cancelled"
-    };
-    return map[trangThai] || "badge-pending";
-}
 
 function setText(id, text) {
     const el = document.getElementById(id);

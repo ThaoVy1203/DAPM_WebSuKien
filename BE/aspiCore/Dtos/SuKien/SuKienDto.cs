@@ -13,6 +13,8 @@ namespace aspiCore.Dtos.SuKien
         public string? TenNguoiTao { get; set; }
         public int? SoLuongToiDa { get; set; }
         public string TrangThai { get; set; } = "Nháp";
+        public int GioHuyTruocBatDauPhut { get; set; } = 120;
+        public bool YeuCauKhaoSatCheckout { get; set; } = true;
         public DateTime ThoiGianTao { get; set; }
         public int SoDaDangKy { get; set; }
     }
@@ -26,6 +28,8 @@ namespace aspiCore.Dtos.SuKien
         public int? IdDiaDiem { get; set; }
         public string IdNguoiTao { get; set; } = string.Empty;
         public int? SoLuongToiDa { get; set; }
+        public int GioHuyTruocBatDauPhut { get; set; } = 120;
+        public bool YeuCauKhaoSatCheckout { get; set; } = true;
         public List<int>? DanhMucIds { get; set; }
     }
 
@@ -37,6 +41,8 @@ namespace aspiCore.Dtos.SuKien
         public DateTime? ThoiGianKetThuc { get; set; }
         public int? IdDiaDiem { get; set; }
         public int? SoLuongToiDa { get; set; }
+        public int? GioHuyTruocBatDauPhut { get; set; }
+        public bool? YeuCauKhaoSatCheckout { get; set; }
         public string? TrangThai { get; set; }
     }
 }

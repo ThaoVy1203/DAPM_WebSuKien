@@ -8,14 +8,25 @@ const TicketBiz = (function () {
     const QR_REFRESH_SEC = 45;
     const QR_MAX_AGE_MS = 45 * 1000;
     const QR_PREFIX = "UTE-CHECKIN";
+    const QR_STATIC_PREFIX = "UTE-CHECKIN-S";
 
     function buildQrPayload(idDangKy) {
         return `${QR_PREFIX}-${idDangKy}-${Date.now()}`;
     }
 
+    function buildStaticQrPayload(idDangKy) {
+        // QR tĩnh: chỉ chứa idDangKy, dùng cho offline fallback.
+        return `${QR_STATIC_PREFIX}-${idDangKy}`;
+    }
+
     function parseQrPayload(raw) {
         if (!raw || typeof raw !== "string") return null;
         const s = raw.trim();
+
+        // QR tĩnh: UTE-CHECKIN-S-{idDangKy}
+        const mStatic = s.match(/^UTE-CHECKIN-S-(\d+)$/i);
+        if (mStatic) return { idDangKy: parseInt(mStatic[1], 10), timestamp: 0, isStatic: true };
+
         const m = s.match(/^UTE-CHECKIN-(\d+)-(\d+)$/i);
         if (m) return { idDangKy: parseInt(m[1], 10), timestamp: parseInt(m[2], 10) };
         const parts = s.split("|");
@@ -30,7 +41,9 @@ const TicketBiz = (function () {
     }
 
     function isQrExpired(timestamp) {
-        if (!timestamp || Number.isNaN(timestamp)) return true;
+        if (timestamp === undefined || timestamp === null || Number.isNaN(timestamp)) return true;
+        // QR tĩnh (timestamp = 0) không hết hạn 45s.
+        if (timestamp === 0) return false;
         return Math.abs(Date.now() - timestamp) > QR_MAX_AGE_MS;
     }
 
@@ -41,10 +54,17 @@ const TicketBiz = (function () {
     function canCancel(ticket) {
         if (!ticket) return false;
         const ts = ticket.trangThai || "";
-        if (!["Đã xác nhận", "Chờ xác nhận"].includes(ts)) return false;
+        if (!["Đã xác nhận", "Chờ xác nhận", "Chờ chỗ", "Chờ người dùng xác nhận"].includes(ts)) return false;
         if (ticket.thoiGianCheckin) return false;
+        const now = new Date();
         const ketThuc = ticket.thoiGianKetThuc ? new Date(ticket.thoiGianKetThuc) : null;
-        if (ketThuc && new Date() > ketThuc) return false;
+        if (ketThuc && now > ketThuc) return false;
+        const batDau = ticket.thoiGianBatDau ? new Date(ticket.thoiGianBatDau) : null;
+        const cutoffMinutes = Number(ticket.gioHuyTruocBatDauPhut ?? 120);
+        if (batDau) {
+            const cutoff = new Date(batDau.getTime() - cutoffMinutes * 60 * 1000);
+            if (now > cutoff) return false;
+        }
         return true;
     }
 
@@ -89,6 +109,8 @@ const TicketBiz = (function () {
             thoiGianCheckout: t.ThoiGianCheckout ?? t.thoiGianCheckout ?? null,
             thoiGianBatDau: t.ThoiGianBatDau ?? t.thoiGianBatDau ?? null,
             thoiGianKetThuc: t.ThoiGianKetThuc ?? t.thoiGianKetThuc ?? null,
+            gioHuyTruocBatDauPhut: t.GioHuyTruocBatDauPhut ?? t.gioHuyTruocBatDauPhut ?? 120,
+            yeuCauKhaoSatCheckout: t.YeuCauKhaoSatCheckout ?? t.yeuCauKhaoSatCheckout ?? true,
             tenDiaDiem: t.TenDiaDiem ?? t.tenDiaDiem ?? ""
         };
     }
@@ -115,6 +137,7 @@ const TicketBiz = (function () {
     return {
         QR_REFRESH_SEC,
         buildQrPayload,
+        buildStaticQrPayload,
         parseQrPayload,
         isQrExpired,
         canShowQr,

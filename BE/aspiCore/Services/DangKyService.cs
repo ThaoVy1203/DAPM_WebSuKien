@@ -10,15 +10,109 @@ namespace aspiCore.Services
     {
         private readonly ApplicationDBContext _context;
 
+        private const string STATUS_DELETED = "Đã hủy";
+        private const string STATUS_WAITLIST = "Chờ chỗ";
+        private const string STATUS_WAITLIST_CONFIRM = "Chờ người dùng xác nhận";
+        private const string STATUS_CHECKED_IN = "Đã tham gia";
+        private const string STATUS_COMPLETED = "Hoàn thành";
+        private const string STATUS_ABSENT = "Vắng mặt";
+
+        // Nếu được mời xác nhận chỗ mà không phản hồi trong 24h → hủy & đẩy người tiếp theo
+        private static readonly TimeSpan USER_CONFIRM_WINDOW = TimeSpan.FromHours(24);
+
         public DangKyService(ApplicationDBContext context)
         {
             _context = context;
         }
 
+        private async Task ExpireWaitlistConfirmationsAsync(int idSuKien)
+        {
+            var now = DateTime.Now;
+
+            var expired = await _context.DangKySuKiens
+                .Where(dk => dk.IdSuKien == idSuKien
+                    && dk.TrangThai == STATUS_WAITLIST_CONFIRM
+                    && dk.ThoiGianDangKy.Add(USER_CONFIRM_WINDOW) < now)
+                .ToListAsync();
+
+            if (!expired.Any()) return;
+
+            foreach (var dk in expired)
+            {
+                dk.TrangThai = STATUS_DELETED;
+                dk.ThoiGianHuy = now;
+
+                _context.ThongBaos.Add(new ThongBao
+                {
+                    IdNguoiDung = dk.IdNguoiDung,
+                    IdSuKien = dk.IdSuKien,
+                    TieuDe = "Hết hạn xác nhận chỗ",
+                    NoiDung = $"Bạn không phản hồi xác nhận chỗ trong {USER_CONFIRM_WINDOW.TotalHours:0} giờ cho sự kiện. Đăng ký của bạn đã bị hủy.",
+                    DaDoc = false,
+                    ThoiGianGui = now
+                });
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task TryPromoteWaitlistAsync(int idSuKien)
+        {
+            var suKien = await _context.SuKiens.FindAsync(idSuKien);
+            if (suKien == null) return;
+            if (!suKien.SoLuongToiDa.HasValue) return;
+
+            // Không đẩy Waitlist khi sự kiện đã kết thúc
+            if (DateTime.Now > suKien.ThoiGianKetThuc) return;
+
+            // 1) Hủy những người đã hết hạn xác nhận 24h (nếu có)
+            await ExpireWaitlistConfirmationsAsync(idSuKien);
+
+            var now = DateTime.Now;
+            var reservedSeatCount = await _context.DangKySuKiens
+                .CountAsync(dk => dk.IdSuKien == idSuKien
+                    && dk.TrangThai != STATUS_DELETED
+                    && dk.TrangThai != STATUS_WAITLIST);
+
+            while (reservedSeatCount < suKien.SoLuongToiDa.Value)
+            {
+                // 2) Lấy người đầu tiên trong Waitlist
+                var next = await _context.DangKySuKiens
+                    .Include(dk => dk.SuKien)
+                    .Where(dk => dk.IdSuKien == idSuKien && dk.TrangThai == STATUS_WAITLIST)
+                    .OrderBy(dk => dk.ThoiGianDangKy)
+                    .FirstOrDefaultAsync();
+
+                if (next == null) break;
+
+                // 3) Mời người dùng xác nhận chỗ (trong 24h)
+                next.TrangThai = STATUS_WAITLIST_CONFIRM;
+                next.ThoiGianDangKy = now;
+                next.ThoiGianHuy = null;
+                next.ThoiGianCheckin = null;
+                next.ThoiGianCheckout = null;
+
+                _context.ThongBaos.Add(new ThongBao
+                {
+                    IdNguoiDung = next.IdNguoiDung,
+                    IdSuKien = next.IdSuKien,
+                    TieuDe = "Bạn có chỗ từ danh sách chờ",
+                    NoiDung = $"Bạn vừa được mời xác nhận chỗ cho sự kiện \"{suKien.TenSuKien}\". Vui lòng xác nhận trong 24h.\n[ACTION_VIEW_TICKET {next.IdDangKy}]\n[ACTION_CONFIRM_WAITLIST]",
+                    DaDoc = false,
+                    ThoiGianGui = now
+                });
+
+                reservedSeatCount++;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<DangKyResponseDto> DangKySuKienAsync(DangKyDto dto)
         {
             var suKien = await _context.SuKiens.FindAsync(dto.IdSuKien);
-            if (suKien == null || suKien.TrangThai != "Đã duyệt")
+            // Cho phép đăng ký khi sự kiện đã duyệt hoặc đang diễn ra
+            if (suKien == null || !new[] { "Đã duyệt", "Đang diễn ra" }.Contains(suKien.TrangThai))
             {
                 return new DangKyResponseDto
                 {
@@ -27,74 +121,114 @@ namespace aspiCore.Services
                 };
             }
 
-            // ── Kiểm tra thời gian: không cho đăng ký khi sự kiện đã bắt đầu hoặc kết thúc ──
+            // ── Kiểm tra thời gian: chỉ chặn khi sự kiện đã KẾT THÚC ──
+            // Sự kiện đang diễn ra vẫn cho đăng ký (người đến muộn)
+            // Sự kiện đã kết thúc → không cho đăng ký
             var now = DateTime.Now;
-            if (now >= suKien.ThoiGianBatDau)
+            if (now > suKien.ThoiGianKetThuc)
             {
                 return new DangKyResponseDto
                 {
                     Success = false,
-                    Message = now > suKien.ThoiGianKetThuc
-                        ? "Sự kiện đã kết thúc. Không thể đăng ký."
-                        : "Sự kiện đã bắt đầu. Không thể đăng ký mới."
+                    Message = "Sự kiện đã kết thúc. Không thể đăng ký."
                 };
             }
-            var existingDangKy = await _context.DangKySuKiens
-                .FirstOrDefaultAsync(dk => dk.IdSuKien == dto.IdSuKien 
-                    && dk.IdNguoiDung == dto.IdNguoiDung 
-                    && dk.TrangThai != "Đã hủy");
 
-            if (existingDangKy != null)
+            var nguoiDung = await _context.NguoiDungs.FirstOrDefaultAsync(n => n.IdNguoiDung == dto.IdNguoiDung);
+            if (nguoiDung?.KhoaDangKyDen.HasValue == true && nguoiDung.KhoaDangKyDen.Value > now)
+            {
+                var remainDays = Math.Max(1, (int)Math.Ceiling((nguoiDung.KhoaDangKyDen.Value - now).TotalDays));
+                return new DangKyResponseDto
+                {
+                    Success = false,
+                    Message = $"Tài khoản đang bị tạm khóa đăng ký do vắng mặt liên tiếp. Vui lòng thử lại sau {remainDays} ngày."
+                };
+            }
+            // Lấy bản ghi đăng ký hiện tại (kể cả trạng thái "Đã hủy" để hỗ trợ đăng ký lại)
+            var existingDangKy = await _context.DangKySuKiens
+                .FirstOrDefaultAsync(dk => dk.IdSuKien == dto.IdSuKien
+                    && dk.IdNguoiDung == dto.IdNguoiDung);
+
+            if (existingDangKy != null && existingDangKy.TrangThai != "Đã hủy")
             {
                 return new DangKyResponseDto
                 {
                     Success = false,
                     Message = "Bạn đã đăng ký sự kiện này rồi.",
-                    IdDangKy = existingDangKy.IdDangKy
+                    IdDangKy = existingDangKy.IdDangKy,
+                    TrangThai = existingDangKy.TrangThai
                 };
             }
 
+            // Kiểm tra giới hạn chỗ: chỉ tính các trạng thái "đang chiếm chỗ", không tính Waitlist ("Chờ chỗ")
+            var reservedSeatCount = 0;
             if (suKien.SoLuongToiDa.HasValue)
             {
-                var soDaDangKy = await _context.DangKySuKiens
-                    .CountAsync(dk => dk.IdSuKien == dto.IdSuKien && dk.TrangThai != "Đã hủy");
-
-                if (soDaDangKy >= suKien.SoLuongToiDa.Value)
-                {
-                    return new DangKyResponseDto
-                    {
-                        Success = false,
-                        Message = "Sự kiện đã đủ số lượng đăng ký."
-                    };
-                }
+                reservedSeatCount = await _context.DangKySuKiens
+                    .CountAsync(dk => dk.IdSuKien == dto.IdSuKien
+                        && dk.TrangThai != "Đã hủy"
+                        && dk.TrangThai != "Chờ chỗ");
             }
 
-            // Trạng thái ban đầu: nếu sự kiện yêu cầu duyệt thủ công → "Chờ xác nhận"
-            // ngược lại → "Đã xác nhận" (tự động)
-            var trangThaiDangKy = suKien.YeuCauXacNhan ? "Chờ xác nhận" : "Đã xác nhận";
+            var isFull = suKien.SoLuongToiDa.HasValue && reservedSeatCount >= suKien.SoLuongToiDa.Value;
 
-            var dangKy = new DangKySuKien
+            // Nếu full → vào danh sách chờ
+            // Không full → trạng thái ban đầu theo yêu cầu duyệt thủ công
+            var trangThaiDangKy = isFull
+                ? "Chờ chỗ"
+                : (suKien.YeuCauXacNhan ? "Chờ xác nhận" : "Đã xác nhận");
+
+            DangKySuKien dangKy;
+            if (existingDangKy != null)
             {
-                IdSuKien = dto.IdSuKien,
-                IdNguoiDung = dto.IdNguoiDung,
-                TrangThai = trangThaiDangKy,
-                ThoiGianDangKy = DateTime.Now
-            };
-
-            _context.DangKySuKiens.Add(dangKy);
+                // Đăng ký lại sau khi đã hủy: cập nhật record thay vì insert (tránh unique constraint)
+                dangKy = existingDangKy;
+                dangKy.TrangThai = trangThaiDangKy;
+                dangKy.ThoiGianDangKy = DateTime.Now;
+                dangKy.ThoiGianHuy = null;
+                dangKy.ThoiGianCheckin = null;
+                dangKy.ThoiGianCheckout = null;
+            }
+            else
+            {
+                dangKy = new DangKySuKien
+                {
+                    IdSuKien = dto.IdSuKien,
+                    IdNguoiDung = dto.IdNguoiDung,
+                    TrangThai = trangThaiDangKy,
+                    ThoiGianDangKy = DateTime.Now
+                };
+                _context.DangKySuKiens.Add(dangKy);
+            }
 
             // Tạo thông báo phù hợp với trạng thái
-            var noiDungThongBao = trangThaiDangKy == "Chờ xác nhận"
-                ? $"Bạn đã đăng ký tham gia \"{suKien.TenSuKien}\". Đăng ký đang chờ ban tổ chức xác nhận."
-                : $"Bạn đã đăng ký tham gia \"{suKien.TenSuKien}\" thành công. Vui lòng check-in đúng giờ.";
+            string noiDungThongBao;
+            string tieuDeThongBao;
+
+            if (trangThaiDangKy == "Chờ chỗ")
+            {
+                tieuDeThongBao = "Bạn đã vào danh sách chờ";
+                noiDungThongBao =
+                    $"Sự kiện \"{suKien.TenSuKien}\" đã hết chỗ. Bạn đã được xếp vào danh sách chờ. Khi có chỗ, hệ thống sẽ mời bạn xác nhận trong 24h.";
+            }
+            else if (trangThaiDangKy == "Chờ xác nhận")
+            {
+                tieuDeThongBao = "Đăng ký đang chờ xác nhận";
+                noiDungThongBao =
+                    $"Bạn đã đăng ký tham gia \"{suKien.TenSuKien}\". Đăng ký đang chờ ban tổ chức xác nhận.";
+            }
+            else
+            {
+                tieuDeThongBao = "Đăng ký sự kiện thành công";
+                noiDungThongBao =
+                    $"Bạn đã đăng ký tham gia \"{suKien.TenSuKien}\" thành công. Vui lòng check-in đúng giờ.";
+            }
 
             _context.ThongBaos.Add(new ThongBao
             {
                 IdNguoiDung = dto.IdNguoiDung,
                 IdSuKien = dto.IdSuKien,
-                TieuDe = trangThaiDangKy == "Chờ xác nhận"
-                    ? "Đăng ký đang chờ xác nhận"
-                    : "Đăng ký sự kiện thành công",
+                TieuDe = tieuDeThongBao,
                 NoiDung = noiDungThongBao,
                 DaDoc = false,
                 ThoiGianGui = DateTime.Now
@@ -107,8 +241,11 @@ namespace aspiCore.Services
                 Success = true,
                 Message = trangThaiDangKy == "Chờ xác nhận"
                     ? "Đăng ký thành công. Vui lòng chờ ban tổ chức xác nhận."
+                    : trangThaiDangKy == "Chờ chỗ"
+                        ? "Đăng ký thành công. Bạn đã được xếp vào danh sách chờ."
                     : "Đăng ký thành công.",
-                IdDangKy = dangKy.IdDangKy
+                IdDangKy = dangKy.IdDangKy,
+                TrangThai = trangThaiDangKy
             };
         }
 
@@ -154,7 +291,20 @@ namespace aspiCore.Services
                 };
             }
 
-            if (!new[] { "Đã xác nhận", "Chờ xác nhận" }.Contains(dangKy.TrangThai))
+            if (dangKy.SuKien != null)
+            {
+                var cutoff = dangKy.SuKien.ThoiGianBatDau.AddMinutes(-Math.Max(0, dangKy.SuKien.GioHuyTruocBatDauPhut));
+                if (DateTime.Now > cutoff)
+                {
+                    return new ApiResponse
+                    {
+                        Success = false,
+                        Message = $"Đã quá hạn hủy vé. Bạn chỉ có thể hủy trước giờ bắt đầu {dangKy.SuKien.GioHuyTruocBatDauPhut} phút."
+                    };
+                }
+            }
+
+            if (!new[] { "Đã xác nhận", "Chờ xác nhận", "Chờ chỗ", "Chờ người dùng xác nhận" }.Contains(dangKy.TrangThai))
             {
                 return new ApiResponse
                 {
@@ -163,9 +313,12 @@ namespace aspiCore.Services
                 };
             }
 
-            dangKy.TrangThai = "Đã hủy";
+            dangKy.TrangThai = STATUS_DELETED;
             dangKy.ThoiGianHuy = DateTime.Now;
             await _context.SaveChangesAsync();
+
+            // Mở thêm chỗ cho Waitlist (nếu sự kiện còn hiệu lực)
+            await TryPromoteWaitlistAsync(dangKy.IdSuKien);
 
             return new ApiResponse
             {
@@ -219,7 +372,7 @@ namespace aspiCore.Services
                 }
             }
 
-            dangKy.TrangThai = "Đã tham gia";
+            dangKy.TrangThai = STATUS_CHECKED_IN;
             dangKy.ThoiGianCheckin = DateTime.Now;
             await _context.SaveChangesAsync();
 
@@ -238,7 +391,12 @@ namespace aspiCore.Services
             if (!TryParseQrToken(dto.QrToken.Trim(), out var idDangKy, out var timestampMs))
                 return new ApiResponse { Success = false, Message = "Định dạng mã QR không đúng." };
 
-            if (Math.Abs(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestampMs) > 45_000)
+            // Offline fallback: dùng ScanTimeMs nếu có (kiosk ghi nhận lúc quét, sync sau).
+            // Với QR tĩnh (UTE-CHECKIN-S-{id}) thì timestampMs = 0 => bỏ qua kiểm tra hết hạn 45s.
+            var scanMs = dto.ScanTimeMs ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var scanLocal = DateTimeOffset.FromUnixTimeMilliseconds(scanMs).LocalDateTime;
+
+            if (timestampMs > 0 && Math.Abs(scanMs - timestampMs) > 45_000)
                 return new ApiResponse { Success = false, Message = "Mã QR đã hết hạn. Vui lòng làm mới mã trên điện thoại." };
 
             var dangKy = await _context.DangKySuKiens
@@ -250,23 +408,22 @@ namespace aspiCore.Services
 
             if (dangKy.SuKien != null)
             {
-                var now = DateTime.Now;
                 var checkInOpen = dangKy.SuKien.ThoiGianBatDau.AddMinutes(-30);
-                if (now < checkInOpen)
+                if (scanLocal < checkInOpen)
                 {
-                    var minutesLeft = (int)Math.Ceiling((checkInOpen - now).TotalMinutes);
+                    var minutesLeft = (int)Math.Ceiling((checkInOpen - scanLocal).TotalMinutes);
                     return new ApiResponse
                     {
                         Success = false,
                         Message = $"Chưa đến giờ check-in. Mở sau {minutesLeft} phút nữa."
                     };
                 }
-                if (now > dangKy.SuKien.ThoiGianKetThuc)
+                if (scanLocal > dangKy.SuKien.ThoiGianKetThuc)
                     return new ApiResponse { Success = false, Message = "Sự kiện đã kết thúc. Không thể check-in." };
             }
 
-            dangKy.TrangThai = "Đã tham gia";
-            dangKy.ThoiGianCheckin = DateTime.Now;
+            dangKy.TrangThai = STATUS_CHECKED_IN;
+            dangKy.ThoiGianCheckin = scanLocal;
             await _context.SaveChangesAsync();
 
             return new ApiResponse
@@ -276,13 +433,13 @@ namespace aspiCore.Services
             };
         }
 
-        public async Task<ApiResponse> CheckOutAsync(CheckInDto dto)
+        public async Task<ApiResponse> CheckOutAsync(CheckOutWithFeedbackDto dto)
         {
             var dangKy = await _context.DangKySuKiens
                 .Include(dk => dk.SuKien)
                 .FirstOrDefaultAsync(dk => dk.IdSuKien == dto.IdSuKien
                     && dk.IdNguoiDung == dto.IdNguoiDung
-                    && dk.TrangThai == "Đã tham gia");
+                    && dk.TrangThai == STATUS_CHECKED_IN);
 
             if (dangKy == null)
             {
@@ -311,7 +468,41 @@ namespace aspiCore.Services
                 };
             }
 
+            var needSurvey = dangKy.SuKien?.YeuCauKhaoSatCheckout ?? true;
+            if (needSurvey)
+            {
+                if (!dto.Diem.HasValue || dto.Diem < 1 || dto.Diem > 5)
+                {
+                    return new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Vui lòng hoàn thành đánh giá 1-5 sao để check-out."
+                    };
+                }
+
+                var oldFeedback = await _context.DangKyDanhGias.FirstOrDefaultAsync(x => x.IdDangKy == dangKy.IdDangKy);
+                if (oldFeedback == null)
+                {
+                    _context.DangKyDanhGias.Add(new DangKyDanhGia
+                    {
+                        IdDangKy = dangKy.IdDangKy,
+                        Diem = dto.Diem.Value,
+                        NhanXet = string.IsNullOrWhiteSpace(dto.NhanXet) ? null : dto.NhanXet.Trim(),
+                        ThoiGianDanhGia = DateTime.Now
+                    });
+                }
+                else
+                {
+                    oldFeedback.Diem = dto.Diem.Value;
+                    oldFeedback.NhanXet = string.IsNullOrWhiteSpace(dto.NhanXet) ? null : dto.NhanXet.Trim();
+                    oldFeedback.ThoiGianDanhGia = DateTime.Now;
+                }
+            }
+
             dangKy.ThoiGianCheckout = DateTime.Now;
+            dangKy.CheckoutTuDong = false;
+            dangKy.TrangThai = STATUS_COMPLETED;
+            await RecalculateTrustForUserAsync(dangKy.IdNguoiDung, DateTime.Now);
             await _context.SaveChangesAsync();
 
             return new ApiResponse
@@ -319,6 +510,55 @@ namespace aspiCore.Services
                 Success = true,
                 Message = "Check-out thành công. Cảm ơn bạn đã tham gia sự kiện!"
             };
+        }
+
+        public async Task<int> ProcessLifecycleAsync()
+        {
+            var now = DateTime.Now;
+            var events = await _context.SuKiens
+                .Where(sk => sk.ThoiGianKetThuc <= now && !sk.DaXuLyKetThuc)
+                .ToListAsync();
+            if (!events.Any()) return 0;
+
+            var touchedUsers = new HashSet<string>();
+
+            foreach (var sk in events)
+            {
+                var regs = await _context.DangKySuKiens
+                    .Where(dk => dk.IdSuKien == sk.IdSuKien)
+                    .ToListAsync();
+
+                foreach (var dk in regs)
+                {
+                    if (dk.TrangThai == "Đã xác nhận" && !dk.ThoiGianCheckin.HasValue)
+                    {
+                        dk.TrangThai = STATUS_ABSENT;
+                        touchedUsers.Add(dk.IdNguoiDung);
+                    }
+
+                    if (dk.TrangThai == STATUS_CHECKED_IN && dk.ThoiGianCheckin.HasValue && !dk.ThoiGianCheckout.HasValue)
+                    {
+                        var autoCheckoutTime = sk.ThoiGianBatDau.AddMinutes((sk.ThoiGianKetThuc - sk.ThoiGianBatDau).TotalMinutes * 0.75);
+                        if (autoCheckoutTime < dk.ThoiGianCheckin.Value) autoCheckoutTime = dk.ThoiGianCheckin.Value;
+                        if (autoCheckoutTime > sk.ThoiGianKetThuc) autoCheckoutTime = sk.ThoiGianKetThuc;
+
+                        dk.ThoiGianCheckout = autoCheckoutTime;
+                        dk.CheckoutTuDong = true;
+                        dk.TrangThai = STATUS_COMPLETED;
+                        touchedUsers.Add(dk.IdNguoiDung);
+                    }
+                }
+
+                sk.DaXuLyKetThuc = true;
+            }
+
+            foreach (var userId in touchedUsers)
+            {
+                await RecalculateTrustForUserAsync(userId, now);
+            }
+
+            await _context.SaveChangesAsync();
+            return events.Count;
         }
 
         /// <summary>GetByIdAsync — dùng cho endpoint public/{idDangKy}</summary>
@@ -343,6 +583,8 @@ namespace aspiCore.Services
                     ThoiGianCheckout  = dk.ThoiGianCheckout,
                     ThoiGianBatDau    = dk.SuKien != null ? dk.SuKien.ThoiGianBatDau : (DateTime?)null,
                     ThoiGianKetThuc   = dk.SuKien != null ? dk.SuKien.ThoiGianKetThuc : (DateTime?)null,
+                    GioHuyTruocBatDauPhut = dk.SuKien != null ? dk.SuKien.GioHuyTruocBatDauPhut : 120,
+                    YeuCauKhaoSatCheckout = dk.SuKien == null || dk.SuKien.YeuCauKhaoSatCheckout,
                     TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null
                                         ? dk.SuKien.DiaDiem.TenDiaDiem : ""
                 })
@@ -400,6 +642,63 @@ namespace aspiCore.Services
             return new ApiResponse { Success = true, Message = "Đã từ chối đăng ký." };
         }
 
+        /// <summary>
+        /// Người dùng xác nhận chỗ từ Waitlist:
+        ///   Chờ người dùng xác nhận → Đã xác nhận
+        /// Hiệu lực 24h.
+        /// </summary>
+        public async Task<ApiResponse> XacNhanChoNgoiAsync(DangKyDto dto)
+        {
+            var dk = await _context.DangKySuKiens
+                .Include(d => d.SuKien)
+                .FirstOrDefaultAsync(d => d.IdSuKien == dto.IdSuKien
+                    && d.IdNguoiDung == dto.IdNguoiDung
+                    && d.TrangThai == STATUS_WAITLIST_CONFIRM);
+
+            if (dk == null)
+                return new ApiResponse { Success = false, Message = "Không tìm thấy yêu cầu xác nhận chỗ." };
+
+            var now = DateTime.Now;
+            if (dk.ThoiGianDangKy.Add(USER_CONFIRM_WINDOW) < now)
+            {
+                dk.TrangThai = STATUS_DELETED;
+                dk.ThoiGianHuy = now;
+
+                _context.ThongBaos.Add(new ThongBao
+                {
+                    IdNguoiDung = dk.IdNguoiDung,
+                    IdSuKien = dk.IdSuKien,
+                    TieuDe = "Hết hạn xác nhận chỗ",
+                    NoiDung = $"Bạn không phản hồi xác nhận chỗ trong 24h cho sự kiện \"{dk.SuKien?.TenSuKien}\".",
+                    DaDoc = false,
+                    ThoiGianGui = now
+                });
+
+                await _context.SaveChangesAsync();
+                await TryPromoteWaitlistAsync(dk.IdSuKien);
+
+                return new ApiResponse { Success = false, Message = "Lời mời xác nhận đã hết hạn (24h)." };
+            }
+
+            dk.TrangThai = "Đã xác nhận";
+            dk.ThoiGianHuy = null;
+            dk.ThoiGianCheckin = null;
+            dk.ThoiGianCheckout = null;
+
+            _context.ThongBaos.Add(new ThongBao
+            {
+                IdNguoiDung = dk.IdNguoiDung,
+                IdSuKien = dk.IdSuKien,
+                TieuDe = "Xác nhận chỗ thành công",
+                NoiDung = $"Bạn đã xác nhận chỗ cho sự kiện \"{dk.SuKien?.TenSuKien}\". Vui lòng check-in đúng giờ.",
+                DaDoc = false,
+                ThoiGianGui = now
+            });
+
+            await _context.SaveChangesAsync();
+            return new ApiResponse { Success = true, Message = "Đã xác nhận chỗ từ danh sách chờ." };
+        }
+
         public async Task<IEnumerable<DangKySuKienDto>> GetBySuKienAsync(int idSuKien)        {
             return await _context.DangKySuKiens
                 .Include(dk => dk.NguoiDung)
@@ -420,6 +719,8 @@ namespace aspiCore.Services
                     ThoiGianCheckout  = dk.ThoiGianCheckout,
                     ThoiGianBatDau    = dk.SuKien != null ? dk.SuKien.ThoiGianBatDau : (DateTime?)null,
                     ThoiGianKetThuc   = dk.SuKien != null ? dk.SuKien.ThoiGianKetThuc : (DateTime?)null,
+                    GioHuyTruocBatDauPhut = dk.SuKien != null ? dk.SuKien.GioHuyTruocBatDauPhut : 120,
+                    YeuCauKhaoSatCheckout = dk.SuKien == null || dk.SuKien.YeuCauKhaoSatCheckout,
                     TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null ? dk.SuKien.DiaDiem.TenDiaDiem : ""
                 })
                 .ToListAsync();
@@ -447,9 +748,43 @@ namespace aspiCore.Services
                     ThoiGianCheckout  = dk.ThoiGianCheckout,
                     ThoiGianBatDau    = dk.SuKien != null ? dk.SuKien.ThoiGianBatDau : (DateTime?)null,
                     ThoiGianKetThuc   = dk.SuKien != null ? dk.SuKien.ThoiGianKetThuc : (DateTime?)null,
+                    GioHuyTruocBatDauPhut = dk.SuKien != null ? dk.SuKien.GioHuyTruocBatDauPhut : 120,
+                    YeuCauKhaoSatCheckout = dk.SuKien == null || dk.SuKien.YeuCauKhaoSatCheckout,
                     TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null ? dk.SuKien.DiaDiem.TenDiaDiem : ""
                 })
                 .ToListAsync();
+        }
+
+        private async Task RecalculateTrustForUserAsync(string idNguoiDung, DateTime now)
+        {
+            var user = await _context.NguoiDungs.FirstOrDefaultAsync(n => n.IdNguoiDung == idNguoiDung);
+            if (user == null) return;
+
+            var statuses = await _context.DangKySuKiens
+                .Where(dk => dk.IdNguoiDung == idNguoiDung)
+                .Include(dk => dk.SuKien)
+                .Where(dk => dk.SuKien != null && dk.SuKien.ThoiGianKetThuc <= now)
+                .OrderByDescending(dk => dk.SuKien!.ThoiGianKetThuc)
+                .Select(dk => dk.TrangThai)
+                .Take(10)
+                .ToListAsync();
+
+            var consecutiveAbsent = 0;
+            foreach (var s in statuses)
+            {
+                if (s == STATUS_ABSENT) consecutiveAbsent++;
+                else break;
+            }
+
+            user.SoVangMatLienTiep = consecutiveAbsent;
+            if (consecutiveAbsent >= 3)
+            {
+                user.KhoaDangKyDen = now.AddMonths(1);
+            }
+            else if (user.KhoaDangKyDen.HasValue && user.KhoaDangKyDen.Value <= now)
+            {
+                user.KhoaDangKyDen = null;
+            }
         }
 
         /// <summary>UTE-CHECKIN-{idDangKy}-{timestamp} hoặc legacy UTE|CHECKIN|...</summary>
@@ -457,6 +792,16 @@ namespace aspiCore.Services
         {
             idDangKy = 0;
             timestampMs = 0;
+
+            // QR tĩnh (offline): UTE-CHECKIN-S-{idDangKy}
+            var staticMatch = System.Text.RegularExpressions.Regex.Match(
+                raw, @"^UTE-CHECKIN-S-(\d+)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (staticMatch.Success)
+            {
+                idDangKy = int.Parse(staticMatch.Groups[1].Value);
+                timestampMs = 0;
+                return true;
+            }
 
             var dash = System.Text.RegularExpressions.Regex.Match(
                 raw, @"^UTE-CHECKIN-(\d+)-(\d+)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);

@@ -269,6 +269,8 @@ function buildEventCard(event, idx) {
             "Đã xác nhận":  { bg:"#d1fae5", color:"#065f46", icon:"fa-check-circle", text:"Đã đăng ký" },
             "Chờ xác nhận": { bg:"#fef3c7", color:"#92400e", icon:"fa-clock",        text:"Chờ xác nhận" },
             "Đã tham gia":  { bg:"#dbeafe", color:"#1e40af", icon:"fa-star",         text:"Đã tham gia" },
+            "Chờ chỗ":     { bg:"#fef3c7", color:"#92400e", icon:"fa-hourglass-half", text:"Chờ chỗ" },
+            "Chờ người dùng xác nhận": { bg:"#fef3c7", color:"#92400e", icon:"fa-bell", text:"Mời xác nhận (24h)" },
             "Vắng mặt":     { bg:"#fee2e2", color:"#991b1b", icon:"fa-user-times",   text:"Vắng mặt" },
         };
         const rc = regCfg[myRegStatus];
@@ -280,9 +282,11 @@ function buildEventCard(event, idx) {
     }
 
     // Nút hành động
-    const canRegister = trangThai === "Đã duyệt" && !myRegStatus && (conLai === null || conLai > 0);
+    const canOpenRegister = ["Đã duyệt", "Đang diễn ra"].includes(trangThai);
+    const canRegister = canOpenRegister && !myRegStatus && (conLai === null || conLai > 0);
     const isEnded     = ["Kết thúc", "Hủy"].includes(trangThai);
     const isFull      = conLai !== null && conLai <= 0;
+    const canWaitlist = canOpenRegister && !myRegStatus && isFull;
 
     let actionBtn = "";
     if (myRegStatus && myRegId) {
@@ -296,6 +300,10 @@ function buildEventCard(event, idx) {
     } else if (canRegister) {
         actionBtn = `<button class="btn-primary" onclick="window.location.href='event-detail.html?id=${idSuKien}'">
             <i class="fas fa-user-plus"></i> Đăng ký ngay
+        </button>`;
+    } else if (canWaitlist) {
+        actionBtn = `<button class="btn-primary" onclick="window.location.href='event-detail.html?id=${idSuKien}'">
+            <i class="fas fa-hourglass-half"></i> Vào danh sách chờ
         </button>`;
     } else if (isFull) {
         actionBtn = `<button class="btn-primary" disabled style="opacity:0.5;cursor:not-allowed;">

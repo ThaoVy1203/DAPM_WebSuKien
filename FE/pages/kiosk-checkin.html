@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiosk Check-in - UTE Events</title>
+  <link rel="stylesheet" href="../css/kiosk-checkin.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    // tránh flash khi chờ script load
+    window.__kioskReady = false;
+  </script>
+</head>
+<body>
+  <div id="kioskApp" class="kiosk-hidden">
+    <div class="kiosk-topbar">
+      <div class="kiosk-title">
+        <i class="fas fa-qrcode"></i> Kiosk Check-in
+      </div>
+      <div class="kiosk-meta">
+        <div class="kiosk-event" id="kioskEventName">Đang tải...</div>
+        <div class="kiosk-offline" id="kioskOfflineLabel">Online</div>
+      </div>
+    </div>
+
+    <div class="kiosk-main">
+      <div class="kiosk-inputCard">
+        <div class="kiosk-inputLabel">
+          Dán QR token hoặc nhập <strong>IdDangKy</strong>
+        </div>
+        <input id="kioskInput" class="kiosk-input" placeholder="UTE-CHECKIN-S-{idDangKy} hoặc IdDangKy" />
+        <div class="kiosk-actions">
+          <button id="kioskBtn" class="kiosk-btn" type="button" onclick="kioskCheckin()">
+            <i class="fas fa-check-circle"></i> Ghi nhận check-in
+          </button>
+          <button id="kioskBtnClear" class="kiosk-btn secondary" type="button" onclick="clearKioskInput()">
+            Xóa
+          </button>
+        </div>
+        <div class="kiosk-hint">
+          Gợi ý offline: dùng <strong>QR tĩnh</strong> (<code>UTE-CHECKIN-S-{idDangKy}</code>).
+        </div>
+      </div>
+
+      <div class="kiosk-statusCard">
+        <div class="kiosk-statusRow">
+          <div>Queue offline</div>
+          <div class="kiosk-strong" id="kioskQueueCount">0</div>
+        </div>
+        <div class="kiosk-statusRow">
+          <div>Cache xác nhận</div>
+          <div class="kiosk-strong" id="kioskCacheCount">0</div>
+        </div>
+        <div class="kiosk-log" id="kioskLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/ticket-business.js"></script>
+  <script src="../js/kiosk-checkin.js"></script>
+</body>
+</html>
+
