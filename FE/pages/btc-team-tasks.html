@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -73,7 +73,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <button class="btn-create">
+                <button class="btn-create" onclick="window.location.href='btc-events.html'">
                     <i class="fas fa-plus-circle"></i>
                     Tạo sự kiện mới
                 </button>
@@ -131,7 +131,7 @@
                         </button>
                     </div>
                     <div class="tasks-list">
-                        <div class="task-card" onclick="openTaskDetailModal(1)">
+                        <div class="task-card" data-event="hoi-nghi-cong-nghe" onclick="openTaskDetailModal(1)">
                             <div class="task-priority high">ƯU TIÊN CAO</div>
                             <h3 class="task-title">Ký kết hợp đồng ăn uống cho Tiệc tối VIP</h3>
                             <div class="task-footer">
@@ -146,7 +146,7 @@
                             </div>
                         </div>
 
-                        <div class="task-card" onclick="openTaskDetailModal(2)">
+                        <div class="task-card" data-event="hoi-nghi-cong-nghe" onclick="openTaskDetailModal(2)">
                             <div class="task-priority medium">TRUNG BÌNH</div>
                             <h3 class="task-title">Hoàn tất danh sách diễn giả và sắp xếp đi lại</h3>
                             <div class="task-footer">
@@ -176,7 +176,7 @@
                         </button>
                     </div>
                     <div class="tasks-list">
-                        <div class="task-card" onclick="openTaskDetailModal(3)">
+                        <div class="task-card" data-event="ngay-hoi-viec-lam" onclick="openTaskDetailModal(3)">
                             <div class="task-priority low">ƯU TIÊN THẤP</div>
                             <h3 class="task-title">Thiết kế banner mạng xã hội cho đợt Tuyển dụng</h3>
                             <div class="task-progress">
@@ -211,7 +211,7 @@
                         </button>
                     </div>
                     <div class="tasks-list">
-                        <div class="task-card" onclick="openTaskDetailModal(4)">
+                        <div class="task-card" data-event="hoi-nghi-cong-nghe" onclick="openTaskDetailModal(4)">
                             <div class="task-priority high">ƯU TIÊN CAO</div>
                             <h3 class="task-title">Kiểm tra các giao thức an toàn cho sự kiện trong khuôn viên</h3>
                             <div class="task-footer">
@@ -443,5 +443,7 @@
 
     <script src="../js/btc-auth.js"></script>
     <script src="../js/btc-team-tasks.js"></script>
+    <script src="../js/logout.js"></script>
 </body>
 </html>
+

@@ -111,11 +111,15 @@ function applyBtcPanelFilter() {
 
         let matchDate = true;
         if (tuNgay || denNgay) {
+            // Parse dd/mm/yyyy từ text card → chuyển sang yyyy-mm-dd để so sánh string
             const m = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
             if (m) {
-                const d = new Date(`${m[3]}-${m[2]}-${m[1]}`);
-                if (tuNgay  && d < new Date(tuNgay))  matchDate = false;
-                if (denNgay && d > new Date(denNgay)) matchDate = false;
+                const cardDateStr = `${m[3]}-${m[2]}-${m[1]}`; // yyyy-mm-dd
+                if (tuNgay  && cardDateStr < tuNgay)  matchDate = false;
+                if (denNgay && cardDateStr > denNgay) matchDate = false;
+            } else {
+                // Không parse được ngày → không lọc theo ngày
+                matchDate = true;
             }
         }
 
