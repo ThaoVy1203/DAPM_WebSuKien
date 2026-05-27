@@ -9,6 +9,7 @@ namespace aspiCore.Services
     public class DangKyService : IDangKyService
     {
         private readonly ApplicationDBContext _context;
+        private readonly ILogger<DangKyService> _logger;
 
         private const string STATUS_DELETED = "Đã hủy";
         private const string STATUS_WAITLIST = "Chờ chỗ";
@@ -20,19 +21,21 @@ namespace aspiCore.Services
         // Nếu được mời xác nhận chỗ mà không phản hồi trong 24h → hủy & đẩy người tiếp theo
         private static readonly TimeSpan USER_CONFIRM_WINDOW = TimeSpan.FromHours(24);
 
-        public DangKyService(ApplicationDBContext context)
+        public DangKyService(ApplicationDBContext context, ILogger<DangKyService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         private async Task ExpireWaitlistConfirmationsAsync(int idSuKien)
         {
             var now = DateTime.Now;
 
+            var expireThreshold = now - USER_CONFIRM_WINDOW;
             var expired = await _context.DangKySuKiens
                 .Where(dk => dk.IdSuKien == idSuKien
                     && dk.TrangThai == STATUS_WAITLIST_CONFIRM
-                    && dk.ThoiGianDangKy.Add(USER_CONFIRM_WINDOW) < now)
+                    && dk.ThoiGianDangKy < expireThreshold)
                 .ToListAsync();
 
             if (!expired.Any()) return;
@@ -293,13 +296,18 @@ namespace aspiCore.Services
 
             if (dangKy.SuKien != null)
             {
-                var cutoff = dangKy.SuKien.ThoiGianBatDau.AddMinutes(-Math.Max(0, dangKy.SuKien.GioHuyTruocBatDauPhut));
+                // GioHuyTruocBatDauPhut là [NotMapped] nên luôn = 0 khi đọc từ DB.
+                // Dùng giá trị mặc định 120 phút nếu bằng 0 để tránh cutoff = giờ bắt đầu.
+                var gioHuy = dangKy.SuKien.GioHuyTruocBatDauPhut > 0
+                    ? dangKy.SuKien.GioHuyTruocBatDauPhut
+                    : 120;
+                var cutoff = dangKy.SuKien.ThoiGianBatDau.AddMinutes(-gioHuy);
                 if (DateTime.Now > cutoff)
                 {
                     return new ApiResponse
                     {
                         Success = false,
-                        Message = $"Đã quá hạn hủy vé. Bạn chỉ có thể hủy trước giờ bắt đầu {dangKy.SuKien.GioHuyTruocBatDauPhut} phút."
+                        Message = $"Đã quá hạn hủy vé. Bạn chỉ có thể hủy trước giờ bắt đầu {gioHuy} phút."
                     };
                 }
             }
@@ -317,8 +325,9 @@ namespace aspiCore.Services
             dangKy.ThoiGianHuy = DateTime.Now;
             await _context.SaveChangesAsync();
 
-            // Mở thêm chỗ cho Waitlist (nếu sự kiện còn hiệu lực)
-            await TryPromoteWaitlistAsync(dangKy.IdSuKien);
+            // Mở thêm chỗ cho Waitlist — lỗi ở bước này không ảnh hưởng kết quả hủy
+            try { await TryPromoteWaitlistAsync(dangKy.IdSuKien); }
+            catch (Exception ex) { _logger.LogError(ex, "TryPromoteWaitlistAsync failed for SuKien {Id}", dangKy.IdSuKien); }
 
             return new ApiResponse
             {

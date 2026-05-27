@@ -1065,7 +1065,7 @@ async function confirmCancel() {
             showToast("Đã hủy đăng ký thành công.", "success");
 
         } else {
-            const msg = data.message || "Hủy đăng ký thất bại.";
+            const msg = data.Message || data.message || "Hủy đăng ký thất bại.";
             showToast(msg, "error");
             if (btn) {
                 btn.disabled = false;

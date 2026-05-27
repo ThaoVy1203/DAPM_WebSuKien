@@ -35,7 +35,6 @@ namespace aspiCore.Middlewares
             var response = new
             {
                 success = false,
-                message = "Đã xảy ra lỗi trong quá trình xử lý",
                 detail = exception.Message
             };
 
