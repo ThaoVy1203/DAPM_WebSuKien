@@ -18,47 +18,102 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ==================== XUẤT EXCEL ====================
-async function exportReport() {
+function showAlert(message, type = 'success') {
+    const existing = document.getElementById('custom-alert');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'custom-alert';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease;
+    `;
+
+    const color = type === 'success' ? '#059669' : '#DC2626';
+    const icon  = type === 'success' ? 'check-circle' : 'times-circle';
+    const title = type === 'success' ? 'Thành công!' : 'Có lỗi xảy ra!';
+
+    overlay.innerHTML = `
+        <style>
+            @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+            @keyframes popIn   { from { transform:scale(0.85); opacity:0; } to { transform:scale(1); opacity:1; } }
+        </style>
+        <div style="
+            background: white;
+            border-radius: 16px;
+            padding: 36px 40px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: popIn 0.25s ease;
+        ">
+            <i class="fas fa-${icon}" style="font-size:52px; color:${color}; margin-bottom:16px; display:block;"></i>
+            <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:700; color:#111827;">${title}</h3>
+            <p style="margin:0 0 24px 0; font-size:15px; color:#6B7280; line-height:1.5;">${message}</p>
+            <button onclick="document.getElementById('custom-alert').remove()" style="
+                background: ${color};
+                color: white;
+                border: none;
+                padding: 10px 32px;
+                border-radius: 8px;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+            ">OK</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Tự đóng sau 4 giây
+    setTimeout(() => overlay?.remove(), 4000);
+}
+
+async function xuatExcelVoiRetry(lanThu) {
+    const btn = document.querySelector('.btn-secondary[onclick="exportReport()"]');
+
     try {
-        const btn = document.querySelector('.btn-primary');
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xuất...';
         }
 
-        const response = await fetch(`${API_BASE_URL}/BaoCao/xuat-excel-ctsv`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            }
-        });
-
-        if (!response.ok) {
-            const errText = await response.text().catch(() => '');
-            throw new Error(`Lỗi server (${response.status}): ${errText}`);
-        }
+        const response = await fetch(`${API_BASE_URL}/BaoCao/xuat-excel-bgh`);
+        if (!response.ok) throw new Error(`Lỗi server: ${response.status}`);
 
         const blob = await response.blob();
-        if (blob.size === 0) throw new Error('File trả về rỗng');
+        if (blob.size === 0) throw new Error('File rỗng');
 
         const objectUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = objectUrl;
-        link.download = `BaoCao_CTSV_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        link.download = `BaoCao_BGH_${new Date().toISOString().slice(0, 10)}.xlsx`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
 
-        alert('✅ Xuất Excel thành công!');
+        showAlert('✅ Xuất Excel thành công! File đang tải về...');
+
     } catch (err) {
-        console.error('Export error:', err);
-        alert('❌ Không thể xuất Excel: ' + err.message);
+        if (lanThu < 2) {
+            await new Promise(r => setTimeout(r, 1000));
+            await xuatExcelVoiRetry(lanThu + 1);
+            return;
+        }
+        console.error('Export Error:', err);
+        showAlert('❌ Không thể xuất Excel: ' + err.message, 'error');
     } finally {
-        const btn = document.querySelector('.btn-primary');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-file-export"></i> Xuất Excel';
+            btn.innerHTML = '<i class="fas fa-file-export"></i> Xuất báo cáo';
         }
     }
 }

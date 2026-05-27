@@ -162,10 +162,20 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     
     // Check if user is already logged in
-    const user = localStorage.getItem('user');
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (user) {
-        // Redirect to dashboard if already logged in
-        window.location.href = '../index.html';
+        const vaiTros = user.vaiTros || [];
+        if (vaiTros.includes('TruongBanToChuc') || vaiTros.includes('ThanhVienBanToChuc')) {
+            window.location.href = 'btc-dashboard.html';
+        } else if (vaiTros.includes('CanBoPheDuyetCap1')) {
+            window.location.href = 'ctsv-pending-approval.html';
+        } else if (vaiTros.includes('CanBoPheDuyetCap2')) {
+            window.location.href = 'bgh-pending-approval.html';
+        } else if (vaiTros.includes('Admin')) {
+            window.location.href = 'admin-dashboard.html';
+        } else {
+            window.location.href = 'home-user.html';
+        }
     }
 });
 
