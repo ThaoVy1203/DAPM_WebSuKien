@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chi tiết vé - UTE Events</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#eef2f7;min-height:100vh;color:#1a1a2e}
+.td-header{background:#fff;padding:0 24px;height:60px;display:flex;align-items:center;
+  justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.08);position:sticky;top:0;z-index:100}
+.td-back{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f1f5f9;
+  border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;
+  color:#475569;text-decoration:none;transition:all .2s}
+.td-back:hover{background:#e2e8f0;color:#0D5A9C}
+.td-header-title{font-size:16px;font-weight:700}
+.td-header-actions{display:flex;gap:8px}
+.td-btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:6px;border:none;transition:all .2s}
+.td-btn-outline{background:#eff6ff;color:#0D5A9C}
+.td-btn-outline:hover{background:#dbeafe}
+.td-btn-primary{background:#0D5A9C;color:#fff}
+.td-btn-primary:hover{background:#0a4a82}
+#tdLoading,#tdError{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:70vh;gap:16px;color:#64748b}
+#tdLoading i{font-size:40px;color:#0D5A9C;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#tdError i{font-size:48px;color:#ef4444}
+#tdError h3{font-size:18px;font-weight:700;color:#1e293b}
+#tdError a{color:#0D5A9C;font-weight:600;text-decoration:none}
+.td-main{max-width:960px;margin:0 auto;padding:28px 20px}
+.td-grid{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
+@media(max-width:768px){.td-grid{grid-template-columns:1fr}}
+.ticket-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.ticket-header{background:linear-gradient(135deg,#0D5A9C 0%,#1565C0 60%,#0D47A1 100%);
+  padding:28px 28px 24px;color:#fff;position:relative;overflow:hidden}
+.ticket-header::before{content:'';position:absolute;top:-50px;right:-50px;
+  width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06)}
+.ticket-header::after{content:'';position:absolute;bottom:-70px;left:-30px;
+  width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04)}
+.th-logo{display:flex;align-items:center;gap:10px;margin-bottom:18px;position:relative;z-index:1}
+.th-logo img{height:28px;filter:brightness(0) invert(1)}
+.th-logo span{font-size:12px;font-weight:600;opacity:.8;letter-spacing:.5px}
+.th-event-name{font-size:21px;font-weight:800;line-height:1.3;margin-bottom:14px;position:relative;z-index:1}
+.th-status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;
+  border-radius:20px;font-size:12px;font-weight:700;position:relative;z-index:1}
+.pill-confirmed{background:rgba(16,185,129,.2);color:#6ee7b7;border:1px solid rgba(16,185,129,.3)}
+.pill-pending  {background:rgba(245,158,11,.2);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.pill-attended {background:rgba(99,102,241,.2);color:#c7d2fe;border:1px solid rgba(99,102,241,.3)}
+.pill-cancelled{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.pill-absent   {background:rgba(107,114,128,.2);color:#d1d5db;border:1px solid rgba(107,114,128,.3)}
+.ticket-tear{display:flex;align-items:center;margin:0 -1px}
+.tear-line{flex:1;border-top:2px dashed #e2e8f0}
+.tear-circle{width:22px;height:22px;border-radius:50%;background:#eef2f7;flex-shrink:0;border:1px solid #e2e8f0}
+.ticket-body{padding:24px 28px}
+.ticket-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.ti-label{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.ti-value{font-size:14px;font-weight:700;color:#1e293b;line-height:1.4}
+.ti-value.blue{color:#0D5A9C}
+.ti-full{grid-column:1/-1}
+.ticket-code-row{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px}
+.tc-label{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:1px;margin-bottom:2px}
+.tc-value{font-family:monospace;font-size:20px;font-weight:900;color:#0D5A9C;letter-spacing:4px}
+.tc-copy{padding:6px 12px;background:#eff6ff;border:none;border-radius:6px;
+  color:#0D5A9C;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.tc-copy:hover{background:#dbeafe}
+.ticket-timeline{display:flex;align-items:flex-start}
+.tl-step{flex:1;text-align:center;position:relative}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:15px;left:50%;
+  width:100%;height:2px;background:#e2e8f0;z-index:0}
+.tl-step.done:not(:last-child)::after{background:#059669}
+.tl-step.active:not(:last-child)::after{background:#0D5A9C}
+.tl-dot{width:30px;height:30px;border-radius:50%;margin:0 auto 6px;display:flex;
+  align-items:center;justify-content:center;font-size:13px;position:relative;
+  z-index:1;border:2px solid #e2e8f0;background:#fff;color:#94a3b8}
+.tl-step.done   .tl-dot{background:#059669;border-color:#059669;color:#fff}
+.tl-step.active .tl-dot{background:#0D5A9C;border-color:#0D5A9C;color:#fff;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(13,90,156,.4)}50%{box-shadow:0 0 0 8px rgba(13,90,156,0)}}
+.tl-label{font-size:11px;font-weight:600;color:#64748b}
+.tl-time{font-size:10px;color:#94a3b8;margin-top:2px;min-height:14px}
+.tl-step.done   .tl-label{color:#059669}
+.tl-step.active .tl-label{color:#0D5A9C;font-weight:700}
+.td-right{display:flex;flex-direction:column;gap:20px}
+.qr-card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 8px 32px rgba(0,0,0,.1);text-align:center}
+.qr-title{font-size:16px;font-weight:800;margin-bottom:4px}
+.qr-sub{font-size:12px;color:#94a3b8;margin-bottom:20px}
+.qr-frame{display:inline-block;padding:14px;background:#fff;border-radius:16px;
+  border:3px solid #0D5A9C;box-shadow:0 4px 16px rgba(13,90,156,.15);margin-bottom:14px;position:relative}
+.qr-frame img{width:180px;height:180px;display:block;transition:opacity .3s}
+.qr-corner{position:absolute;width:18px;height:18px;border-color:#0D5A9C;border-style:solid}
+.qr-corner.tl{top:-3px;left:-3px;border-width:4px 0 0 4px;border-radius:4px 0 0 0}
+.qr-corner.tr{top:-3px;right:-3px;border-width:4px 4px 0 0;border-radius:0 4px 0 0}
+.qr-corner.bl{bottom:-3px;left:-3px;border-width:0 0 4px 4px;border-radius:0 0 0 4px}
+.qr-corner.br{bottom:-3px;right:-3px;border-width:0 4px 4px 0;border-radius:0 0 4px 0}
+.qr-countdown-row{display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:12px;color:#94a3b8;margin-bottom:12px}
+.qr-countdown-row strong{color:#0D5A9C;font-size:16px;font-weight:800}
+.qr-refresh-btn{padding:8px 20px;border:1.5px solid #0D5A9C;border-radius:8px;
+  background:#fff;color:#0D5A9C;font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.qr-refresh-btn:hover{background:#eff6ff}
+.qr-msg{padding:14px;border-radius:10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.qr-msg.pending  {background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+.qr-msg.cancelled{background:#fff5f5;border:1px solid #fca5a5;color:#c53030}
+.qr-msg.attended {background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.ci-card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.1)}
+.ci-title{font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ci-time-info{padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  margin-bottom:14px;display:none;align-items:center;gap:8px}
+.ci-time-info.open   {background:#f0fff4;border:1px solid #a7f3d0;color:#065f46;display:flex}
+.ci-time-info.waiting{background:#fffbeb;border:1px solid #fcd34d;color:#92400e;display:flex}
+.ci-time-info.closed {background:#fff5f5;border:1px solid #fca5a5;color:#c53030;display:flex}
+.btn-ci{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:800;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .2s;margin-bottom:10px;letter-spacing:.3px}
+.btn-ci.ci-on {background:linear-gradient(135deg,#0D5A9C,#1565C0);color:#fff;box-shadow:0 4px 16px rgba(13,90,156,.35)}
+.btn-ci.co-on {background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 4px 16px rgba(5,150,105,.35)}
+.btn-ci.ci-on:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(13,90,156,.45)}
+.btn-ci.co-on:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(5,150,105,.45)}
+.btn-ci.ci-off,.btn-ci.co-off{background:#f1f5f9;color:#94a3b8;cursor:not-allowed}
+.btn-ci.ci-done{background:#f0fff4;color:#059669;border:2px solid #a7f3d0;cursor:default}
+.btn-ci.co-done{background:#eff6ff;color:#0D5A9C;border:2px solid #bfdbfe;cursor:default}
+.ci-hint{font-size:11px;color:#94a3b8;text-align:center;margin-top:6px}
+.btn-cancel{width:100%;padding:12px;border:1.5px solid #ef4444;border-radius:12px;
+  background:#fff;color:#ef4444;font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.btn-cancel:hover{background:#fff5f5}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:36px 32px;max-width:420px;width:90%;text-align:center;animation:mIn .25s ease}
+@keyframes mIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-icon{font-size:52px;margin-bottom:14px}
+.modal-box h3{font-size:20px;font-weight:800;margin-bottom:8px}
+.modal-box p{color:#64748b;font-size:14px;margin-bottom:24px;line-height:1.6}
+.modal-actions{display:flex;gap:12px;justify-content:center}
+.modal-keep{padding:12px 28px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-weight:700;font-size:14px}
+.modal-confirm{padding:12px 28px;border:none;border-radius:10px;background:#ef4444;color:#fff;cursor:pointer;font-weight:700;font-size:14px}
+.modal-keep:hover{background:#f8fafc}
+.modal-confirm:hover{background:#dc2626}
+</style>
+</head>
+<body>
+
+<header class="td-header">
+  <a href="my-tickets.html" class="td-back"><i class="fas fa-arrow-left"></i> Vé của tôi</a>
+  <span class="td-header-title">Chi tiết vé</span>
+  <div class="td-header-actions">
+    <button class="td-btn td-btn-outline" onclick="window.print()"><i class="fas fa-print"></i> In vé</button>
+    <button class="td-btn td-btn-primary" onclick="shareTicket()"><i class="fas fa-share-alt"></i> Chia sẻ</button>
+  </div>
+</header>
+
+<div id="tdLoading">
+  <i class="fas fa-circle-notch"></i>
+  <p>Đang tải thông tin vé...</p>
+</div>
+
+<div id="tdError" style="display:none">
+  <i class="fas fa-exclamation-circle"></i>
+  <h3>Không tìm thấy vé</h3>
+  <p>Vé không tồn tại hoặc bạn không có quyền xem.</p>
+  <a href="my-tickets.html"><i class="fas fa-arrow-left"></i> Quay lại danh sách vé</a>
+</div>
+
+<div class="td-main" id="tdMain" style="display:none">
+  <div class="td-grid">
+    <div>
+      <div class="ticket-card">
+        <div class="ticket-header">
+          <div class="th-logo">
+            <img src="../images/logo.png" alt="UTE" onerror="this.style.display='none'">
+            <span>UTE EVENTS — VÉ ĐIỆN TỬ</span>
+          </div>
+          <div class="th-event-name" id="tdEventName">Đang tải...</div>
+          <span class="th-status-pill" id="tdStatusPill">
+            <i class="fas fa-circle" style="font-size:8px"></i>
+            <span id="tdStatusText">...</span>
+          </span>
+        </div>
+        <div class="ticket-tear">
+          <div class="tear-circle"></div>
+          <div class="tear-line"></div>
+          <div class="tear-circle"></div>
+        </div>
+        <div class="ticket-body">
+          <div class="ticket-info-grid">
+            <div>
+              <div class="ti-label">NGÀY</div>
+              <div class="ti-value" id="tdDate">—</div>
+            </div>
+            <div>
+              <div class="ti-label">GIỜ</div>
+              <div class="ti-value blue" id="tdTime">—</div>
+            </div>
+            <div class="ti-full">
+              <div class="ti-label">ĐỊA ĐIỂM</div>
+              <div class="ti-value" id="tdLocation">—</div>
+            </div>
+            <div>
+              <div class="ti-label">NGƯỜI THAM GIA</div>
+              <div class="ti-value" id="tdAttendee">—</div>
+            </div>
+            <div>
+              <div class="ti-label">MSSV / MÃ SSO</div>
+              <div class="ti-value" id="tdMSSV">—</div>
+            </div>
+            <div>
+              <div class="ti-label">NGÀY ĐĂNG KÝ</div>
+              <div class="ti-value" id="tdRegDate">—</div>
+            </div>
+            <div>
+              <div class="ti-label">TRẠNG THÁI</div>
+              <div class="ti-value" id="tdTrangThai">—</div>
+            </div>
+          </div>
+          <div class="ticket-code-row">
+            <div>
+              <div class="tc-label">MÃ VÉ</div>
+              <div class="tc-value" id="tdTicketCode">UTE-000000</div>
+            </div>
+            <button class="tc-copy" onclick="copyCode()"><i class="fas fa-copy"></i> Sao chép</button>
+          </div>
+          <div class="ticket-timeline">
+            <div class="tl-step done" id="tlReg">
+              <div class="tl-dot"><i class="fas fa-user-check"></i></div>
+              <div class="tl-label">Đăng ký</div>
+              <div class="tl-time" id="tlRegTime"></div>
+            </div>
+            <div class="tl-step" id="tlCI">
+              <div class="tl-dot"><i class="fas fa-sign-in-alt"></i></div>
+              <div class="tl-label">Check-in</div>
+              <div class="tl-time" id="tlCITime"></div>
+            </div>
+            <div class="tl-step" id="tlCO">
+              <div class="tl-dot"><i class="fas fa-sign-out-alt"></i></div>
+              <div class="tl-label">Check-out</div>
+              <div class="tl-time" id="tlCOTime"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="td-right">
+      <div class="qr-card">
+        <div class="qr-title">Mã QR Check-in</div>
+        <div class="qr-sub" id="qrSub">Đưa mã này cho BTC quét tại cổng sự kiện</div>
+        <div id="qrActive">
+          <div class="qr-frame">
+            <img id="qrImg" src="" alt="QR Code">
+            <img id="qrImgStatic" src="" alt="QR Code tĩnh (offline)" style="display:none;">
+            <div class="qr-corner tl"></div>
+            <div class="qr-corner tr"></div>
+            <div class="qr-corner bl"></div>
+            <div class="qr-corner br"></div>
+          </div>
+          <div class="qr-countdown-row" id="qrCountdownRow">
+            <i class="fas fa-sync-alt"></i>
+            <span>Làm mới sau</span>
+            <strong id="qrCountdown">45</strong>s
+          </div>
+          <button class="qr-refresh-btn" id="btnRefreshQR" onclick="refreshQR()">
+            <i class="fas fa-sync-alt"></i> Làm mới QR
+          </button>
+          <button class="qr-refresh-btn" id="btnStaticQR" onclick="showStaticQR()" style="margin-top:10px;">
+            <i class="fas fa-shield-alt"></i> QR tĩnh (offline)
+          </button>
+        </div>
+        <div id="qrMsg" style="display:none"></div>
+      </div>
+
+      <div class="ci-card">
+        <div class="ci-title">
+          <i class="fas fa-map-marker-alt" style="color:#0D5A9C"></i>
+          Check-in / Check-out
+        </div>
+        <div class="ci-time-info" id="ciTimeInfo"></div>
+        <button class="btn-ci ci-off" id="btnCI" onclick="doCheckin()">
+          <i class="fas fa-sign-in-alt"></i> CHECK-IN
+        </button>
+        <button class="btn-ci co-off" id="btnCO" onclick="doCheckout()">
+          <i class="fas fa-sign-out-alt"></i> CHECK-OUT
+        </button>
+        <p class="ci-hint"><i class="fas fa-info-circle"></i> Check-in mở 30 phút trước khi sự kiện bắt đầu</p>
+      </div>
+
+      <button class="btn-cancel" id="btnCancel" onclick="openCancelModal()" style="display:none">
+        <i class="fas fa-times-circle"></i> Hủy đăng ký
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="cancelModal">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <h3>Xác nhận hủy đăng ký</h3>
+    <p>Bạn có chắc muốn hủy đăng ký sự kiện này không?<br>Hành động này <strong>không thể hoàn tác</strong>.</p>
+    <div class="modal-actions">
+      <button class="modal-keep" onclick="closeCancelModal()">Không, giữ lại</button>
+      <button class="modal-confirm" onclick="confirmCancel()">Có, hủy đăng ký</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/ticket-business.js"></script>
+<script src="../js/ticket-detail.js"></script>
+</body>
+</html>

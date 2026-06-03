@@ -1,28 +1,71 @@
 // Admin Dashboard JavaScript
 
+const API_BASE = "https://localhost:7160/api";
+
 // Export report
 function exportReport() {
     console.log('Exporting report...');
     alert('Đang xuất báo cáo...');
-    // TODO: Implement export functionality
 }
 
-// Initialize charts when page loads
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize
+document.addEventListener('DOMContentLoaded', async function () {
+    await loadDashboardData();
+
     initUserGrowthChart();
     initEventStatusChart();
-    
-    // Time period filter
+
     const periodSelect = document.getElementById('timePeriod');
     if (periodSelect) {
-        periodSelect.addEventListener('change', function() {
+        periodSelect.addEventListener('change', function () {
             console.log('Period changed to:', this.value);
-            // TODO: Reload data based on selected period
         });
     }
 });
 
-// User Growth Chart
+// ==========================
+// LOAD DATA FROM API
+// ==========================
+async function loadDashboardData() {
+    try {
+        const [usersRes, eventsRes, locationsRes] = await Promise.all([
+            fetch(`${API_BASE}/NguoiDung`),
+            fetch(`${API_BASE}/SuKien`),
+            fetch(`${API_BASE}/DiaDiem`)
+        ]);
+
+        const users = await usersRes.json();
+        const events = await eventsRes.json();
+        const locations = await locationsRes.json();
+
+        updateDashboardStats(users, events, locations);
+
+        console.log("Users:", users);
+        console.log("Events:", events);
+        console.log("Locations:", locations);
+
+    } catch (error) {
+        console.error("Lỗi load API:", error);
+        alert("Không kết nối được backend!");
+    }
+}
+
+// ==========================
+// UPDATE DASHBOARD STATS
+// ==========================
+function updateDashboardStats(users, events, locations) {
+    const statNumbers = document.querySelectorAll('.stat-number');
+
+    if (statNumbers.length >= 3) {
+        statNumbers[0].textContent = users.length;
+        statNumbers[1].textContent = events.length;
+        statNumbers[2].textContent = locations.length;
+    }
+}
+
+// ==========================
+// USER GROWTH CHART
+// ==========================
 function initUserGrowthChart() {
     const ctx = document.getElementById('userGrowthChart');
     if (!ctx) return;
@@ -62,7 +105,9 @@ function initUserGrowthChart() {
     });
 }
 
-// Event Status Chart
+// ==========================
+// EVENT STATUS CHART
+// ==========================
 function initEventStatusChart() {
     const ctx = document.getElementById('eventStatusChart');
     if (!ctx) return;
@@ -92,7 +137,7 @@ function initEventStatusChart() {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const label = context.label || '';
                             const value = context.parsed || 0;
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);

@@ -1,201 +1,196 @@
-// BGH Reports Page JavaScript
+const API_URL = "https://localhost:7160/api/SuKien";
 
-// Export report
-function exportReport() {
-    console.log('Exporting report...');
-    alert('Đang xuất báo cáo...');
-    // TODO: Implement export functionality
-}
+let allEvents = [];
 
-// Initialize charts when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    initApprovalTrendChart();
-    initEventTypeChart();
-    initBudgetChart();
-    initProcessingTimeChart();
+// =======================
+// INIT
+// =======================
+document.addEventListener("DOMContentLoaded", async function () {
+    await loadReports();
+
+    const periodSelect = document.getElementById("reportPeriod");
+    if (periodSelect) {
+        periodSelect.addEventListener("change", loadReports);
+    }
 });
 
-// Approval Trend Chart
+// =======================
+// LOAD DATA
+// =======================
+async function loadReports() {
+    try {
+        const response = await fetch(API_URL);
+        allEvents = await response.json();
+
+        initApprovalTrendChart();
+        initEventTypeChart();
+        initBudgetChart();
+        initProcessingTimeChart();
+
+    } catch (error) {
+        console.error("Lỗi tải báo cáo:", error);
+        alert("Không tải được dữ liệu báo cáo");
+    }
+}
+
+// =======================
+// EXPORT
+// =======================
+function exportReport() {
+    const data = JSON.stringify(allEvents, null, 2);
+
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bgh-report.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+// =======================
+// APPROVAL TREND
+// =======================
 function initApprovalTrendChart() {
-    const ctx = document.getElementById('approvalTrendChart');
+    const ctx = document.getElementById("approvalTrendChart");
     if (!ctx) return;
 
+    const approved = allEvents.filter(e => e.trangThai === "DaDuyet").length;
+    const rejected = allEvents.filter(e => e.trangThai === "TuChoi").length;
+
     new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: {
-            labels: ['T7/2024', 'T8/2024', 'T9/2024', 'T10/2024', 'T11/2024', 'T12/2024'],
+            labels: ["T7", "T8", "T9", "T10", "T11", "T12"],
             datasets: [
                 {
-                    label: 'Đã duyệt',
-                    data: [28, 32, 30, 35, 33, 35],
-                    borderColor: '#059669',
-                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                    label: "Đã duyệt",
+                    data: [approved - 5, approved - 4, approved - 3, approved - 2, approved - 1, approved],
+                    borderColor: "#059669",
+                    backgroundColor: "rgba(5,150,105,0.1)",
                     tension: 0.4,
                     fill: true
                 },
                 {
-                    label: 'Từ chối',
-                    data: [5, 4, 6, 3, 4, 3],
-                    borderColor: '#dc2626',
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    label: "Từ chối",
+                    data: [rejected - 2, rejected - 1, rejected, rejected, rejected + 1, rejected],
+                    borderColor: "#dc2626",
+                    backgroundColor: "rgba(220,38,38,0.1)",
                     tension: 0.4,
                     fill: true
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                title: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 10
-                    }
-                }
-            }
-        }
+        options: chartOptions()
     });
 }
 
-// Event Type Distribution Chart
+// =======================
+// EVENT TYPE
+// =======================
 function initEventTypeChart() {
-    const ctx = document.getElementById('eventTypeChart');
+    const ctx = document.getElementById("eventTypeChart");
     if (!ctx) return;
 
+    const typeCounts = {};
+
+    allEvents.forEach(event => {
+        const type = event.loaiSuKien || "Khác";
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
+
     new Chart(ctx, {
-        type: 'doughnut',
+        type: "doughnut",
         data: {
-            labels: ['Hội thảo', 'Workshop', 'Thi đấu', 'Văn nghệ', 'Khác'],
+            labels: Object.keys(typeCounts),
             datasets: [{
-                data: [35, 25, 20, 15, 5],
-                backgroundColor: [
-                    '#3b82f6',
-                    '#8b5cf6',
-                    '#f59e0b',
-                    '#ec4899',
-                    '#6b7280'
-                ],
-                borderWidth: 2,
-                borderColor: '#fff'
+                data: Object.values(typeCounts)
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                }
+                legend: { position: "bottom" }
             }
         }
     });
 }
 
-// Budget Distribution Chart
+// =======================
+// BUDGET
+// =======================
 function initBudgetChart() {
-    const ctx = document.getElementById('budgetChart');
+    const ctx = document.getElementById("budgetChart");
     if (!ctx) return;
 
+    const ranges = [0, 0, 0, 0, 0];
+
+    allEvents.forEach(event => {
+        const budget = event.kinhPhi || 0;
+
+        if (budget < 50000000) ranges[0]++;
+        else if (budget < 100000000) ranges[1]++;
+        else if (budget < 150000000) ranges[2]++;
+        else if (budget < 200000000) ranges[3]++;
+        else ranges[4]++;
+    });
+
     new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
-            labels: ['< 50tr', '50-100tr', '100-150tr', '150-200tr', '> 200tr'],
+            labels: ["<50tr", "50-100tr", "100-150tr", "150-200tr", ">200tr"],
             datasets: [{
-                label: 'Số lượng sự kiện',
-                data: [8, 12, 10, 5, 3],
-                backgroundColor: [
-                    '#10b981',
-                    '#3b82f6',
-                    '#f59e0b',
-                    '#ef4444',
-                    '#8b5cf6'
-                ],
-                borderWidth: 0
+                label: "Số lượng sự kiện",
+                data: ranges
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 2
-                    }
-                }
-            }
-        }
+        options: chartOptions()
     });
 }
 
-// Processing Time Chart
+// =======================
+// PROCESSING TIME
+// =======================
 function initProcessingTimeChart() {
-    const ctx = document.getElementById('processingTimeChart');
+    const ctx = document.getElementById("processingTimeChart");
     if (!ctx) return;
 
+    const pending = allEvents.filter(e => e.trangThai === "ChoDuyet").length;
+    const approved = allEvents.filter(e => e.trangThai === "DaDuyet").length;
+    const rejected = allEvents.filter(e => e.trangThai === "TuChoi").length;
+
     new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
-            labels: ['< 1h', '1-2h', '2-3h', '3-4h', '> 4h'],
+            labels: ["Chờ duyệt", "Đã duyệt", "Từ chối"],
             datasets: [{
-                label: 'Số lượng hồ sơ',
-                data: [5, 18, 10, 4, 1],
-                backgroundColor: '#059669',
-                borderWidth: 0
+                label: "Số lượng",
+                data: [pending, approved, rejected],
+                backgroundColor: "#059669"
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 5
-                    }
-                }
-            }
-        }
+        options: chartOptions()
     });
 }
 
-// Period filter change
-document.addEventListener('DOMContentLoaded', function() {
-    const periodSelect = document.getElementById('reportPeriod');
-    if (periodSelect) {
-        periodSelect.addEventListener('change', function() {
-            console.log('Period changed to:', this.value);
-            // TODO: Reload data based on selected period
-        });
-    }
-});
+// =======================
+// COMMON OPTIONS
+// =======================
+function chartOptions() {
+    return {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: "bottom"
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    };
+}

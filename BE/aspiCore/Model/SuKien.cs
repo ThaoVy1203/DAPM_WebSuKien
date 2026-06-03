@@ -34,6 +34,26 @@ namespace aspiCore.Model
         [MaxLength(20)]
         public string TrangThai { get; set; } = "Nháp";
 
+        /// <summary>Deadline hủy vé: số phút trước giờ bắt đầu sự kiện.</summary>
+        [NotMapped]
+        public int GioHuyTruocBatDauPhut { get; set; } = 120;
+
+        /// <summary>Yêu cầu gửi khảo sát khi check-out.</summary>
+        [NotMapped]
+        public bool YeuCauKhaoSatCheckout { get; set; } = true;
+
+        /// <summary>Đã được batch lifecycle xử lý sau khi sự kiện kết thúc.</summary>
+        [NotMapped]
+        public bool DaXuLyKetThuc { get; set; } = false;
+
+        /// <summary>
+        /// true = BTC phải duyệt thủ công từng đăng ký (Chờ xác nhận → Đã xác nhận)
+        /// false (mặc định) = tự động xác nhận ngay khi đăng ký
+        /// Cần chạy DAPM_AlterTable.sql để thêm cột này vào DB trước khi bỏ [NotMapped]
+        /// </summary>
+        [NotMapped]
+        public bool YeuCauXacNhan { get; set; } = false;
+
         [MaxLength(5)]
         public string? CapPheDuyet { get; set; }
 
@@ -48,6 +68,7 @@ namespace aspiCore.Model
 
         public ICollection<SuKien_DanhMuc> SuKien_DanhMucs { get; set; } = new List<SuKien_DanhMuc>();
         public ICollection<DangKySuKien> DangKySuKiens { get; set; } = new List<DangKySuKien>();
+        public ICollection<DangKyDanhGia> DangKyDanhGias { get; set; } = new List<DangKyDanhGia>();
         public ICollection<NguoiDung_SuKien> NguoiDung_SuKiens { get; set; } = new List<NguoiDung_SuKien>();
         public ICollection<ThongBao> ThongBaos { get; set; } = new List<ThongBao>();
         public ICollection<CongViec> CongViecs { get; set; } = new List<CongViec>();

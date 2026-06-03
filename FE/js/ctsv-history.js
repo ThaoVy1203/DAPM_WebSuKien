@@ -1,143 +1,176 @@
 // CTSV Approval History JavaScript
 
+const API_BASE = "https://localhost:7160/api";
+
+let currentPage = 1;
+let currentStatus = "all";
+
 // Initialize
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function () {
     initializeFilterTabs();
     initializeFilters();
+    initializeSearch();
+    initializePagination();
+
+    await loadHistory();
 });
 
-// Filter Tabs
+// ==================== LOAD DATA ====================
+
+async function loadHistory(page = 1) {
+    try {
+        const month = document.getElementById('monthFilter')?.value || "";
+        const eventType = document.getElementById('eventTypeFilter')?.value || "";
+        const search = document.querySelector('.search-bar input')?.value || "";
+
+        const response = await fetch(
+            `${API_BASE}/approval-history?page=${page}&status=${currentStatus}&month=${month}&eventType=${eventType}&search=${search}`
+        );
+
+        const data = await response.json();
+
+        renderHistory(data.items);
+        renderPagination(data.totalPages);
+
+        currentPage = page;
+
+    } catch (error) {
+        console.error("Error loading approval history:", error);
+    }
+}
+
+function renderHistory(items) {
+    const container = document.getElementById('historyList');
+    if (!container) return;
+
+    container.innerHTML = items.map(item => `
+        <div class="history-item" data-id="${item.id}" data-status="${item.status}">
+            <div class="history-header">
+                <h3>${item.name}</h3>
+                <span class="history-id">${item.code}</span>
+            </div>
+
+            <div class="history-body">
+                <p>Loại: ${item.eventType}</p>
+                <p>Ngày xử lý: ${item.processedDate}</p>
+                <p>Trạng thái: 
+                    <span class="status ${item.status}">
+                        ${item.statusText}
+                    </span>
+                </p>
+            </div>
+
+            <button onclick="viewHistoryDetail(${item.id})">
+                Xem chi tiết
+            </button>
+        </div>
+    `).join('');
+}
+
+// ==================== FILTER TABS ====================
+
 function initializeFilterTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
-    const historyItems = document.querySelectorAll('.history-item');
 
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', async function () {
             tabButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
 
-            const filterType = this.getAttribute('data-filter');
+            currentStatus = this.getAttribute('data-filter');
 
-            historyItems.forEach(item => {
-                if (filterType === 'all') {
-                    item.style.display = 'block';
-                } else {
-                    const itemStatus = item.getAttribute('data-status');
-                    item.style.display = itemStatus === filterType ? 'block' : 'none';
-                }
-            });
+            await loadHistory(1);
         });
     });
 }
 
-// Initialize Filters
+// ==================== FILTERS ====================
+
 function initializeFilters() {
-    const monthFilter = document.getElementById('monthFilter');
-    const eventTypeFilter = document.getElementById('eventTypeFilter');
+    document.getElementById('monthFilter')
+        ?.addEventListener('change', () => loadHistory(1));
 
-    if (monthFilter) {
-        monthFilter.addEventListener('change', applyFilters);
+    document.getElementById('eventTypeFilter')
+        ?.addEventListener('change', () => loadHistory(1));
+}
+
+// ==================== SEARCH ====================
+
+function initializeSearch() {
+    const searchInput = document.querySelector('.search-bar input');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            loadHistory(1);
+        }, 500));
     }
+}
 
-    if (eventTypeFilter) {
-        eventTypeFilter.addEventListener('change', applyFilters);
+// ==================== DETAIL ====================
+
+async function viewHistoryDetail(historyId) {
+    try {
+        const response = await fetch(`${API_BASE}/approval-history/${historyId}`);
+        const detail = await response.json();
+
+        alert(`
+ID: ${detail.code}
+Tên: ${detail.name}
+Trạng thái: ${detail.statusText}
+Người xử lý: ${detail.processedBy}
+Ngày xử lý: ${detail.processedDate}
+Ghi chú: ${detail.note || "Không có"}
+        `);
+
+    } catch (error) {
+        console.error("Error loading detail:", error);
     }
 }
 
-// Apply Filters
-function applyFilters() {
-    const month = document.getElementById('monthFilter').value;
-    const eventType = document.getElementById('eventTypeFilter').value;
+// ==================== EXPORT ====================
 
-    console.log('Applying filters:', { month, eventType });
-
-    // In real implementation, this would filter the history items
-    // For now, just log the filter values
-    alert(`Đang lọc theo:\nThời gian: ${month}\nLoại sự kiện: ${eventType}`);
+async function exportHistory() {
+    window.open(`${API_BASE}/approval-history/export`, "_blank");
 }
 
-// Export History
-function exportHistory() {
-    console.log('Exporting approval history');
-    alert('Đang xuất báo cáo lịch sử phê duyệt...');
-    
-    // In real implementation, call API to generate Excel/PDF file
-}
+// ==================== PAGINATION ====================
 
-// View History Detail
-function viewHistoryDetail(historyId) {
-    console.log('Viewing history detail:', historyId);
-    
-    // Get history info (mock data)
-    const historyInfo = getHistoryInfo(historyId);
-    
-    // In real implementation, open a detail modal or navigate to detail page
-    alert(`Xem chi tiết hồ sơ:\n\nID: ${historyInfo.id}\nTên: ${historyInfo.name}\nTrạng thái: ${historyInfo.status}`);
-}
+function initializePagination() {
+    document.addEventListener('click', async function (e) {
+        if (e.target.classList.contains('page-btn')) {
+            const page = parseInt(e.target.dataset.page);
 
-// Get History Info (Mock Data)
-function getHistoryInfo(historyId) {
-    const mockData = {
-        1: {
-            id: '#HS2024-015',
-            name: 'Hội thảo Khởi nghiệp và Đổi mới Sáng tạo 2025',
-            status: 'Đã duyệt'
-        },
-        2: {
-            id: '#HS2024-014',
-            name: 'Cuộc thi Hackathon Sinh viên 2025',
-            status: 'Từ chối'
-        },
-        3: {
-            id: '#HS2024-013',
-            name: 'Ngày hội Việc làm và Cơ hội Nghề nghiệp',
-            status: 'Đã duyệt'
-        },
-        4: {
-            id: '#HS2024-012',
-            name: 'Chương trình Giao lưu Văn hóa Quốc tế',
-            status: 'Đã duyệt'
-        },
-        5: {
-            id: '#HS2024-011',
-            name: 'Festival Âm nhạc Mùa Xuân',
-            status: 'Từ chối'
-        }
-    };
-    
-    return mockData[historyId] || { id: 'Unknown', name: 'Unknown', status: 'Unknown' };
-}
-
-// Search functionality
-const searchInput = document.querySelector('.search-bar input');
-if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const historyItems = document.querySelectorAll('.history-item');
-        
-        historyItems.forEach(item => {
-            const title = item.querySelector('h3').textContent.toLowerCase();
-            const id = item.querySelector('.history-id').textContent.toLowerCase();
-            
-            if (title.includes(searchTerm) || id.includes(searchTerm)) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
+            if (!isNaN(page)) {
+                await loadHistory(page);
             }
-        });
+        }
     });
 }
 
-// Pagination functionality
-const pageButtons = document.querySelectorAll('.page-btn');
-pageButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        if (this.disabled) return;
-        
-        pageButtons.forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
-        
-        // In real implementation, load data for the selected page
-        console.log('Loading page:', this.textContent);
-    });
-});
+function renderPagination(totalPages) {
+    const container = document.querySelector('.pagination');
+    if (!container) return;
+
+    let html = '';
+
+    for (let i = 1; i <= totalPages; i++) {
+        html += `
+            <button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                ${i}
+            </button>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+// ==================== HELPERS ====================
+
+function debounce(func, delay) {
+    let timeout;
+
+    return function () {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, arguments), delay);
+    };
+}

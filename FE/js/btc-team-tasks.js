@@ -1,22 +1,25 @@
 // Team Tasks JavaScript
 
+const API_BASE = "https://localhost:7160/api/teamtasks";
+
 // Global variables
 let currentTaskId = null;
 
 // Initialize
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('Team Tasks page loaded');
 });
 
-// Create Task Modal
+// ================= CREATE / EDIT MODAL =================
+
 function openCreateTaskModal() {
     const modal = document.getElementById('taskModal');
     const modalTitle = document.getElementById('taskModalTitle');
-    
+
     modalTitle.textContent = 'Tạo nhiệm vụ mới';
     document.getElementById('taskForm').reset();
     currentTaskId = null;
-    
+
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -24,13 +27,12 @@ function openCreateTaskModal() {
 function openEditTaskModal(taskId) {
     const modal = document.getElementById('taskModal');
     const modalTitle = document.getElementById('taskModalTitle');
-    
+
     modalTitle.textContent = 'Chỉnh sửa nhiệm vụ';
     currentTaskId = taskId;
-    
-    // Load task data
+
     loadTaskData(taskId);
-    
+
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -41,72 +43,39 @@ function closeTaskModal() {
     document.body.style.overflow = 'auto';
 }
 
-function loadTaskData(taskId) {
-    // Mock data - replace with actual API call
-    const mockData = {
-        1: {
-            title: 'Ký kết hợp đồng ăn uống cho Tiệc tối VIP',
-            description: 'Liên hệ và ký kết hợp đồng với nhà cung cấp dịch vụ ăn uống',
-            priority: 'high',
-            status: 'todo',
-            deadline: '2024-10-12',
-            progress: 0,
-            assignee: '1',
-            notes: 'Cần hoàn thành trước ngày 12/10'
-        },
-        2: {
-            title: 'Hoàn tất danh sách diễn giả và sắp xếp đi lại',
-            description: 'Liên hệ và xác nhận danh sách diễn giả, sắp xếp lịch trình di chuyển',
-            priority: 'medium',
-            status: 'todo',
-            deadline: '2024-10-15',
-            progress: 0,
-            assignee: '5',
-            notes: ''
-        },
-        3: {
-            title: 'Thiết kế banner mạng xã hội cho đợt Tuyển dụng',
-            description: 'Thiết kế banner quảng cáo cho các nền tảng mạng xã hội',
-            priority: 'low',
-            status: 'in-progress',
-            deadline: '2024-10-08',
-            progress: 60,
-            assignee: '6',
-            notes: 'Đã hoàn thành 60%'
-        },
-        4: {
-            title: 'Kiểm tra các giao thức an toàn cho sự kiện trong khuôn viên',
-            description: 'Kiểm tra và đảm bảo các giao thức an toàn cho sự kiện',
-            priority: 'high',
-            status: 'review',
-            deadline: '2024-10-10',
-            progress: 90,
-            assignee: '4',
-            notes: 'Đang chờ phê duyệt'
-        }
-    };
+// ================= LOAD TASK DATA =================
 
-    const data = mockData[taskId];
-    if (data) {
-        document.getElementById('taskTitle').value = data.title;
-        document.getElementById('taskDescription').value = data.description;
-        document.getElementById('taskPriority').value = data.priority;
-        document.getElementById('taskStatus').value = data.status;
-        document.getElementById('taskDeadline').value = data.deadline;
-        document.getElementById('taskProgress').value = data.progress;
-        document.getElementById('taskAssignee').value = data.assignee;
-        document.getElementById('taskNotes').value = data.notes;
+async function loadTaskData(taskId) {
+    try {
+        const response = await fetch(`${API_BASE}/${taskId}`);
+
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+
+        document.getElementById('taskTitle').value = data.title || '';
+        document.getElementById('taskDescription').value = data.description || '';
+        document.getElementById('taskPriority').value = data.priority || '';
+        document.getElementById('taskStatus').value = data.status || '';
+        document.getElementById('taskDeadline').value = data.deadline?.split('T')[0] || '';
+        document.getElementById('taskProgress').value = data.progress || 0;
+        document.getElementById('taskAssignee').value = data.assigneeId || '';
+        document.getElementById('taskNotes').value = data.notes || '';
+
+    } catch (error) {
+        console.error('Lỗi load task:', error);
+        alert('Không tải được dữ liệu nhiệm vụ');
     }
 }
 
-// Task Detail Modal
+// ================= DETAIL MODAL =================
+
 function openTaskDetailModal(taskId) {
     const modal = document.getElementById('taskDetailModal');
     currentTaskId = taskId;
-    
-    // Load task detail data
+
     loadTaskDetailData(taskId);
-    
+
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -122,131 +91,131 @@ function editTaskFromDetail() {
     openEditTaskModal(currentTaskId);
 }
 
-function loadTaskDetailData(taskId) {
-    // Mock data - replace with actual API call
-    const mockData = {
-        1: {
-            title: 'Ký kết hợp đồng ăn uống cho Tiệc tối VIP',
-            description: 'Liên hệ và ký kết hợp đồng với nhà cung cấp dịch vụ ăn uống cho tiệc tối VIP trong sự kiện.',
-            priority: 'high',
-            priorityText: 'ƯU TIÊN CAO',
-            status: 'todo',
-            statusText: 'CẦN LÀM',
-            assigneeName: 'TS. Aris',
-            assigneeAvatar: 'https://ui-avatars.com/api/?name=TS+Aris&background=0D5A9C&color=fff',
-            deadline: '12/10/2024',
-            progress: 0,
-            notes: 'Cần hoàn thành trước ngày 12/10'
-        },
-        2: {
-            title: 'Hoàn tất danh sách diễn giả và sắp xếp đi lại',
-            description: 'Liên hệ và xác nhận danh sách diễn giả, sắp xếp lịch trình di chuyển và chỗ ở.',
-            priority: 'medium',
-            priorityText: 'TRUNG BÌNH',
-            status: 'todo',
-            statusText: 'CẦN LÀM',
-            assigneeName: 'Sarah L.',
-            assigneeAvatar: 'https://ui-avatars.com/api/?name=Sarah+L&background=10B981&color=fff',
-            deadline: '15/10/2024',
-            progress: 0,
-            notes: 'Không có ghi chú'
-        },
-        3: {
-            title: 'Thiết kế banner mạng xã hội cho đợt Tuyển dụng',
-            description: 'Thiết kế banner quảng cáo cho các nền tảng mạng xã hội như Facebook, Instagram, LinkedIn.',
-            priority: 'low',
-            priorityText: 'ƯU TIÊN THẤP',
-            status: 'in-progress',
-            statusText: 'ĐANG THỰC HIỆN',
-            assigneeName: 'Mike T.',
-            assigneeAvatar: 'https://ui-avatars.com/api/?name=Mike+T&background=1976D2&color=fff',
-            deadline: '08/10/2024',
-            progress: 60,
-            notes: 'Đã hoàn thành 60%, đang chờ feedback'
-        },
-        4: {
-            title: 'Kiểm tra các giao thức an toàn cho sự kiện trong khuôn viên',
-            description: 'Kiểm tra và đảm bảo các giao thức an toàn, phòng cháy chữa cháy, lối thoát hiểm cho sự kiện.',
-            priority: 'high',
-            priorityText: 'ƯU TIÊN CAO',
-            status: 'review',
-            statusText: 'XEM XÉT',
-            assigneeName: 'D/u Jane',
-            assigneeAvatar: 'https://ui-avatars.com/api/?name=D+Jane&background=F59E0B&color=fff',
-            deadline: 'HÔM NAY',
-            progress: 90,
-            notes: 'Đang chờ phê duyệt từ ban giám hiệu'
-        }
-    };
+async function loadTaskDetailData(taskId) {
+    try {
+        const response = await fetch(`${API_BASE}/${taskId}`);
 
-    const data = mockData[taskId];
-    if (data) {
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+
         document.getElementById('detailTaskTitle').textContent = data.title;
         document.getElementById('detailDescription').textContent = data.description;
-        document.getElementById('detailPriority').textContent = data.priorityText;
+
+        document.getElementById('detailPriority').textContent = data.priority;
         document.getElementById('detailPriority').className = `task-priority ${data.priority}`;
-        document.getElementById('detailStatus').textContent = data.statusText;
+
+        document.getElementById('detailStatus').textContent = data.status;
         document.getElementById('detailStatus').className = `task-status-badge ${data.status}`;
-        document.getElementById('detailAssigneeName').textContent = data.assigneeName;
-        document.getElementById('detailAssigneeAvatar').src = data.assigneeAvatar;
-        document.getElementById('detailDeadline').textContent = data.deadline;
-        document.getElementById('detailProgressBar').style.width = data.progress + '%';
-        document.getElementById('detailProgressText').textContent = data.progress + '%';
-        document.getElementById('detailNotes').textContent = data.notes;
+
+        document.getElementById('detailAssigneeName').textContent = data.assigneeName || '';
+        document.getElementById('detailAssigneeAvatar').src = data.assigneeAvatar || '';
+
+        document.getElementById('detailDeadline').textContent = data.deadline || '';
+        document.getElementById('detailProgressBar').style.width = `${data.progress}%`;
+        document.getElementById('detailProgressText').textContent = `${data.progress}%`;
+
+        document.getElementById('detailNotes').textContent = data.notes || '';
+
+    } catch (error) {
+        console.error('Lỗi load detail:', error);
+        alert('Không tải được chi tiết nhiệm vụ');
     }
 }
 
-// Form Submission
-document.getElementById('taskForm')?.addEventListener('submit', function(e) {
+// ================= SAVE TASK =================
+
+document.getElementById('taskForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
-    
-    // Collect form data
+
     const formData = {
         title: document.getElementById('taskTitle').value,
         description: document.getElementById('taskDescription').value,
         priority: document.getElementById('taskPriority').value,
         status: document.getElementById('taskStatus').value,
         deadline: document.getElementById('taskDeadline').value,
-        progress: document.getElementById('taskProgress').value,
-        assignee: document.getElementById('taskAssignee').value,
+        progress: parseInt(document.getElementById('taskProgress').value),
+        assigneeId: document.getElementById('taskAssignee').value,
         notes: document.getElementById('taskNotes').value
     };
 
-    console.log('Task data:', formData);
+    try {
+        let response;
 
-    // Call API to save task
-    if (currentTaskId) {
-        // Update existing task
-        alert('Đã cập nhật nhiệm vụ thành công');
-    } else {
-        // Create new task
-        alert('Đã tạo nhiệm vụ mới thành công');
+        if (currentTaskId) {
+            response = await fetch(`${API_BASE}/${currentTaskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            alert('Đã cập nhật nhiệm vụ thành công');
+        } else {
+            response = await fetch(API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            alert('Đã tạo nhiệm vụ mới thành công');
+        }
+
+        if (!response.ok) throw new Error();
+
+        closeTaskModal();
+        location.reload();
+
+    } catch (error) {
+        console.error(error);
+        alert('Lưu nhiệm vụ thất bại');
     }
-
-    closeTaskModal();
 });
 
-// Close modal when clicking outside
-window.addEventListener('click', function(e) {
+// ================= DELETE TASK =================
+
+async function deleteTask(taskId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa nhiệm vụ này?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/${taskId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error();
+
+        alert('Đã xóa nhiệm vụ');
+        location.reload();
+
+    } catch (error) {
+        console.error(error);
+        alert('Xóa thất bại');
+    }
+}
+
+// ================= CLOSE MODAL =================
+
+window.addEventListener('click', function (e) {
     const taskModal = document.getElementById('taskModal');
     const taskDetailModal = document.getElementById('taskDetailModal');
-    
+
     if (e.target === taskModal) {
         closeTaskModal();
     }
-    
+
     if (e.target === taskDetailModal) {
         closeTaskDetailModal();
     }
 });
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
+// ================= KEYBOARD =================
+
+document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
         closeTaskModal();
         closeTaskDetailModal();
     }
 });
-
-// Drag and Drop functionality (optional - for future enhancement)
-// This would allow dragging tasks between columns

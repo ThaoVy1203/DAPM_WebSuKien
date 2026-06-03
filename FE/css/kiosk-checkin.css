@@ -1,0 +1,128 @@
+/* Full-screen self-service check-in (kiosk) */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f7fa;
+  color: #0f172a;
+}
+
+.kiosk-hidden { display: none; }
+
+.kiosk-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.kiosk-title {
+  font-weight: 900;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.kiosk-meta { display: flex; gap: 14px; align-items: center; }
+.kiosk-event { font-weight: 800; }
+.kiosk-offline {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #0D5A9C;
+  font-weight: 800;
+}
+.kiosk-offline.offline {
+  background: #fff5f5;
+  color: #c53030;
+}
+
+.kiosk-main {
+  padding: 18px 22px;
+  height: calc(100% - 72px);
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+}
+
+.kiosk-inputCard, .kiosk-statusCard {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(15,23,42,0.06);
+  padding: 18px;
+}
+
+.kiosk-inputLabel {
+  font-size: 14px;
+  font-weight: 800;
+  color: #475569;
+  margin-bottom: 10px;
+}
+.kiosk-input {
+  width: 100%;
+  padding: 16px 14px;
+  font-size: 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  outline: none;
+  background: #fafafa;
+}
+.kiosk-input:focus {
+  border-color: #0D5A9C;
+  background: #fff;
+}
+
+.kiosk-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+.kiosk-btn {
+  flex: 1;
+  padding: 14px 14px;
+  border: none;
+  border-radius: 12px;
+  background: #0D5A9C;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.kiosk-btn.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.kiosk-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.kiosk-statusCard { display: flex; flex-direction: column; gap: 10px; }
+.kiosk-statusRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.kiosk-strong { font-weight: 900; color: #0D5A9C; }
+.kiosk-log {
+  padding-top: 10px;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow: auto;
+  height: 180px;
+}
+
+@media (max-width: 900px) {
+  .kiosk-main { grid-template-columns: 1fr; }
+}
+

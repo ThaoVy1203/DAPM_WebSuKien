@@ -33,8 +33,11 @@ namespace aspiCore.Services
                     TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
                     SoLuongToiDa = s.SoLuongToiDa,
                     TrangThai = s.TrangThai,
+                    GioHuyTruocBatDauPhut = s.GioHuyTruocBatDauPhut,
+                    YeuCauKhaoSatCheckout = s.YeuCauKhaoSatCheckout,
                     ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy")
+                    // Không tính "Chờ chỗ" vào giới hạn số lượng.
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy" && dk.TrangThai != "Chờ chỗ")
                 })
                 .ToListAsync();
         }
@@ -62,8 +65,11 @@ namespace aspiCore.Services
                 TenNguoiTao = suKien.NguoiTao?.HoTen,
                 SoLuongToiDa = suKien.SoLuongToiDa,
                 TrangThai = suKien.TrangThai,
+                GioHuyTruocBatDauPhut = suKien.GioHuyTruocBatDauPhut,
+                YeuCauKhaoSatCheckout = suKien.YeuCauKhaoSatCheckout,
                 ThoiGianTao = suKien.ThoiGianTao,
-                SoDaDangKy = suKien.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy")
+                // Không tính "Chờ chỗ" vào giới hạn số lượng.
+                SoDaDangKy = suKien.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy" && dk.TrangThai != "Chờ chỗ")
             };
         }
 
@@ -87,8 +93,11 @@ namespace aspiCore.Services
                     TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
                     SoLuongToiDa = s.SoLuongToiDa,
                     TrangThai = s.TrangThai,
+                    GioHuyTruocBatDauPhut = s.GioHuyTruocBatDauPhut,
+                    YeuCauKhaoSatCheckout = s.YeuCauKhaoSatCheckout,
                     ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy")
+                    // Không tính "Chờ chỗ" vào giới hạn số lượng.
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy" && dk.TrangThai != "Chờ chỗ")
                 })
                 .ToListAsync();
         }
@@ -104,6 +113,8 @@ namespace aspiCore.Services
                 IdDiaDiem = dto.IdDiaDiem,
                 IdNguoiTao = dto.IdNguoiTao,
                 SoLuongToiDa = dto.SoLuongToiDa,
+                GioHuyTruocBatDauPhut = dto.GioHuyTruocBatDauPhut,
+                YeuCauKhaoSatCheckout = dto.YeuCauKhaoSatCheckout,
                 TrangThai = "Nháp",
                 ThoiGianTao = DateTime.Now
             };
@@ -144,6 +155,10 @@ namespace aspiCore.Services
                 suKien.IdDiaDiem = dto.IdDiaDiem;
             if (dto.SoLuongToiDa.HasValue)
                 suKien.SoLuongToiDa = dto.SoLuongToiDa;
+            if (dto.GioHuyTruocBatDauPhut.HasValue)
+                suKien.GioHuyTruocBatDauPhut = Math.Max(0, dto.GioHuyTruocBatDauPhut.Value);
+            if (dto.YeuCauKhaoSatCheckout.HasValue)
+                suKien.YeuCauKhaoSatCheckout = dto.YeuCauKhaoSatCheckout.Value;
             if (!string.IsNullOrEmpty(dto.TrangThai))
                 suKien.TrangThai = dto.TrangThai;
 

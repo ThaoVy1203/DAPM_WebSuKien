@@ -1,273 +1,275 @@
-// Notifications Page JavaScript
+const API_BASE = "https://localhost:7160/api";
 
-// Sample notifications data
-const notificationsData = {
-    today: [
-        {
-            id: 1,
-            type: 'event',
-            icon: 'fa-calendar',
-            title: 'Cập nhật lịch hội nghị Sinh viên Nghiên cứu Khoa học',
-            text: 'Thời gian diễn ra hội nghị đã được dời sang 8:30 sáng Thứ Hai tuần sau tại Hội trường A. Vui lòng cập nhật lịch của bạn.',
-            time: '10 phút trước',
-            unread: true,
-            actions: [
-                { text: 'Xem chi tiết sự kiện', type: 'primary', link: 'event-detail.html' },
-                { text: 'Đã hiểu', type: 'secondary' }
-            ]
-        },
-        {
-            id: 2,
-            type: 'system',
-            icon: 'fa-check-circle',
-            title: 'Đăng ký tham gia CLB Marketing được phê duyệt',
-            text: 'Chúc mừng bạn! Hồ sơ đăng ký tham gia CLB Marketing của bạn đã được phê duyệt.',
-            time: '2 giờ trước',
-            unread: true,
-            actions: [
-                { text: 'Xác nhận tham gia', type: 'primary' }
-            ]
-        }
-    ],
-    older: [
-        {
-            id: 3,
-            type: 'reminder',
-            icon: 'fa-clock',
-            title: 'Nhắc nhở: Hạn cuối đăng ký học phần',
-            text: 'Chỉ còn 24 giờ để hoàn tất việc đăng ký học phần cho học kỳ tới. Hệ thống sẽ đóng lúc 23:59 tối nay.',
-            time: 'Hôm qua',
-            unread: false,
-            actions: []
-        },
-        {
-            id: 4,
-            type: 'info',
-            icon: 'fa-info-circle',
-            title: 'Bảo trì hệ thống Portal',
-            text: 'Hệ thống Portal UTE sẽ tạm dừng hoạt động để nâng cấp định kỳ từ 00:00 đến 03:00 Chủ Nhật nay.',
-            time: '3 ngày trước',
-            unread: false,
-            actions: []
-        },
-        {
-            id: 5,
-            type: 'event',
-            icon: 'fa-calendar',
-            title: 'Sự kiện mới: Workshop "Kỹ năng mềm trong kỷ nguyên AI"',
-            text: 'Đăng ký ngay để tham gia workshop về kỹ năng mềm cần thiết trong thời đại trí tuệ nhân tạo. Số lượng chỗ có hạn!',
-            time: '5 ngày trước',
-            unread: false,
-            actions: [
-                { text: 'Đăng ký ngay', type: 'primary', link: 'event-detail.html' }
-            ]
-        }
-    ]
-};
+let notifications = [];
 
-// Render notification item
-function renderNotification(notification) {
-    const notificationDiv = document.createElement('div');
-    notificationDiv.className = `notification-item ${notification.unread ? 'unread' : ''}`;
-    notificationDiv.dataset.id = notification.id;
+// ==========================
+// INIT
+// ==========================
+document.addEventListener("DOMContentLoaded", async function () {
+    await loadNotifications();
 
-    const iconClass = notification.type;
-    
-    let actionsHTML = '';
-    if (notification.actions && notification.actions.length > 0) {
-        actionsHTML = '<div class="notification-actions">';
-        notification.actions.forEach(action => {
-            actionsHTML += `<button class="notification-btn ${action.type}" data-link="${action.link || ''}">${action.text}</button>`;
-        });
-        actionsHTML += '</div>';
+    setupFilters();
+    setupMarkAllRead();
+    setupSettings();
+});
+
+// ==========================
+// LOAD DATA
+// ==========================
+async function loadNotifications() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "login.html";
+        return;
     }
 
-    notificationDiv.innerHTML = `
-        <div class="notification-icon ${iconClass}">
-            <i class="fas ${notification.icon}"></i>
+    const todayList = document.getElementById("notificationsList");
+    const olderList = document.getElementById("olderNotificationsList");
+    if (todayList) todayList.innerHTML = '<div style="padding:20px;color:#999;text-align:center;"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
+
+    try {
+        const res = await fetch(`${API_BASE}/ThongBao`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        // API có thể trả về mảng hoặc { items: [...] }
+        notifications = Array.isArray(data) ? data : (data.items || data.data || []);
+
+        renderNotifications();
+        updateBadgeCounts();
+
+    } catch (error) {
+        console.error("Lỗi load thông báo:", error);
+        if (todayList) todayList.innerHTML = '<div style="padding:20px;color:#999;text-align:center;">Không tải được thông báo. Vui lòng thử lại sau.</div>';
+    }
+}
+
+// ==========================
+// RENDER
+// ==========================
+function renderNotifications() {
+    const todayList = document.getElementById("notificationsList");
+    const olderList = document.getElementById("olderNotificationsList");
+
+    if (!todayList || !olderList) return;
+
+    todayList.innerHTML = "";
+    olderList.innerHTML = "";
+
+    if (!notifications || notifications.length === 0) {
+        todayList.innerHTML = '<div style="padding:24px;color:#999;text-align:center;">Không có thông báo nào.</div>';
+        return;
+    }
+
+    notifications.forEach(notification => {
+        const thoiGian = notification.thoiGianGui || notification.ngayTao || notification.createdAt;
+        const item = renderNotification(notification);
+        if (thoiGian && isToday(thoiGian)) {
+            todayList.appendChild(item);
+        } else {
+            olderList.appendChild(item);
+        }
+    });
+
+    if (todayList.innerHTML === "") {
+        todayList.innerHTML = '<div style="padding:12px;color:#999;font-size:14px;">Không có thông báo hôm nay.</div>';
+    }
+}
+
+function renderNotification(notification) {
+    const div = document.createElement("div");
+
+    // Hỗ trợ cả idThongBao (từ DB) và id
+    const notifId = notification.idThongBao || notification.id;
+    const daDoc = notification.daDoc === true || notification.daDoc === 1;
+    // Hỗ trợ cả thoiGianGui và ngayTao
+    const thoiGian = notification.thoiGianGui || notification.ngayTao || notification.createdAt;
+    const loai = notification.loai || notification.type || "general";
+
+    div.className = `notification-item ${!daDoc ? "unread" : ""}`;
+    div.dataset.id = notifId;
+    div.dataset.type = loai;
+
+    div.innerHTML = `
+        <div class="notification-icon ${loai}">
+            <i class="fas ${getIcon(loai)}"></i>
         </div>
         <div class="notification-content">
             <div class="notification-header">
                 <div class="notification-title">
-                    ${notification.unread ? '<span class="unread-dot"></span>' : ''}
-                    ${notification.title}
+                    ${!daDoc ? '<span class="unread-dot"></span>' : ''}
+                    ${escapeHtml(notification.tieuDe || notification.title || "Thông báo")}
                 </div>
-                <span class="notification-time">${notification.time}</span>
+                <span class="notification-time">
+                    ${thoiGian ? formatTime(thoiGian) : ""}
+                </span>
             </div>
-            <p class="notification-text">${notification.text}</p>
-            ${actionsHTML}
-        </div>
-    `;
+            <p class="notification-text">${escapeHtml(notification.noiDung || notification.content || "")}</p>
+        </div>`;
 
-    return notificationDiv;
+    div.addEventListener("click", () => markAsRead(notifId));
+    return div;
 }
 
-// Load notifications
-function loadNotifications() {
-    const todayList = document.getElementById('notificationsList');
-    const olderList = document.getElementById('olderNotificationsList');
+// ==========================
+// MARK READ
+// ==========================
+async function markAsRead(id) {
+    try {
+        const token = localStorage.getItem("token");
 
-    // Clear existing notifications
-    todayList.innerHTML = '';
-    olderList.innerHTML = '';
-
-    // Render today's notifications
-    notificationsData.today.forEach(notification => {
-        todayList.appendChild(renderNotification(notification));
-    });
-
-    // Render older notifications
-    notificationsData.older.forEach(notification => {
-        olderList.appendChild(renderNotification(notification));
-    });
-
-    // Add event listeners to notification buttons
-    addNotificationListeners();
-}
-
-// Add event listeners to notification items
-function addNotificationListeners() {
-    // Handle notification clicks
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            if (!e.target.closest('.notification-btn')) {
-                markAsRead(this.dataset.id);
+        await fetch(`${API_BASE}/ThongBao/${id}/read`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`
             }
         });
-    });
 
-    // Handle action button clicks
-    document.querySelectorAll('.notification-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const link = this.dataset.link;
-            const notificationItem = this.closest('.notification-item');
-            
-            markAsRead(notificationItem.dataset.id);
-            
-            if (link) {
-                window.location.href = link;
-            }
-        });
-    });
-}
+        const notification = notifications.find(n => n.id == id);
+        if (notification) notification.daDoc = true;
 
-// Mark notification as read
-function markAsRead(notificationId) {
-    const notification = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
-    if (notification && notification.classList.contains('unread')) {
-        notification.classList.remove('unread');
-        const unreadDot = notification.querySelector('.unread-dot');
-        if (unreadDot) {
-            unreadDot.remove();
-        }
+        renderNotifications();
         updateBadgeCounts();
+
+    } catch (error) {
+        console.error("Lỗi đánh dấu đã đọc:", error);
     }
 }
 
-// Mark all as read
-function markAllAsRead() {
-    document.querySelectorAll('.notification-item.unread').forEach(item => {
-        item.classList.remove('unread');
-        const unreadDot = item.querySelector('.unread-dot');
-        if (unreadDot) {
-            unreadDot.remove();
-        }
-    });
-    updateBadgeCounts();
-}
+async function markAllAsRead() {
+    try {
+        const token = localStorage.getItem("token");
 
-// Update badge counts
-function updateBadgeCounts() {
-    const allUnread = document.querySelectorAll('.notification-item.unread').length;
-    const allBadge = document.querySelector('.filter-item[data-filter="all"] .badge');
-    if (allBadge) {
-        allBadge.textContent = allUnread;
-    }
-
-    // Update individual category badges
-    const categories = ['general', 'event', 'system', 'reminder'];
-    categories.forEach(category => {
-        const count = document.querySelectorAll(`.notification-item.unread .notification-icon.${category}`).length;
-        const badge = document.querySelector(`.filter-item[data-filter="${category}"] .badge`);
-        if (badge) {
-            badge.textContent = count;
-        }
-    });
-}
-
-// Filter notifications
-function filterNotifications(filterType) {
-    const allNotifications = document.querySelectorAll('.notification-item');
-    
-    allNotifications.forEach(notification => {
-        if (filterType === 'all') {
-            notification.style.display = 'flex';
-        } else {
-            const icon = notification.querySelector('.notification-icon');
-            if (icon.classList.contains(filterType)) {
-                notification.style.display = 'flex';
-            } else {
-                notification.style.display = 'none';
+        await fetch(`${API_BASE}/ThongBao/read-all`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`
             }
+        });
+
+        notifications.forEach(n => n.daDoc = true);
+
+        renderNotifications();
+        updateBadgeCounts();
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// ==========================
+// FILTER
+// ==========================
+function setupFilters() {
+    document.querySelectorAll(".filter-item").forEach(btn => {
+        btn.addEventListener("click", function () {
+
+            document.querySelectorAll(".filter-item")
+                .forEach(b => b.classList.remove("active"));
+
+            this.classList.add("active");
+
+            filterNotifications(this.dataset.filter);
+        });
+    });
+}
+
+function filterNotifications(type) {
+    document.querySelectorAll(".notification-item").forEach(item => {
+        if (type === "all" || item.dataset.type === type) {
+            item.style.display = "flex";
+        } else {
+            item.style.display = "none";
         }
     });
 }
 
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    // Load notifications
-    loadNotifications();
+// ==========================
+// BADGES
+// ==========================
+function updateBadgeCounts() {
+    const unread = notifications.filter(n => !n.daDoc);
 
-    // Mark all as read button
-    const markAllReadBtn = document.getElementById('markAllRead');
-    if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', markAllAsRead);
-    }
+    document.querySelector(".filter-item[data-filter='all'] .badge")
+        ?.textContent = unread.length;
 
-    // Filter buttons
-    document.querySelectorAll('.filter-item').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Update active state
-            document.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Filter notifications
-            const filterType = this.dataset.filter;
-            filterNotifications(filterType);
-        });
+    ["event", "system", "reminder", "info"].forEach(type => {
+        const count = unread.filter(n => n.loai === type).length;
+
+        document.querySelector(
+            `.filter-item[data-filter='${type}'] .badge`
+        )?.textContent = count;
     });
+}
 
-    // Settings toggle
-    const emailToggle = document.getElementById('emailToggle');
-    const pushToggle = document.getElementById('pushToggle');
-
-    if (emailToggle) {
-        emailToggle.addEventListener('change', function() {
-            console.log('Email notifications:', this.checked ? 'enabled' : 'disabled');
-            // Here you would typically save this preference to the backend
+// ==========================
+// SETTINGS
+// ==========================
+function setupSettings() {
+    document.getElementById("emailToggle")
+        ?.addEventListener("change", function () {
+            saveNotificationSetting("email", this.checked);
         });
-    }
 
-    if (pushToggle) {
-        pushToggle.addEventListener('change', function() {
-            console.log('Push notifications:', this.checked ? 'enabled' : 'disabled');
-            // Here you would typically save this preference to the backend
+    document.getElementById("pushToggle")
+        ?.addEventListener("change", function () {
+            saveNotificationSetting("push", this.checked);
         });
-    }
+}
 
-    // Check for user authentication
-    const token = localStorage.getItem('token');
-    if (!token) {
-        // Redirect to login if not authenticated
-        // window.location.href = 'login.html';
-    }
-});
+async function saveNotificationSetting(type, enabled) {
+    try {
+        const token = localStorage.getItem("token");
 
-// Export functions for potential use in other scripts
-window.notificationsModule = {
-    markAsRead,
-    markAllAsRead,
-    loadNotifications,
-    filterNotifications
-};
+        await fetch(`${API_BASE}/ThongBao/settings`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                type,
+                enabled
+            })
+        });
+
+    } catch (error) {
+        console.error("Lỗi lưu setting:", error);
+    }
+}
+
+// ==========================
+// BUTTONS
+// ==========================
+function setupMarkAllRead() {
+    document.getElementById("markAllRead")
+        ?.addEventListener("click", markAllAsRead);
+}
+
+// ==========================
+// HELPERS
+// ==========================
+function getIcon(type) {
+    const icons = {
+        event: "fa-calendar",
+        system: "fa-check-circle",
+        reminder: "fa-clock",
+        info: "fa-info-circle"
+    };
+
+    return icons[type] || "fa-bell";
+}
+
+function formatTime(date) {
+    return new Date(date).toLocaleString("vi-VN");
+}
+
+function isToday(date) {
+    const d = new Date(date);
+    const now = new Date();
+
+    return d.toDateString() === now.toDateString();
+}

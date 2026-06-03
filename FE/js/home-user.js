@@ -1,5 +1,7 @@
-// Home User Page JavaScript
+// js/home-user.js
+const API_BASE = "https://localhost:7160/api";
 
+<<<<<<< HEAD
 document.addEventListener('DOMContentLoaded', function() {
     checkAuthentication();
     loadUserInfo();
@@ -53,195 +55,233 @@ function initializeUserMenu() {
     
     if (userMenu) {
         userMenu.addEventListener('click', function(e) {
+=======
+// ==========================
+// INIT
+// ==========================
+document.addEventListener("DOMContentLoaded", async function () {
+    // Kiểm tra đăng nhập - nếu chưa đăng nhập thì về trang login
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    loadUserInfo();
+    initUserMenu();
+    await loadFeaturedEvents();
+    await loadNotificationCount();
+    initScrollAnimations();
+});
+
+// ==========================
+// USER INFO
+// ==========================
+function loadUserInfo() {
+    const raw = localStorage.getItem("userData");
+    if (!raw) return;
+
+    try {
+        const user = JSON.parse(raw);
+
+        // Hỗ trợ cả PascalCase (BE trả) và camelCase
+        const hoTen = user.HoTen || user.hoTen || "Người dùng";
+
+        const nameEl = document.getElementById("userName");
+        if (nameEl) nameEl.textContent = hoTen;
+
+        const avatarEl = document.getElementById("userAvatar");
+        if (avatarEl) {
+            const name = encodeURIComponent(hoTen);
+            avatarEl.src = user.AnhDaiDien || user.anhDaiDien
+                || `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff`;
+            avatarEl.onerror = function () {
+                this.src = `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff`;
+            };
+        }
+    } catch (e) {
+        console.error("Lỗi parse userData:", e);
+    }
+}
+
+// ==========================
+// USER MENU DROPDOWN
+// ==========================
+function initUserMenu() {
+    const wrapper = document.getElementById("userMenuWrapper");
+    const dropdown = document.getElementById("userDropdown");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (!wrapper || !dropdown) return;
+
+    // Toggle dropdown khi click vào user menu
+    wrapper.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const isVisible = dropdown.style.display === "block";
+        dropdown.style.display = isVisible ? "none" : "block";
+    });
+
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener("click", function () {
+        if (dropdown) dropdown.style.display = "none";
+    });
+
+    // Đăng xuất
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+>>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
             e.stopPropagation();
-            showUserDropdown();
+            handleLogout();
         });
     }
 }
 
-function showUserDropdown() {
-    // Create dropdown menu if it doesn't exist
-    let dropdown = document.querySelector('.user-dropdown');
-    
-    if (!dropdown) {
-        dropdown = createUserDropdown();
-        document.querySelector('.user-menu').appendChild(dropdown);
-    }
-    
-    dropdown.classList.toggle('show');
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function closeDropdown(e) {
-        if (!e.target.closest('.user-menu')) {
-            dropdown.classList.remove('show');
-            document.removeEventListener('click', closeDropdown);
-        }
-    });
+// ==========================
+// LOGOUT
+// ==========================
+function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    window.location.href = "login.html";
 }
 
-function createUserDropdown() {
-    const dropdown = document.createElement('div');
-    dropdown.className = 'user-dropdown';
-    dropdown.innerHTML = `
-        <div class="dropdown-menu">
-            <a href="profile.html" class="dropdown-item">
-                <i class="fas fa-user"></i>
-                <span>Hồ sơ cá nhân</span>
-            </a>
-            <a href="my-tickets.html" class="dropdown-item">
-                <i class="fas fa-ticket-alt"></i>
-                <span>Vé của tôi</span>
-            </a>
-            <a href="history.html" class="dropdown-item">
-                <i class="fas fa-history"></i>
-                <span>Lịch sử tham gia</span>
-            </a>
-            <a href="calender.html" class="dropdown-item">
-                <i class="fas fa-calendar"></i>
-                <span>Lịch cá nhân</span>
-            </a>
-            <div class="dropdown-divider"></div>
-            <a href="#" class="dropdown-item" onclick="handleLogout(event)">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Đăng xuất</span>
-            </a>
-        </div>
-    `;
-    
-    // Add styles for dropdown
-    const style = document.createElement('style');
-    style.textContent = `
-        .user-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 8px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-        }
-        
-        .user-dropdown.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .dropdown-menu {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            min-width: 220px;
-            padding: 8px 0;
-        }
-        
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: #1A1A1A;
-            text-decoration: none;
-            transition: background-color 0.2s ease;
-        }
-        
-        .dropdown-item:hover {
-            background-color: #F3F4F6;
-        }
-        
-        .dropdown-item i {
-            width: 20px;
-            color: #0D5A9C;
-        }
-        
-        .dropdown-divider {
-            height: 1px;
-            background-color: #E5E7EB;
-            margin: 8px 0;
-        }
-        
-        .user-menu {
-            position: relative;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    return dropdown;
-}
+// ==========================
+// NOTIFICATION COUNT
+// ==========================
+async function loadNotificationCount() {
+    const token = localStorage.getItem("token");
+    const badge = document.getElementById("notifBadge");
+    if (!badge) return;
 
-// Notification Functionality
-function initializeNotifications() {
-    const btnNotification = document.querySelector('.btn-notification');
-    
-    if (btnNotification) {
-        btnNotification.addEventListener('click', function() {
-            window.location.href = 'notifications.html';
+    try {
+        const res = await fetch(`${API_BASE}/ThongBao/unread-count`, {
+            headers: { "Authorization": `Bearer ${token}` }
         });
-        
-        // Load notification count
-        loadNotificationCount();
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const count = typeof data === "number" ? data : (data.count || data.soLuong || 0);
+
+        if (count > 0) {
+            badge.textContent = count > 99 ? "99+" : count;
+            badge.style.display = "inline-block";
+        } else {
+            badge.style.display = "none";
+        }
+    } catch (e) {
+        console.log("Không lấy được số thông báo:", e);
     }
 }
 
-function loadNotificationCount() {
-    // Simulate loading notification count
-    // In production, this would fetch from API
-    const badge = document.querySelector('.notification-badge');
-    if (badge) {
-        // Example: fetch unread count
-        const unreadCount = 3; // This should come from API
-        badge.textContent = unreadCount;
-        
-        if (unreadCount === 0) {
-            badge.style.display = 'none';
-        }
+// ==========================
+// FEATURED EVENTS
+// ==========================
+async function loadFeaturedEvents() {
+    const token = localStorage.getItem("token");
+    const container = document.querySelector(".events-grid");
+    if (!container) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/SuKien`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Không lấy được sự kiện");
+
+        const data = await res.json();
+        // API có thể trả về mảng trực tiếp hoặc { data: [...] }
+        const events = Array.isArray(data) ? data : (data.data || data.items || []);
+
+        renderFeaturedEvents(events, container);
+
+    } catch (e) {
+        console.error("Lỗi load sự kiện:", e);
+        container.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">
+                <i class="fas fa-exclamation-circle" style="font-size:32px; margin-bottom:12px; display:block;"></i>
+                Không thể tải sự kiện. Vui lòng thử lại sau.
+            </div>`;
     }
 }
 
-// Event Cards Functionality
-function initializeEventCards() {
-    const eventCards = document.querySelectorAll('.event-card');
-    
-    eventCards.forEach(card => {
-        // Add click handler for view detail buttons
-        const detailBtn = card.querySelector('.btn-view-detail');
-        if (detailBtn) {
-            detailBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const eventId = card.dataset.eventId || '1';
-                window.location.href = `event-detail.html?id=${eventId}`;
-            });
-        }
+function renderFeaturedEvents(events, container) {
+    if (!events || events.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">
+                Hiện chưa có sự kiện nào.
+            </div>`;
+        return;
+    }
+
+    // Chỉ hiển thị tối đa 3 sự kiện nổi bật
+    container.innerHTML = "";
+    events.slice(0, 3).forEach(event => {
+        const idSuKien = event.IdSuKien ?? event.idSuKien;
+        const tenSuKien = event.TenSuKien ?? event.tenSuKien ?? "Chưa có tên";
+        const batDau = event.ThoiGianBatDau ?? event.thoiGianBatDau;
+        const ketThuc = event.ThoiGianKetThuc ?? event.thoiGianKetThuc;
+        const startDate = batDau
+            ? new Date(batDau).toLocaleDateString("vi-VN")
+            : "Chưa có";
+        const endDate = ketThuc
+            ? new Date(ketThuc).toLocaleDateString("vi-VN")
+            : "";
+        const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
+
+        const diaDiem = event.TenDiaDiem ?? event.tenDiaDiem ?? event.DiaDiem?.TenDiaDiem ?? "Đang cập nhật";
+        const trangThai = event.TrangThai ?? event.trangThai ?? "";
+        const badgeClass = getBadgeClass(trangThai);
+        const badgeText = trangThai || "Sự kiện";
+        const isFeatured = events.indexOf(event) === 0 ? "featured" : "";
+
+        container.innerHTML += `
+            <div class="event-card ${isFeatured}">
+                <div class="event-badge ${badgeClass}">${escapeHtml(badgeText)}</div>
+                <div class="event-card-content">
+                    <h3>${escapeHtml(tenSuKien)}</h3>
+                    <div class="event-meta">
+                        <span><i class="far fa-calendar"></i> ${dateStr}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</span>
+                    </div>
+                    <a href="event-detail.html?id=${idSuKien}" class="btn-view-detail">Xem chi tiết</a>
+                </div>
+            </div>`;
     });
 }
 
-// Scroll Animations
-function initializeScrollAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver(function(entries) {
+function getBadgeClass(trangThai) {
+    switch (trangThai) {
+        case "Đang diễn ra": return "blue";
+        case "Đã duyệt":
+        case "Kết thúc":    return "green";
+        case "Hủy":         return "red";
+        default:            return "";
+    }
+}
+
+// ==========================
+// SCROLL ANIMATIONS
+// ==========================
+function initScrollAnimations() {
+    const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                entry.target.style.opacity = "1";
+                entry.target.style.transform = "translateY(0)";
             }
         });
-    }, observerOptions);
-    
-    // Observe elements for animation
-    const animatedElements = document.querySelectorAll('.event-card, .stat-item, .feature-column');
-    animatedElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll(".event-card, .feature-item, .stat-item").forEach(el => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(20px)";
+        el.style.transition = "opacity 0.4s ease, transform 0.4s ease";
         observer.observe(el);
     });
 }
 
+<<<<<<< HEAD
 // Logout Handler
 function handleLogout(event) {
     event.preventDefault();
@@ -302,13 +342,18 @@ const statsObserver = new IntersectionObserver((entries) => {
             });
             statsObserver.unobserve(entry.target);
         }
+=======
+// ==========================
+// HELPERS
+// ==========================
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str).replace(/[&<>"']/g, function (m) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
+>>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
     });
-}, { threshold: 0.5 });
-
-const statsSection = document.querySelector('.stats-section');
-if (statsSection) {
-    statsObserver.observe(statsSection);
 }
+<<<<<<< HEAD
 
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -323,3 +368,5 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+=======
+>>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
