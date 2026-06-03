@@ -96,15 +96,22 @@
                     <h1>Quản lý Báo cáo</h1>
                     <p>Tạo, xuất và quản lý báo cáo sự kiện</p>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-secondary" onclick="openUploadReportModal()">
-                        <i class="fas fa-upload"></i>
-                        Upload báo cáo
-                    </button>
-                    <button class="btn-primary" onclick="openCreateReportModal()">
-                        <i class="fas fa-plus"></i>
-                        Tạo báo cáo mới
-                    </button>
+                <div class="header-sub-row">
+                    <div class="event-selector-wrapper">
+                        <select id="eventSelector" class="event-dropdown-select">
+                            <option value="">-- Chọn sự kiện --</option>
+                        </select>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-secondary" onclick="openUploadReportModal()">
+                            <i class="fas fa-upload"></i>
+                            Upload báo cáo
+                        </button>
+                        <button class="btn-primary" onclick="openCreateReportModal()">
+                            <i class="fas fa-plus"></i>
+                            Tạo báo cáo mới
+                        </button>
+                    </div>
                 </div>
             </div>
 

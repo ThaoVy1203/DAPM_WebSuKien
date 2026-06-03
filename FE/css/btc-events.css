@@ -34,7 +34,7 @@
 /* Events Grid */
 .events-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
 }
 
@@ -624,6 +624,74 @@
 
 .btn-confirm-cancel:hover {
     background: #DC2626;
+}
+
+/* Additional Status Badges */
+.event-badge.draft {
+    background: #F1F5F9;
+    color: #475569;
+}
+
+.event-badge.pending {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.event-badge.rejected, .event-badge.cancelled {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Form Redesign CSS */
+.category-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.category-tag {
+    padding: 6px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    user-select: none;
+}
+.category-tag.selected {
+    background: #0056b3;
+    color: white;
+    border-color: #0056b3;
+}
+.category-tag.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.image-upload-wrapper input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+.image-upload-wrapper input[type="file"]:disabled {
+    cursor: not-allowed;
+    background: #e2e8f0;
 }
 
 /* Responsive */

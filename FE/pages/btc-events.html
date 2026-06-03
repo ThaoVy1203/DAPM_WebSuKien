@@ -97,10 +97,6 @@
                     <p>Quản lý tất cả các sự kiện bạn đang tổ chức</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-secondary">
-                        <i class="fas fa-filter"></i>
-                        Lọc
-                    </button>
                     <button class="btn-primary" onclick="openCreateEventModal()">
                         <i class="fas fa-plus"></i>
                         Tạo sự kiện mới
@@ -110,181 +106,17 @@
 
             <!-- Filter Tabs -->
             <div class="filter-tabs">
-                <button class="tab-btn active" data-status="all">Tất cả (12)</button>
-                <button class="tab-btn" data-status="upcoming">Sắp diễn ra (5)</button>
-                <button class="tab-btn" data-status="ongoing">Đang diễn ra (3)</button>
-                <button class="tab-btn" data-status="completed">Đã hoàn thành (4)</button>
+                <button class="tab-btn active" data-status="all">Tất cả (0)</button>
+                <button class="tab-btn" data-status="Nháp">Nháp (0)</button>
+                <button class="tab-btn" data-status="Chờ duyệt">Chờ duyệt (0)</button>
+                <button class="tab-btn" data-status="Sắp diễn ra">Sắp diễn ra (0)</button>
+                <button class="tab-btn" data-status="Đã hoàn thành">Đã hoàn thành (0)</button>
+                <button class="tab-btn" data-status="Hủy">Đã hủy (0)</button>
             </div>
 
             <!-- Events Grid -->
-            <div class="events-grid">
-                <!-- Event Card 1 -->
-                <div class="event-card" data-status="upcoming">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400" alt="Event">
-                        <span class="event-badge upcoming">Sắp diễn ra</span>
-                    </div>
-                    <div class="event-content">
-                        <div class="event-date">
-                            <i class="fas fa-calendar"></i>
-                            <span>15/12/2024 - 09:00</span>
-                        </div>
-                        <h3 class="event-title">Hội thảo Công nghệ Thường niên 2024</h3>
-                        <div class="event-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Hội trường A1-101</span>
-                        </div>
-                        <div class="event-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-users"></i>
-                                <span>250/300 người</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-tasks"></i>
-                                <span>12/15 nhiệm vụ</span>
-                            </div>
-                        </div>
-                        <div class="event-actions">
-                            <button class="btn-action btn-edit" onclick="openEditEventModal(1)">
-                                <i class="fas fa-edit"></i>
-                                Chỉnh sửa
-                            </button>
-                            <button class="btn-action btn-cancel" onclick="confirmCancelEvent(1)">
-                                <i class="fas fa-times-circle"></i>
-                                Hủy
-                            </button>
-                            <button class="btn-action btn-view" onclick="openViewEventModal(1)">
-                                <i class="fas fa-eye"></i>
-                                Chi tiết
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event Card 2 -->
-                <div class="event-card" data-status="ongoing">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=400" alt="Event">
-                        <span class="event-badge ongoing">Đang diễn ra</span>
-                    </div>
-                    <div class="event-content">
-                        <div class="event-date">
-                            <i class="fas fa-calendar"></i>
-                            <span>10/12/2024 - 14:00</span>
-                        </div>
-                        <h3 class="event-title">Workshop Khởi nghiệp Sinh viên</h3>
-                        <div class="event-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Phòng B2-205</span>
-                        </div>
-                        <div class="event-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-users"></i>
-                                <span>85/100 người</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-tasks"></i>
-                                <span>8/10 nhiệm vụ</span>
-                            </div>
-                        </div>
-                        <div class="event-actions">
-                            <button class="btn-action btn-edit" onclick="openEditEventModal(2)">
-                                <i class="fas fa-edit"></i>
-                                Chỉnh sửa
-                            </button>
-                            <button class="btn-action btn-cancel" onclick="confirmCancelEvent(2)">
-                                <i class="fas fa-times-circle"></i>
-                                Hủy
-                            </button>
-                            <button class="btn-action btn-view" onclick="openViewEventModal(2)">
-                                <i class="fas fa-eye"></i>
-                                Chi tiết
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event Card 3 -->
-                <div class="event-card" data-status="upcoming">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=400" alt="Event">
-                        <span class="event-badge upcoming">Sắp diễn ra</span>
-                    </div>
-                    <div class="event-content">
-                        <div class="event-date">
-                            <i class="fas fa-calendar"></i>
-                            <span>20/12/2024 - 08:00</span>
-                        </div>
-                        <h3 class="event-title">Ngày hội Việc làm 2024</h3>
-                        <div class="event-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Sân vận động UTE</span>
-                        </div>
-                        <div class="event-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-users"></i>
-                                <span>450/500 người</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-tasks"></i>
-                                <span>20/25 nhiệm vụ</span>
-                            </div>
-                        </div>
-                        <div class="event-actions">
-                            <button class="btn-action btn-edit" onclick="openEditEventModal(3)">
-                                <i class="fas fa-edit"></i>
-                                Chỉnh sửa
-                            </button>
-                            <button class="btn-action btn-cancel" onclick="confirmCancelEvent(3)">
-                                <i class="fas fa-times-circle"></i>
-                                Hủy
-                            </button>
-                            <button class="btn-action btn-view" onclick="openViewEventModal(3)">
-                                <i class="fas fa-eye"></i>
-                                Chi tiết
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event Card 4 -->
-                <div class="event-card" data-status="completed">
-                    <div class="event-image">
-                        <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400" alt="Event">
-                        <span class="event-badge completed">Đã hoàn thành</span>
-                    </div>
-                    <div class="event-content">
-                        <div class="event-date">
-                            <i class="fas fa-calendar"></i>
-                            <span>05/12/2024 - 19:00</span>
-                        </div>
-                        <h3 class="event-title">Đêm nhạc Acoustic</h3>
-                        <div class="event-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Sân khấu ngoài trời</span>
-                        </div>
-                        <div class="event-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-users"></i>
-                                <span>180/200 người</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-tasks"></i>
-                                <span>10/10 nhiệm vụ</span>
-                            </div>
-                        </div>
-                        <div class="event-actions">
-                            <button class="btn-action btn-view" onclick="openViewEventModal(4)">
-                                <i class="fas fa-eye"></i>
-                                Chi tiết
-                            </button>
-                            <button class="btn-action btn-report">
-                                <i class="fas fa-file-alt"></i>
-                                Báo cáo
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div class="events-grid" id="eventsGrid">
+                <!-- Events will be dynamically rendered here by JS -->
             </div>
         </main>
     </div>
@@ -302,46 +134,58 @@
                 <form id="eventForm">
                     <div class="form-section">
                         <h3>1. Thông tin cơ bản</h3>
+                        <input type="hidden" id="eventId">
+                        <div class="form-group" id="statusGroup" style="display:none; margin-bottom: 1rem;">
+                            <label>Trạng thái</label>
+                            <div id="eventStatusBadge"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Ảnh bìa sự kiện</label>
+                            <div class="image-upload-wrapper">
+                                <input type="file" id="eventImage" accept="image/*" onchange="previewImage(event)">
+                                <div class="image-preview" id="imagePreviewContainer">
+                                    <img id="imagePreview" src="" alt="Preview" style="display: none; max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 8px;">
+                                </div>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label>Tên sự kiện <span class="required">*</span></label>
-                            <input type="text" id="eventName" placeholder="Ví dụ: Hội thảo Công nghệ Thường niên 2024" required>
+                            <input type="text" id="eventName" placeholder="Nhập tên sự kiện..." required>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Danh mục <span class="required">*</span></label>
-                                <select id="eventCategory" required>
-                                    <option value="">Chọn danh mục</option>
-                                    <option value="workshop">Hội thảo (Workshop)</option>
-                                    <option value="seminar">Hội nghị (Seminar)</option>
-                                    <option value="competition">Cuộc thi</option>
-                                    <option value="festival">Lễ hội</option>
-                                    <option value="other">Khác</option>
-                                </select>
+                                <label>Danh mục <span class="required">*</span> <small>(chọn một hoặc nhiều)</small></label>
+                                <div id="categoryTags" class="category-tags">
+                                    <!-- Populated by JS -->
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Địa điểm <span class="required">*</span></label>
                                 <select id="eventLocation" required>
                                     <option value="">Chọn địa điểm</option>
-                                    <option value="a1-101">Hội trường A1-101</option>
-                                    <option value="b2-205">Phòng B2-205</option>
-                                    <option value="stadium">Sân vận động</option>
-                                    <option value="outdoor">Sân khấu ngoài trời</option>
+                                    <!-- Populated by JS -->
                                 </select>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Ngày <span class="required">*</span></label>
-                                <input type="date" id="eventDate" required>
+                                <label>Thời gian bắt đầu <span class="required">*</span></label>
+                                <input type="datetime-local" id="eventStartTime" required>
                             </div>
                             <div class="form-group">
-                                <label>Thời gian <span class="required">*</span></label>
-                                <input type="time" id="eventTime" required>
+                                <label>Thời gian kết thúc <span class="required">*</span></label>
+                                <input type="datetime-local" id="eventEndTime" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Số lượng tối đa</label>
+                                <input type="number" id="eventMaxAttendees" placeholder="Để trống nếu không giới hạn">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Mô tả</label>
-                            <textarea id="eventDescription" rows="4" placeholder="Mô tả ngắn gọn mục đích và chương trình của sự kiện..."></textarea>
+                            <label>Mô tả sự kiện</label>
+                            <textarea id="eventDescription" rows="4" placeholder="Nhập mô tả nội dung, mục tiêu của sự kiện..."></textarea>
                         </div>
                     </div>
 
@@ -351,61 +195,39 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Tên hạng mục</th>
-                                        <th>Số lượng</th>
-                                        <th>Đơn giá (VNĐ)</th>
-                                        <th>Tổng cộng</th>
-                                        <th>Thao tác</th>
+                                        <th>TÊN HẠNG MỤC</th>
+                                        <th>SỐ LƯỢNG</th>
+                                        <th>ĐƠN GIÁ (VNĐ)</th>
+                                        <th>THÀNH TIỀN</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="budgetTableBody">
-                                    <tr>
-                                        <td><input type="text" placeholder="Văn phòng phẩm & In ấn"></td>
-                                        <td><input type="number" value="100"></td>
-                                        <td><input type="number" value="15000"></td>
-                                        <td class="total-cell">1,500,000</td>
-                                        <td><button type="button" class="btn-remove"><i class="fas fa-trash"></i></button></td>
-                                    </tr>
+                                    <!-- Populated by JS -->
                                 </tbody>
                             </table>
                             <button type="button" class="btn-add-row" onclick="addBudgetRow()">
-                                <i class="fas fa-plus"></i> Thêm mục
+                                Thêm hạng mục
                             </button>
-                            <div class="budget-total">
-                                <span>Tổng dự toán:</span>
-                                <span class="total-amount">4,000,000 VNĐ</span>
+                            <div class="budget-total" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                <span style="font-weight: 500;">Tổng dự toán</span>
+                                <span class="total-amount" id="budgetGrandTotal" style="color: #0056b3; font-weight: bold;">0 VNĐ</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-section">
                         <h3>3. Ban tổ chức</h3>
-                        <div class="organizers-list">
-                            <div class="organizer-item">
-                                <img src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=0D5A9C&color=fff" alt="Avatar">
-                                <div class="organizer-info">
-                                    <span class="organizer-name">Nguyễn Văn A</span>
-                                    <span class="organizer-role">Trưởng Ban tổ chức</span>
-                                </div>
-                                <button type="button" class="btn-edit-organizer"><i class="fas fa-edit"></i></button>
-                            </div>
+                        <div class="organizers-list" id="organizersList">
+                            <!-- Selected users will be populated here -->
                         </div>
-                        <button type="button" class="btn-add-organizer">
-                            <i class="fas fa-user-plus"></i> Chỉ định vai trò mới
+                        <button type="button" class="btn-add-organizer" style="margin-top: 15px; font-weight: 600;" onclick="toggleUserSelection()">
+                            Thêm thành viên ban tổ chức
                         </button>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>4. Phê duyệt</h3>
-                        <div class="approval-upload">
-                            <div class="upload-area">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Nhấn để tải lên hoặc kéo thả</p>
-                                <span>PDF, DOCX tối đa 10MB</span>
-                            </div>
-                            <div class="approval-note">
-                                <i class="fas fa-info-circle"></i>
-                                <p>Vui lòng tải lên kế hoạch chi tiết để Ban Giám hiệu có thể xem xét. Thời gian xét duyệt thường từ 3-5 ngày làm việc.</p>
+                        <div id="userSelectionContainer" style="display: none; margin-top: 10px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc; max-height: 200px; overflow-y: auto;">
+                            <input type="text" id="userSearchInput" placeholder="Tìm kiếm người dùng..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 4px;" oninput="filterUserSelection()">
+                            <div id="userCheckboxes" style="display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Populated by JS -->
                             </div>
                         </div>
                     </div>
@@ -492,6 +314,5 @@
 
     <script src="../js/btc-auth.js"></script>
     <script src="../js/btc-events.js"></script>
-    <script src="../js/btc-logout.js"></script>
 </body>
 </html>

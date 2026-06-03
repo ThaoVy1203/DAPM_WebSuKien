@@ -96,15 +96,22 @@
                     <h1>Quản lý Ngân sách</h1>
                     <p>Lập kế hoạch và theo dõi chi phí cho các sự kiện</p>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-secondary">
-                        <i class="fas fa-file-export"></i>
-                        Xuất báo cáo
-                    </button>
-                    <button class="btn-primary" onclick="openCreateBudgetModal()">
-                        <i class="fas fa-plus"></i>
-                        Lập kế hoạch mới
-                    </button>
+                <div class="header-sub-row">
+                    <div class="event-selector-wrapper">
+                        <select id="eventSelector" class="event-dropdown-select">
+                            <option value="">-- Chọn sự kiện --</option>
+                        </select>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-secondary">
+                            <i class="fas fa-file-export"></i>
+                            Xuất báo cáo
+                        </button>
+                        <button class="btn-primary" onclick="openCreateBudgetModal()">
+                            <i class="fas fa-plus"></i>
+                            Lập kế hoạch mới
+                        </button>
+                    </div>
                 </div>
             </div>
 

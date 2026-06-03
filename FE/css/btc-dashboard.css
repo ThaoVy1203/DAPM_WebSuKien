@@ -225,9 +225,19 @@ body {
 /* Page Header */
 .page-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
     margin-bottom: 32px;
+    align-items: stretch;
+}
+
+.header-sub-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .page-header h1 {
@@ -1047,3 +1057,30 @@ body {
         gap: 30px;
     }
 }
+
+/* Event Selector Styling */
+.event-selector-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 12px;
+}
+.event-dropdown-select {
+    padding: 10px 16px;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease;
+    min-width: 250px;
+    max-width: 400px;
+}
+.event-dropdown-select:focus, .event-dropdown-select:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 90, 156, 0.1);
+}
+

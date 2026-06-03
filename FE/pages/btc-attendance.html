@@ -93,20 +93,21 @@
             <!-- Event Info -->
             <div class="event-info">
                 <div class="event-details">
-                    <h1>UTE Innovate 2024</h1>
+                    <h1 id="attendanceEventTitle">Điểm danh người tham gia</h1>
+                    <div class="event-selector-wrapper" style="margin: 12px 0;">
+                        <select id="eventSelector" class="event-dropdown-select">
+                            <option value="">-- Chọn sự kiện --</option>
+                        </select>
+                    </div>
                     <div class="event-meta">
-                        <span><i class="fas fa-map-marker-alt"></i> Hội trường chính</span>
-                        <span><i class="fas fa-clock"></i> Trực tiếp • 09:00 - 17:00</span>
+                        <span id="attendanceEventLocation"><i class="fas fa-map-marker-alt"></i> Đang tải...</span>
+                        <span id="attendanceEventTime"><i class="fas fa-clock"></i> Đang tải...</span>
                     </div>
                 </div>
                 <div class="event-actions">
-                    <button type="button" class="btn-export">
+                    <button type="button" class="btn-export" onclick="exportParticipants()">
                         <i class="fas fa-file-excel"></i>
                         Xuất CSV
-                    </button>
-                    <button type="button" class="btn-manual-checkin">
-                        <i class="fas fa-qrcode"></i>
-                        Nhập mã QR
                     </button>
                 </div>
             </div>

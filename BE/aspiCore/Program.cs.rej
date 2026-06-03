@@ -1,0 +1,9 @@
+diff a/BE/aspiCore/Program.cs b/BE/aspiCore/Program.cs	(rejected hunks)
+@@ -19,6 +19,7 @@
+ builder.Services.AddScoped<INguoiDungService, NguoiDungService>();
+ builder.Services.AddScoped<IDangKyService, DangKyService>();
+ builder.Services.AddScoped<IDiaDiemService, DiaDiemService>();
++builder.Services.AddScoped<IDanhMucService, DanhMucService>();
+ 
+ // Add CORS
+ builder.Services.AddCors(options =>

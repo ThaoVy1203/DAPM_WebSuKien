@@ -11,97 +11,125 @@
     <link rel="stylesheet" href="../css/ctsv-approval.css">
     <link rel="stylesheet" href="../css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Skip link for keyboard navigation */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #6366f1;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            z-index: 1001;
+            border-radius: 0 0 4px 0;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+        /* Ensure modal close button has proper styling */
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .btn-close:hover {
+            color: #000;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Skip navigation link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <header class="header">
         <div class="header-left">
             <div class="logo">
                 <img src="../images/logo.png" alt="UTE Events">
             </div>
             <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm danh mục...">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" placeholder="Tìm kiếm danh mục..." aria-label="Tìm kiếm danh mục">
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-notification">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">5</span>
+            <!-- FIXED: Added type="button", aria-label, title -->
+            <button type="button" class="btn-notification" aria-label="Thông báo" title="Thông báo">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                <span class="notification-badge" aria-label="5 thông báo chưa đọc">5</span>
             </button>
-            <div class="user-profile">
+            <div class="user-profile" tabindex="0" role="button" aria-label="Menu người dùng">
                 <div class="user-info">
                     <span class="user-name">Admin</span>
                     <span class="user-role">Quản trị viên hệ thống</span>
                 </div>
-                <img src="../images/avatar-admin.jpg" alt="Admin" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff'">
+                <img src="../images/avatar-admin.jpg" alt="Avatar Admin" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff'">
             </div>
         </div>
     </header>
 
     <div class="main-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" aria-label="Thanh điều hướng quản trị">
             <nav class="sidebar-nav">
                 <a href="admin-dashboard.html" class="nav-item">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
                     <span>Dashboard</span>
                 </a>
                 <a href="admin-users.html" class="nav-item">
-                    <i class="fas fa-users"></i>
+                    <i class="fas fa-users" aria-hidden="true"></i>
                     <span>Tài khoản</span>
                 </a>
                 <a href="admin-roles.html" class="nav-item">
-                    <i class="fas fa-user-shield"></i>
+                    <i class="fas fa-user-shield" aria-hidden="true"></i>
                     <span>Phân quyền</span>
                 </a>
                 <a href="admin-event-categories.html" class="nav-item active">
-                    <i class="fas fa-tags"></i>
+                    <i class="fas fa-tags" aria-hidden="true"></i>
                     <span>Danh mục SK</span>
                 </a>
                 <a href="admin-locations.html" class="nav-item">
-                    <i class="fas fa-map-marker-alt"></i>
+                    <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
                     <span>Địa điểm</span>
                 </a>
             </nav>
 
             <div class="sidebar-footer">
                 <a href="#" class="nav-item">
-                    <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog" aria-hidden="true"></i>
                     <span>Cài đặt</span>
                 </a>
                 <a href="#" class="nav-item">
-                    <i class="fas fa-question-circle"></i>
+                    <i class="fas fa-question-circle" aria-hidden="true"></i>
                     <span>Trợ giúp</span>
                 </a>
                 <a href="#" class="nav-item danger">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span>Đăng xuất</span>
                 </a>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Page Header -->
+        <main class="main-content" id="main-content" tabindex="-1">
             <div class="page-header">
                 <div>
                     <h1>Quản lý loại sự kiện</h1>
                     <p>Thêm, sửa, xóa danh mục sự kiện</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-primary" onclick="openAddCategoryModal()">
-                        <i class="fas fa-plus"></i>
+                    <!-- FIXED: Added type="button" -->
+                    <button type="button" class="btn-primary" onclick="openAddCategoryModal()" aria-label="Thêm danh mục mới">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
                         Thêm danh mục
                     </button>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
             <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
                 <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="stat-header">
-                        <i class="fas fa-tags"></i>
+                        <i class="fas fa-tags" aria-hidden="true"></i>
                     </div>
                     <div class="stat-number">5</div>
                     <div class="stat-label">TỔNG DANH MỤC</div>
@@ -110,7 +138,7 @@
 
                 <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                     <div class="stat-header">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                     </div>
                     <div class="stat-number">5</div>
                     <div class="stat-label">ĐANG SỬ DỤNG</div>
@@ -119,7 +147,7 @@
 
                 <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                     <div class="stat-header">
-                        <i class="fas fa-calendar-alt"></i>
+                        <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                     </div>
                     <div class="stat-number">3</div>
                     <div class="stat-label">SỰ KIỆN</div>
@@ -128,7 +156,7 @@
 
                 <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                     <div class="stat-header">
-                        <i class="fas fa-fire"></i>
+                        <i class="fas fa-fire" aria-hidden="true"></i>
                     </div>
                     <div class="stat-number">Học thuật</div>
                     <div class="stat-label">PHỔ BIẾN NHẤT</div>
@@ -136,262 +164,271 @@
                 </div>
             </div>
 
-            <!-- Categories Grid -->
             <div class="categories-grid" style="margin-bottom: 32px;">
+                <!-- Category Card 1 -->
                 <div class="category-card">
-                    <div class="category-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <i class="fas fa-chalkboard-teacher"></i>
+                    <div class="category-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" aria-hidden="true">
+                        <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
                     </div>
                     <div class="category-info">
                         <h3>Học thuật</h3>
                         <p>Hội thảo, seminar, tọa đàm học thuật</p>
                         <div class="category-stats">
-                            <span><i class="fas fa-calendar"></i> 2 sự kiện</span>
-                            <span><i class="fas fa-users"></i> 380 người tham gia</span>
+                            <span><i class="fas fa-calendar" aria-hidden="true"></i> 2 sự kiện</span>
+                            <span><i class="fas fa-users" aria-hidden="true"></i> 380 người tham gia</span>
                         </div>
                     </div>
                     <div class="category-actions">
-                        <button class="btn-action edit" onclick="editCategory(1)">
-                            <i class="fas fa-edit"></i>
+                        <!-- FIXED: Added type="button", aria-label, title -->
+                        <button type="button" class="btn-action edit" onclick="editCategory(1)" aria-label="Sửa danh mục Học thuật" title="Sửa">
+                            <i class="fas fa-edit" aria-hidden="true"></i>
                         </button>
-                        <button class="btn-action delete" onclick="deleteCategory(1)">
-                            <i class="fas fa-trash"></i>
+                        <button type="button" class="btn-action delete" onclick="deleteCategory(1)" aria-label="Xóa danh mục Học thuật" title="Xóa">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
 
+                <!-- Category Card 2 -->
                 <div class="category-card">
-                    <div class="category-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <i class="fas fa-hands-helping"></i>
+                    <div class="category-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" aria-hidden="true">
+                        <i class="fas fa-hands-helping" aria-hidden="true"></i>
                     </div>
                     <div class="category-info">
                         <h3>Tình nguyện</h3>
                         <p>Hoạt động tình nguyện cộng đồng</p>
                         <div class="category-stats">
-                            <span><i class="fas fa-calendar"></i> 1 sự kiện</span>
-                            <span><i class="fas fa-users"></i> 500 người tham gia</span>
+                            <span><i class="fas fa-calendar" aria-hidden="true"></i> 1 sự kiện</span>
+                            <span><i class="fas fa-users" aria-hidden="true"></i> 500 người tham gia</span>
                         </div>
                     </div>
                     <div class="category-actions">
-                        <button class="btn-action edit" onclick="editCategory(2)">
-                            <i class="fas fa-edit"></i>
+                        <button type="button" class="btn-action edit" onclick="editCategory(2)" aria-label="Sửa danh mục Tình nguyện" title="Sửa">
+                            <i class="fas fa-edit" aria-hidden="true"></i>
                         </button>
-                        <button class="btn-action delete" onclick="deleteCategory(2)">
-                            <i class="fas fa-trash"></i>
+                        <button type="button" class="btn-action delete" onclick="deleteCategory(2)" aria-label="Xóa danh mục Tình nguyện" title="Xóa">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
 
+                <!-- Category Card 3 -->
                 <div class="category-card">
-                    <div class="category-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <i class="fas fa-music"></i>
+                    <div class="category-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" aria-hidden="true">
+                        <i class="fas fa-music" aria-hidden="true"></i>
                     </div>
                     <div class="category-info">
                         <h3>Văn nghệ thể thao</h3>
                         <p>Sự kiện văn hóa, thể dục thể thao</p>
                         <div class="category-stats">
-                            <span><i class="fas fa-calendar"></i> 0 sự kiện</span>
-                            <span><i class="fas fa-users"></i> 0 người tham gia</span>
+                            <span><i class="fas fa-calendar" aria-hidden="true"></i> 0 sự kiện</span>
+                            <span><i class="fas fa-users" aria-hidden="true"></i> 0 người tham gia</span>
                         </div>
                     </div>
                     <div class="category-actions">
-                        <button class="btn-action edit" onclick="editCategory(3)">
-                            <i class="fas fa-edit"></i>
+                        <button type="button" class="btn-action edit" onclick="editCategory(3)" aria-label="Sửa danh mục Văn nghệ thể thao" title="Sửa">
+                            <i class="fas fa-edit" aria-hidden="true"></i>
                         </button>
-                        <button class="btn-action delete" onclick="deleteCategory(3)">
-                            <i class="fas fa-trash"></i>
+                        <button type="button" class="btn-action delete" onclick="deleteCategory(3)" aria-label="Xóa danh mục Văn nghệ thể thao" title="Xóa">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
 
+                <!-- Category Card 4 -->
                 <div class="category-card">
-                    <div class="category-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <i class="fas fa-laptop-code"></i>
+                    <div class="category-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" aria-hidden="true">
+                        <i class="fas fa-laptop-code" aria-hidden="true"></i>
                     </div>
                     <div class="category-info">
                         <h3>Kỹ năng mềm</h3>
                         <p>Đào tạo kỹ năng, workshop</p>
                         <div class="category-stats">
-                            <span><i class="fas fa-calendar"></i> 2 sự kiện</span>
-                            <span><i class="fas fa-users"></i> 380 người tham gia</span>
+                            <span><i class="fas fa-calendar" aria-hidden="true"></i> 2 sự kiện</span>
+                            <span><i class="fas fa-users" aria-hidden="true"></i> 380 người tham gia</span>
                         </div>
                     </div>
                     <div class="category-actions">
-                        <button class="btn-action edit" onclick="editCategory(4)">
-                            <i class="fas fa-edit"></i>
+                        <button type="button" class="btn-action edit" onclick="editCategory(4)" aria-label="Sửa danh mục Kỹ năng mềm" title="Sửa">
+                            <i class="fas fa-edit" aria-hidden="true"></i>
                         </button>
-                        <button class="btn-action delete" onclick="deleteCategory(4)">
-                            <i class="fas fa-trash"></i>
+                        <button type="button" class="btn-action delete" onclick="deleteCategory(4)" aria-label="Xóa danh mục Kỹ năng mềm" title="Xóa">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
 
+                <!-- Category Card 5 -->
                 <div class="category-card">
-                    <div class="category-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <i class="fas fa-flag"></i>
+                    <div class="category-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" aria-hidden="true">
+                        <i class="fas fa-flag" aria-hidden="true"></i>
                     </div>
                     <div class="category-info">
                         <h3>Phong trào Đoàn</h3>
                         <p>Hoạt động Đoàn – Hội sinh viên</p>
                         <div class="category-stats">
-                            <span><i class="fas fa-calendar"></i> 1 sự kiện</span>
-                            <span><i class="fas fa-users"></i> 500 người tham gia</span>
+                            <span><i class="fas fa-calendar" aria-hidden="true"></i> 1 sự kiện</span>
+                            <span><i class="fas fa-users" aria-hidden="true"></i> 500 người tham gia</span>
                         </div>
                     </div>
                     <div class="category-actions">
-                        <button class="btn-action edit" onclick="editCategory(5)">
-                            <i class="fas fa-edit"></i>
+                        <button type="button" class="btn-action edit" onclick="editCategory(5)" aria-label="Sửa danh mục Phong trào Đoàn" title="Sửa">
+                            <i class="fas fa-edit" aria-hidden="true"></i>
                         </button>
-                        <button class="btn-action delete" onclick="deleteCategory(5)">
-                            <i class="fas fa-trash"></i>
+                        <button type="button" class="btn-action delete" onclick="deleteCategory(5)" aria-label="Xóa danh mục Phong trào Đoàn" title="Xóa">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Categories Table -->
             <div class="chart-card" style="margin-bottom: 24px;">
                 <div class="chart-header">
-                    <h3><i class="fas fa-list"></i> Danh sách chi tiết</h3>
+                    <h3><i class="fas fa-list" aria-hidden="true"></i> Danh sách chi tiết</h3>
                 </div>
                 <div class="table-responsive">
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>STT</th>
-                                <th>Tên danh mục</th>
-                                <th>Mô tả</th>
-                                <th>Số sự kiện</th>
-                                <th>Trạng thái</th>
-                                <th>Ngày tạo</th>
-                                <th>Thao tác</th>
+                                <th scope="col">STT</th>
+                                <th scope="col">Tên danh mục</th>
+                                <th scope="col">Mô tả</th>
+                                <th scope="col">Số sự kiện</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col">Ngày tạo</th>
+                                <th scope="col">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Row 1 -->
                             <tr>
                                 <td>1</td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                            <i class="fas fa-chalkboard-teacher"></i>
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" aria-hidden="true">
+                                            <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
                                         </div>
                                         <strong>Học thuật</strong>
                                     </div>
-                                </td>
+                                 </td>
                                 <td>Hội thảo, seminar, tọa đàm học thuật</td>
                                 <td>2</td>
                                 <td><span class="status-badge active">Đang sử dụng</span></td>
                                 <td>01/01/2024</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action edit" onclick="editCategory(1)">
-                                            <i class="fas fa-edit"></i>
+                                        <button type="button" class="btn-action edit" onclick="editCategory(1)" aria-label="Sửa danh mục Học thuật" title="Sửa">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                         </button>
-                                        <button class="btn-action delete" onclick="deleteCategory(1)">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="button" class="btn-action delete" onclick="deleteCategory(1)" aria-label="Xóa danh mục Học thuật" title="Xóa">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                         </button>
                                     </div>
-                                </td>
+                                 </td>
                             </tr>
+                            <!-- Row 2 -->
                             <tr>
                                 <td>2</td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                                            <i class="fas fa-hands-helping"></i>
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" aria-hidden="true">
+                                            <i class="fas fa-hands-helping" aria-hidden="true"></i>
                                         </div>
                                         <strong>Tình nguyện</strong>
                                     </div>
-                                </td>
+                                 </td>
                                 <td>Hoạt động tình nguyện cộng đồng</td>
                                 <td>1</td>
                                 <td><span class="status-badge active">Đang sử dụng</span></td>
                                 <td>01/01/2024</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action edit" onclick="editCategory(2)">
-                                            <i class="fas fa-edit"></i>
+                                        <button type="button" class="btn-action edit" onclick="editCategory(2)" aria-label="Sửa danh mục Tình nguyện" title="Sửa">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                         </button>
-                                        <button class="btn-action delete" onclick="deleteCategory(2)">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="button" class="btn-action delete" onclick="deleteCategory(2)" aria-label="Xóa danh mục Tình nguyện" title="Xóa">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                         </button>
                                     </div>
-                                </td>
+                                 </td>
                             </tr>
+                            <!-- Row 3 -->
                             <tr>
                                 <td>3</td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                                            <i class="fas fa-music"></i>
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" aria-hidden="true">
+                                            <i class="fas fa-music" aria-hidden="true"></i>
                                         </div>
                                         <strong>Văn nghệ thể thao</strong>
                                     </div>
-                                </td>
+                                 </td>
                                 <td>Sự kiện văn hóa, thể dục thể thao</td>
                                 <td>0</td>
                                 <td><span class="status-badge active">Đang sử dụng</span></td>
                                 <td>01/01/2024</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action edit" onclick="editCategory(3)">
-                                            <i class="fas fa-edit"></i>
+                                        <button type="button" class="btn-action edit" onclick="editCategory(3)" aria-label="Sửa danh mục Văn nghệ thể thao" title="Sửa">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                         </button>
-                                        <button class="btn-action delete" onclick="deleteCategory(3)">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="button" class="btn-action delete" onclick="deleteCategory(3)" aria-label="Xóa danh mục Văn nghệ thể thao" title="Xóa">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                         </button>
                                     </div>
-                                </td>
+                                 </td>
                             </tr>
+                            <!-- Row 4 -->
                             <tr>
                                 <td>4</td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                                            <i class="fas fa-laptop-code"></i>
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" aria-hidden="true">
+                                            <i class="fas fa-laptop-code" aria-hidden="true"></i>
                                         </div>
                                         <strong>Kỹ năng mềm</strong>
                                     </div>
-                                </td>
+                                 </td>
                                 <td>Đào tạo kỹ năng, workshop</td>
                                 <td>2</td>
                                 <td><span class="status-badge active">Đang sử dụng</span></td>
                                 <td>01/01/2024</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action edit" onclick="editCategory(4)">
-                                            <i class="fas fa-edit"></i>
+                                        <button type="button" class="btn-action edit" onclick="editCategory(4)" aria-label="Sửa danh mục Kỹ năng mềm" title="Sửa">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                         </button>
-                                        <button class="btn-action delete" onclick="deleteCategory(4)">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="button" class="btn-action delete" onclick="deleteCategory(4)" aria-label="Xóa danh mục Kỹ năng mềm" title="Xóa">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                         </button>
                                     </div>
-                                </td>
+                                 </td>
                             </tr>
+                            <!-- Row 5 -->
                             <tr>
                                 <td>5</td>
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                                            <i class="fas fa-flag"></i>
+                                        <div class="category-icon-small" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" aria-hidden="true">
+                                            <i class="fas fa-flag" aria-hidden="true"></i>
                                         </div>
                                         <strong>Phong trào Đoàn</strong>
                                     </div>
-                                </td>
+                                 </td>
                                 <td>Hoạt động Đoàn – Hội sinh viên</td>
                                 <td>1</td>
                                 <td><span class="status-badge active">Đang sử dụng</span></td>
                                 <td>01/01/2024</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action edit" onclick="editCategory(5)">
-                                            <i class="fas fa-edit"></i>
+                                        <button type="button" class="btn-action edit" onclick="editCategory(5)" aria-label="Sửa danh mục Phong trào Đoàn" title="Sửa">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                         </button>
-                                        <button class="btn-action delete" onclick="deleteCategory(5)">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="button" class="btn-action delete" onclick="deleteCategory(5)" aria-label="Xóa danh mục Phong trào Đoàn" title="Xóa">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
                                         </button>
                                     </div>
-                                </td>
+                                 </td>
                             </tr>
                         </tbody>
                     </table>
@@ -400,7 +437,6 @@
         </main>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
@@ -418,27 +454,27 @@
                 <div class="footer-col">
                     <h4>Thông tin liên lạc</h4>
                     <ul class="footer-links">
-                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
-                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                        <li><i class="fas fa-phone" aria-hidden="true"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope" aria-hidden="true"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt" aria-hidden="true"></i> 48 Cao Thắng, Đà Nẵng</li>
                     </ul>
                 </div>
 
                 <div class="footer-col">
                     <h4>Bản đồ chỉ dẫn</h4>
                     <div class="map-placeholder">
-                        <img src="../images/map.png" alt="Bản đồ">
+                        <img src="../images/map.png" alt="Bản đồ trường Đại học Sư phạm Kỹ thuật">
                     </div>
                 </div>
 
                 <div class="footer-col">
                     <h4>Kết nối</h4>
                     <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-google"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Google"><i class="fab fa-google" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
@@ -448,27 +484,27 @@
         </div>
     </footer>
 
-    <!-- Add/Edit Category Modal -->
-    <div id="categoryModal" class="modal">
+    <!-- Modal -->
+    <div id="categoryModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle">Thêm danh mục mới</h2>
-                <button class="btn-close" onclick="closeCategoryModal()">
-                    <i class="fas fa-times"></i>
+                <button type="button" class="btn-close" onclick="closeCategoryModal()" aria-label="Đóng modal">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <form id="categoryForm">
                     <div class="form-group">
-                        <label>Tên danh mục <span class="required">*</span></label>
-                        <input type="text" class="form-control" id="categoryName" required>
+                        <label for="categoryName">Tên danh mục <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="categoryName" required aria-required="true">
                     </div>
                     <div class="form-group">
-                        <label>Mô tả</label>
+                        <label for="categoryDescription">Mô tả</label>
                         <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Icon</label>
+                        <label for="categoryIcon">Icon</label>
                         <select class="form-control" id="categoryIcon">
                             <option value="fa-chalkboard-teacher">Hội thảo</option>
                             <option value="fa-laptop-code">Workshop</option>
@@ -479,7 +515,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Trạng thái</label>
+                        <label for="categoryStatus">Trạng thái</label>
                         <select class="form-control" id="categoryStatus">
                             <option value="active">Đang sử dụng</option>
                             <option value="inactive">Tạm ngưng</option>
@@ -489,8 +525,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel-modal" onclick="closeCategoryModal()">Hủy</button>
-                <button type="button" class="btn-submit success" onclick="saveCategory()">
-                    <i class="fas fa-save"></i>
+                <button type="button" class="btn-submit success" onclick="saveCategory()" aria-label="Lưu danh mục">
+                    <i class="fas fa-save" aria-hidden="true"></i>
                     Lưu
                 </button>
             </div>

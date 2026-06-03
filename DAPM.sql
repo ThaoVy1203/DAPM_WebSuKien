@@ -120,13 +120,14 @@ GO
 
 CREATE TABLE SuKien (
     idSuKien INTEGER NOT NULL IDENTITY(1,1),
-    tenSuKien NVARCHAR(50) NOT NULL,
+    tenSuKien NVARCHAR(200) NOT NULL,
     moTa NVARCHAR(MAX) NULL,
     thoiGianBatDau DATETIME2 NOT NULL,
     thoiGianKetThuc DATETIME2 NOT NULL,
     idDiaDiem INTEGER NULL,
     idNguoiTao CHAR(5) NOT NULL,
     soLuongToiDa INTEGER NULL,
+    hinhAnh NVARCHAR(MAX) NULL,
     trangThai NVARCHAR(20) NOT NULL DEFAULT N'Nháp',
     capPheDuyet CHAR(5) NULL,
     thoiGianTao DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
@@ -407,25 +408,25 @@ INSERT INTO DanhMucSuKien (tenDanhMuc, moTa) VALUES
 (N'Phong trào Đoàn', N'Hoạt động Đoàn – Hội sinh viên');
 GO
 
--- 4.6 Sự kiện cơ bản
-INSERT INTO SuKien (tenSuKien, moTa, thoiGianBatDau, thoiGianKetThuc, idDiaDiem, idNguoiTao, soLuongToiDa, trangThai, capPheDuyet) VALUES
+-- 4.6 Sự kiện cơ bản (đã hợp nhất từ cả hai nhánh)
+INSERT INTO SuKien (tenSuKien, moTa, thoiGianBatDau, thoiGianKetThuc, idDiaDiem, idNguoiTao, soLuongToiDa, hinhAnh, trangThai, capPheDuyet) VALUES
 (
     N'Hội thảo Chuyển đổi số 2025',
     N'Hội thảo về xu hướng chuyển đổi số trong giáo dục đại học',
     '2025-11-15 08:00:00', '2025-11-15 17:00:00',
-    1, 'ND002', 300, N'Đã duyệt', 'ND005'
+    1, 'ND002', 300, '../images/event1.png', N'Nháp', 'ND005'
 ),
 (
     N'Ngày hội Tình nguyện Mùa Hè Xanh',
     N'Chiến dịch tình nguyện hè hỗ trợ cộng đồng',
     '2025-07-20 06:00:00', '2025-07-25 18:00:00',
-    3, 'ND002', 500, N'Đã duyệt', 'ND005'
+    3, 'ND002', 500, '../images/event2.png', N'Đã duyệt', 'ND005'
 ),
 (
     N'Workshop Kỹ năng thuyết trình chuyên nghiệp',
     N'Rèn luyện kỹ năng thuyết trình và giao tiếp',
     '2025-12-05 13:30:00', '2025-12-05 17:00:00',
-    2, 'ND003', 80, N'Chờ duyệt', NULL
+    2, 'ND003', 80, '../images/event3.png', N'Chờ duyệt', NULL
 );
 GO
 
@@ -512,24 +513,24 @@ IF OBJECT_ID('vw_SuKienDayDu', 'V') IS NOT NULL DROP VIEW vw_SuKienDayDu;
 GO
 
 CREATE VIEW vw_SuKienDayDu AS
-SELECT
-    sk.idSuKien, sk.tenSuKien, sk.moTa,
-    sk.thoiGianBatDau, sk.thoiGianKetThuc,
-    sk.soLuongToiDa, sk.trangThai, sk.thoiGianTao,
+SELECT 
+    s.idSuKien, s.tenSuKien, s.moTa, s.thoiGianBatDau, s.thoiGianKetThuc, 
+    s.soLuongToiDa, s.trangThai, s.thoiGianTao, s.hinhAnh,
     dd.tenDiaDiem, dd.viTri,
     nd.hoTen  AS tenNguoiTao,
     nd.email  AS emailNguoiTao,
     COUNT(DISTINCT dksk.idDangKy) AS soDaDangKy
-FROM SuKien sk
-LEFT JOIN DiaDiem dd ON sk.idDiaDiem  = dd.idDiaDiem
-LEFT JOIN NguoiDung nd ON sk.idNguoiTao = nd.idNguoiDung
-LEFT JOIN DangKySuKien dksk ON sk.idSuKien = dksk.idSuKien
+FROM SuKien s
+LEFT JOIN DiaDiem dd ON s.idDiaDiem  = dd.idDiaDiem
+LEFT JOIN NguoiDung nd ON s.idNguoiTao = nd.idNguoiDung
+LEFT JOIN DangKySuKien dksk ON s.idSuKien = dksk.idSuKien
     AND dksk.trangThai NOT IN (N'Đã hủy')
 GROUP BY
-    sk.idSuKien, sk.tenSuKien, sk.moTa,
-    sk.thoiGianBatDau, sk.thoiGianKetThuc,
-    sk.soLuongToiDa, sk.trangThai, sk.thoiGianTao,
-    dd.tenDiaDiem, dd.viTri, nd.hoTen, nd.email;
+    s.idSuKien, s.tenSuKien, s.moTa,
+    s.thoiGianBatDau, s.thoiGianKetThuc,
+    s.soLuongToiDa, s.trangThai, s.thoiGianTao, s.hinhAnh,
+    dd.tenDiaDiem, dd.viTri,
+    nd.hoTen, nd.email;
 GO
 
 IF OBJECT_ID('vw_ThongKeThamGia', 'V') IS NOT NULL DROP VIEW vw_ThongKeThamGia;
@@ -736,48 +737,48 @@ DELETE FROM NganSachDuKien WHERE idSuKien BETWEEN 4 AND 10;
 DELETE FROM SuKien WHERE idSuKien BETWEEN 4 AND 10;
 GO
 
-INSERT INTO SuKien (tenSuKien, moTa, thoiGianBatDau, thoiGianKetThuc, idDiaDiem, idNguoiTao, soLuongToiDa, trangThai, capPheDuyet) VALUES
+INSERT INTO SuKien (tenSuKien, moTa, thoiGianBatDau, thoiGianKetThuc, idDiaDiem, idNguoiTao, soLuongToiDa, hinhAnh, trangThai, capPheDuyet) VALUES
 (
     N'Ngày hội Khởi nghiệp UTE 2026',
     N'Sự kiện kết nối sinh viên với các nhà đầu tư và mentor khởi nghiệp.',
     '2026-06-15 08:00:00', '2026-06-15 17:00:00',
-    1, 'ND002', 200, N'Đã duyệt', 'ND005'
+    1, 'ND002', 200, '../images/event4.png', N'Đã duyệt', 'ND005'
 ),
 (
     N'Festival Văn hóa Các Dân tộc 2026',
     N'Lễ hội văn hóa đặc sắc với các tiết mục nghệ thuật, ẩm thực và trò chơi dân gian.',
     '2026-06-20 14:00:00', '2026-06-20 21:00:00',
-    3, 'ND002', 1000, N'Đã duyệt', 'ND005'
+    3, 'ND002', 1000, '../images/event5.png', N'Đã duyệt', 'ND005'
 ),
 (
     N'Hackathon AI 24h - UTE 2026',
     N'Cuộc thi lập trình 24 giờ liên tục với chủ đề Trí tuệ Nhân tạo.',
     '2026-05-25 08:00:00', '2026-05-26 08:00:00',
-    2, 'ND003', 120, N'Đang diễn ra', 'ND005'
+    2, 'ND003', 120, '../images/event6.png', N'Đang diễn ra', 'ND005'
 ),
 (
     N'Hội thảo Blockchain & Web3 cho Sinh viên',
     N'Tìm hiểu về công nghệ Blockchain, NFT và tương lai của Web3.',
     '2026-04-10 09:00:00', '2026-04-10 12:00:00',
-    2, 'ND002', 80, N'Kết thúc', 'ND005'
+    2, 'ND002', 80, '../images/event7.png', N'Kết thúc', 'ND005'
 ),
 (
     N'Workshop Thiết kế UI/UX Nâng cao',
     N'Workshop thực hành thiết kế giao diện người dùng với Figma.',
     '2026-07-01 13:30:00', '2026-07-01 17:30:00',
-    4, 'ND003', 5, N'Đã duyệt', 'ND005'
+    4, 'ND003', 5, '../images/event8.png', N'Đã duyệt', 'ND005'
 ),
 (
     N'Cuộc thi Robotics UTE Cup 2026',
     N'Cuộc thi chế tạo robot tự động với các thử thách thực tế.',
     '2026-08-15 08:00:00', '2026-08-16 17:00:00',
-    3, 'ND002', 60, N'Chờ duyệt', NULL
+    3, 'ND002', 60, '../images/event9.png', N'Chờ duyệt', NULL
 ),
 (
     N'Seminar Kỹ năng Phỏng vấn & Tìm việc làm',
     N'Chia sẻ kinh nghiệm phỏng vấn từ HR các công ty lớn.',
     '2026-06-28 08:30:00', '2026-06-28 11:30:00',
-    1, 'ND002', 300, N'Đã duyệt', 'ND005'
+    1, 'ND002', 300, '../images/event10.png', N'Đã duyệt', 'ND005'
 );
 GO
 
@@ -993,6 +994,7 @@ SELECT * FROM PhanCong
 SELECT * FROM NguoiDung_SuKien
 SELECT * FROM DangKySuKien
 SELECT * FROM ThongBao
+
 -- ============================================================
 -- KIỂM TRA VIEWS
 -- ============================================================

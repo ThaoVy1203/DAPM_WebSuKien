@@ -57,115 +57,128 @@
             padding: 40px;
             color: #666;
         }
+        /* Additional accessibility fix for skip link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #0D5A9C;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 1001;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Skip navigation link for keyboard users -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <header class="header">
         <div class="header-left">
             <div class="logo">
                 <img src="../images/logo.png" alt="UTE Events">
             </div>
             <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm nhiệm vụ, thành viên...">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" placeholder="Tìm kiếm nhiệm vụ, thành viên..." aria-label="Tìm kiếm">
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-notification">
-                <i class="fas fa-bell"></i>
+            <!-- FIXED: Added aria-label and title for the notification button -->
+            <button class="btn-notification" aria-label="Thông báo" title="Thông báo">
+                <i class="fas fa-bell" aria-hidden="true"></i>
             </button>
-            <div class="user-profile" id="userProfile">
+            <div class="user-profile" id="userProfile" tabindex="0" role="button" aria-expanded="false" aria-label="Menu người dùng">
                 <div class="user-info">
                     <span class="user-name" id="userName">Đang tải...</span>
                     <span class="user-role" id="userRole">Thành viên BTC</span>
                 </div>
-                <img src="" alt="User" class="user-avatar" id="userAvatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
+                <img src="" alt="Avatar người dùng" class="user-avatar" id="userAvatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
                 <div class="user-dropdown" id="userDropdown" style="display: none;">
-                    <a href="btc-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                    <a href="profile.html"><i class="fas fa-user"></i> Hồ sơ</a>
+                    <a href="btc-dashboard.html"><i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard</a>
+                    <a href="profile.html"><i class="fas fa-user" aria-hidden="true"></i> Hồ sơ</a>
                     <hr>
-                    <a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                    <a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng xuất</a>
                 </div>
             </div>
         </div>
     </header>
 
     <div class="main-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav" aria-label="Điều hướng chính">
                 <a href="btc-dashboard.html" class="nav-item active">
-                    <i class="fas fa-th-large"></i>
+                    <i class="fas fa-th-large" aria-hidden="true"></i>
                     <span>Dashboard</span>
                 </a>
                 <a href="btc-events.html" class="nav-item">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                     <span>Sự kiện của tôi</span>
                 </a>
                 <a href="btc-budget.html" class="nav-item">
-                    <i class="fas fa-money-bill-wave"></i>
+                    <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
                     <span>Ngân sách</span>
                 </a>
                 <a href="btc-approval.html" class="nav-item">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                     <span>Phê duyệt</span>
                 </a>
                 <a href="btc-team-tasks.html" class="nav-item">
-                    <i class="fas fa-tasks"></i>
+                    <i class="fas fa-tasks" aria-hidden="true"></i>
                     <span>Công việc (Task)</span>
                 </a>
                 <a href="btc-attendance.html" class="nav-item">
-                    <i class="fas fa-users"></i>
+                    <i class="fas fa-users" aria-hidden="true"></i>
                     <span>Người tham gia</span>
                 </a>
                 <a href="btc-reports.html" class="nav-item">
-                    <i class="fas fa-chart-bar"></i>
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
                     <span>Báo cáo</span>
                 </a>
             </nav>
 
             <div class="sidebar-footer">
-                <button class="btn-create" onclick="window.location.href='btc-events.html'">
-                    <i class="fas fa-plus-circle"></i>
+                <button class="btn-create" onclick="window.location.href='btc-events.html'" aria-label="Tạo sự kiện mới">
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i>
                     Tạo sự kiện mới
                 </button>
                 <a href="#" class="nav-item">
-                    <i class="fas fa-question-circle"></i>
+                    <i class="fas fa-question-circle" aria-hidden="true"></i>
                     <span>Trợ giúp</span>
                 </a>
                 <a href="#" class="nav-item danger" onclick="logout(event)">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span>Đăng xuất</span>
                 </a>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Page Header -->
+        <main class="main-content" id="main-content" tabindex="-1">
             <div class="page-header">
                 <div>
                     <h1>Tổng quan Dự án</h1>
                     <p id="welcomeMsg">Cập nhật lúc hôm nay. Kiểm tra tất cả nhiệm vụ và ngân sách.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-secondary" onclick="exportReport()">
-                        <i class="fas fa-file-export"></i>
+                    <button class="btn-secondary" onclick="exportReport()" aria-label="Gửi báo cáo">
+                        <i class="fas fa-file-export" aria-hidden="true"></i>
                         Gửi báo cáo
                     </button>
-                    <button class="btn-primary" onclick="submitBudgetApproval()">
-                        <i class="fas fa-check"></i>
+                    <button class="btn-primary" onclick="submitBudgetApproval()" aria-label="Gửi phê duyệt ngân sách">
+                        <i class="fas fa-check" aria-hidden="true"></i>
                         Gửi phê duyệt ngân sách
                     </button>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-header">
-                        <i class="fas fa-user-plus"></i>
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
                         <span class="stat-change positive">+12%</span>
                     </div>
                     <div class="stat-number" id="teamMembers">0</div>
@@ -175,7 +188,7 @@
 
                 <div class="stat-card">
                     <div class="stat-header">
-                        <i class="fas fa-tasks"></i>
+                        <i class="fas fa-tasks" aria-hidden="true"></i>
                     </div>
                     <div class="stat-number"><span id="completedTasks">0</span><span class="stat-total">/<span id="totalTasks">0</span></span></div>
                     <div class="stat-label">TIẾN ĐỘ CÔNG VIỆC</div>
@@ -202,11 +215,8 @@
                 </div>
             </div>
 
-            <!-- Content Grid -->
             <div class="content-grid">
-                <!-- Left Column -->
                 <div class="left-column">
-                    <!-- Task Assignment -->
                     <div class="card">
                         <div class="card-header">
                             <h2>Phân công Nhiệm vụ</h2>
@@ -217,13 +227,12 @@
                         </div>
                     </div>
 
-                    <!-- Budget Details -->
                     <div class="card">
                         <div class="card-header">
                             <h2>Chi tiết Ngân sách</h2>
                             <div class="card-actions">
-                                <button class="btn-icon" onclick="filterBudget()"><i class="fas fa-filter"></i></button>
-                                <button class="btn-icon" onclick="downloadBudget()"><i class="fas fa-download"></i></button>
+                                <button class="btn-icon" onclick="filterBudget()" aria-label="Lọc ngân sách"><i class="fas fa-filter" aria-hidden="true"></i></button>
+                                <button class="btn-icon" onclick="downloadBudget()" aria-label="Tải xuống ngân sách"><i class="fas fa-download" aria-hidden="true"></i></button>
                             </div>
                         </div>
                         <div class="budget-list" id="budgetList">
@@ -232,9 +241,7 @@
                     </div>
                 </div>
 
-                <!-- Right Column -->
                 <div class="right-column">
-                    <!-- Approval Requests -->
                     <div class="card approval-card">
                         <div class="card-header">
                             <h3>Yêu cầu cần Phê duyệt</h3>
@@ -244,7 +251,6 @@
                         </div>
                     </div>
 
-                    <!-- Activity Feed -->
                     <div class="card activity-card">
                         <div class="card-header">
                             <h3>Hoạt động gần đây</h3>
@@ -258,7 +264,6 @@
         </main>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
@@ -275,25 +280,25 @@
                 <div class="footer-col">
                     <h4>Thông tin liên lạc</h4>
                     <ul class="footer-links">
-                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
-                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                        <li><i class="fas fa-phone" aria-hidden="true"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope" aria-hidden="true"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt" aria-hidden="true"></i> 48 Cao Thắng, Đà Nẵng</li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>Bản đồ chỉ dẫn</h4>
                     <div class="map-placeholder">
-                        <img src="../images/map.png" alt="Bản đồ">
+                        <img src="../images/map.png" alt="Bản đồ trường Đại học Sư phạm Kỹ thuật">
                     </div>
                 </div>
                 <div class="footer-col">
                     <h4>Kết nối</h4>
                     <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-google"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Google"><i class="fab fa-google" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
@@ -303,12 +308,34 @@
         </div>
     </footer>
 
-<<<<<<< HEAD
-    <script src="../js/config.js"></script>
-    <script src="../js/btc-auth.js"></script>
-=======
->>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
     <script src="../js/btc-dashboard.js"></script>
     <script src="../js/btc-logout.js"></script>
+    <script>
+        // Optional: Small script to handle user dropdown accessibility (toggle aria-expanded)
+        (function() {
+            const userProfile = document.getElementById('userProfile');
+            const dropdown = document.getElementById('userDropdown');
+            if (userProfile && dropdown) {
+                userProfile.addEventListener('click', function(e) {
+                    const isExpanded = dropdown.style.display === 'block';
+                    dropdown.style.display = isExpanded ? 'none' : 'block';
+                    userProfile.setAttribute('aria-expanded', !isExpanded);
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    dropdown.style.display = 'none';
+                    userProfile.setAttribute('aria-expanded', 'false');
+                });
+                userProfile.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const isExpanded = dropdown.style.display === 'block';
+                        dropdown.style.display = isExpanded ? 'none' : 'block';
+                        userProfile.setAttribute('aria-expanded', !isExpanded);
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

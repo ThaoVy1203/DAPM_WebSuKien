@@ -96,15 +96,22 @@
                     <h1>Quản lý Phê duyệt</h1>
                     <p>Soạn hồ sơ và gửi yêu cầu phê duyệt lên cấp trên</p>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-secondary">
-                        <i class="fas fa-history"></i>
-                        Lịch sử phê duyệt
-                    </button>
-                    <button class="btn-primary" onclick="openCreateApprovalModal()">
-                        <i class="fas fa-plus"></i>
-                        Soạn hồ sơ mới
-                    </button>
+                <div class="header-sub-row">
+                    <div class="event-selector-wrapper">
+                        <select id="eventSelector" class="event-dropdown-select">
+                            <option value="">-- Chọn sự kiện --</option>
+                        </select>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-secondary">
+                            <i class="fas fa-history"></i>
+                            Lịch sử phê duyệt
+                        </button>
+                        <button class="btn-primary" onclick="openCreateApprovalModal()">
+                            <i class="fas fa-plus"></i>
+                            Soạn hồ sơ mới
+                        </button>
+                    </div>
                 </div>
             </div>
 

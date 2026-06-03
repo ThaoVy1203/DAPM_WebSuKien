@@ -27,7 +27,8 @@ namespace aspiCore.Services
             _logger = logger;
         }
 
-<<<<<<< HEAD
+// Xóa toàn bộ conflict markers, thay bằng:
+
         public async Task<IEnumerable<DangKySuKienDto>> GetAllAsync()
         {
             return await _context.DangKySuKiens
@@ -48,12 +49,9 @@ namespace aspiCore.Services
                 .ToListAsync();
         }
 
-        public async Task<ApiResponse> DangKySuKienAsync(DangKyDto dto)
-=======
         private async Task ExpireWaitlistConfirmationsAsync(int idSuKien)
         {
             var now = DateTime.Now;
-
             var expireThreshold = now - USER_CONFIRM_WINDOW;
             var expired = await _context.DangKySuKiens
                 .Where(dk => dk.IdSuKien == idSuKien
@@ -88,10 +86,8 @@ namespace aspiCore.Services
             if (suKien == null) return;
             if (!suKien.SoLuongToiDa.HasValue) return;
 
-            // Không đẩy Waitlist khi sự kiện đã kết thúc
             if (DateTime.Now > suKien.ThoiGianKetThuc) return;
 
-            // 1) Hủy những người đã hết hạn xác nhận 24h (nếu có)
             await ExpireWaitlistConfirmationsAsync(idSuKien);
 
             var now = DateTime.Now;
@@ -102,7 +98,6 @@ namespace aspiCore.Services
 
             while (reservedSeatCount < suKien.SoLuongToiDa.Value)
             {
-                // 2) Lấy người đầu tiên trong Waitlist
                 var next = await _context.DangKySuKiens
                     .Include(dk => dk.SuKien)
                     .Where(dk => dk.IdSuKien == idSuKien && dk.TrangThai == STATUS_WAITLIST)
@@ -111,7 +106,6 @@ namespace aspiCore.Services
 
                 if (next == null) break;
 
-                // 3) Mời người dùng xác nhận chỗ (trong 24h)
                 next.TrangThai = STATUS_WAITLIST_CONFIRM;
                 next.ThoiGianDangKy = now;
                 next.ThoiGianHuy = null;
@@ -135,7 +129,7 @@ namespace aspiCore.Services
         }
 
         public async Task<DangKyResponseDto> DangKySuKienAsync(DangKyDto dto)
->>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
+        // ... phần còn lại giữ nguyên như file hiện tại
         {
             var suKien = await _context.SuKiens.FindAsync(dto.IdSuKien);
             // Cho phép đăng ký khi sự kiện đã duyệt hoặc đang diễn ra

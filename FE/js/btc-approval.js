@@ -1,30 +1,124 @@
-const API_URL = "https://localhost:7160/api/PheDuyet";
+// BTC Approval Management JavaScript
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
 
-let currentApprovalId = null;
-let uploadedFiles = [];
-let approvals = [];
+let approvalPageData = {
+    events: [],
+    selectedEventId: null,
+    approvals: [],
+    currentApprovalId: null,
+    uploadedFiles: []
+};
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadApprovals();
-
-    initializeFilterTabs();
+    setupModals();
     initializeApprovalTypeChange();
     initializeFileUpload();
     initializeFilterSelect();
+    await loadEventsSelector();
+    await loadApprovalsForSelectedEvent();
 });
 
-// ================= LOAD =================
-async function loadApprovals() {
-    try {
-        const response = await fetch(API_URL);
-        approvals = await response.json();
+// ================= SETUP MODALS =================
+function setupModals() {
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            closeApprovalModal();
+            closeApprovalDetailModal();
+        }
+    });
 
-        renderApprovals(approvals);
+    window.addEventListener("click", function (e) {
+        const modal1 = document.getElementById("approvalModal");
+        const modal2 = document.getElementById("approvalDetailModal");
+        if (e.target === modal1) closeApprovalModal();
+        if (e.target === modal2) closeApprovalDetailModal();
+    });
+}
+
+// ================= LOAD EVENTS SELECTOR =================
+async function loadEventsSelector() {
+    const selector = document.getElementById("eventSelector");
+    if (!selector) return;
+
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/SuKien`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Lỗi tải sự kiện");
+
+        const events = await res.json();
+        approvalPageData.events = events;
+
+        selector.innerHTML = "";
+        events.forEach(e => {
+            selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
+        });
+
+        // Set selected event
+        let savedId = localStorage.getItem("btc_approval_selected_event_id");
+        if (savedId && events.some(e => e.idSuKien == savedId)) {
+            selector.value = savedId;
+            approvalPageData.selectedEventId = savedId;
+        } else if (events.length > 0) {
+            selector.value = events[0].idSuKien;
+            approvalPageData.selectedEventId = events[0].idSuKien;
+            localStorage.setItem("btc_approval_selected_event_id", events[0].idSuKien);
+        }
+
+        // Change listener
+        selector.addEventListener("change", function () {
+            approvalPageData.selectedEventId = this.value;
+            localStorage.setItem("btc_approval_selected_event_id", this.value);
+            loadApprovalsForSelectedEvent();
+        });
 
     } catch (error) {
-        console.error(error);
-        alert("Không tải được dữ liệu phê duyệt");
+        console.error("Lỗi tải selector:", error);
+    }
+}
+
+// ================= LOAD APPROVALS FOR SELECTED EVENT =================
+async function loadApprovalsForSelectedEvent() {
+    const eventId = approvalPageData.selectedEventId;
+    if (!eventId) return;
+
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/PheDuyet/su-kien/${eventId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Lỗi tải yêu cầu phê duyệt");
+
+        const approvals = await res.json();
+        approvalPageData.approvals = approvals;
+        renderApprovals(approvals);
+        updateStats(approvals);
+        initializeFilterTabs();
+
+    } catch (error) {
+        console.error("Lỗi load approvals:", error);
+    }
+}
+
+// ================= UPDATE STATS CARDS =================
+function updateStats(data) {
+    const pending = data.filter(a => a.trangThai === "pending" || a.trangThai === "Chờ duyệt").length;
+    const approved = data.filter(a => a.trangThai === "approved" || a.trangThai === "Đã duyệt").length;
+    const rejected = data.filter(a => a.trangThai === "rejected" || a.trangThai === "Từ chối").length;
+    const draft = data.filter(a => a.trangThai === "draft" || a.trangThai === "Nháp").length;
+
+    const cards = document.querySelectorAll(".approval-stats .stat-card");
+    if (cards.length >= 4) {
+        cards[0].querySelector(".stat-number").textContent = pending;
+        cards[1].querySelector(".stat-number").textContent = approved;
+        cards[2].querySelector(".stat-number").textContent = rejected;
+        cards[3].querySelector(".stat-number").textContent = draft;
     }
 }
 
@@ -35,16 +129,70 @@ function renderApprovals(data) {
 
     container.innerHTML = "";
 
+    if (data.length === 0) {
+        container.innerHTML = '<div class="loading">Không có yêu cầu phê duyệt nào phù hợp.</div>';
+        return;
+    }
+
     data.forEach(item => {
+        const statusMap = {
+            pending: { text: "Chờ duyệt", class: "pending" },
+            approved: { text: "Đã duyệt", class: "approved" },
+            rejected: { text: "Từ chối", class: "rejected" },
+            draft: { text: "Nháp", class: "draft" }
+        };
+        const status = statusMap[item.trangThai] || { text: item.trangThai, class: "pending" };
+
+        const typeMap = {
+            event: "Sự kiện",
+            budget: "Ngân sách",
+            venue: "Địa điểm",
+            other: "Khác"
+        };
+        const typeText = typeMap[item.loai] || item.loai;
+
         container.innerHTML += `
             <div class="approval-item" data-status="${item.trangThai}">
-                <h3>${item.tieuDe}</h3>
-                <p>${item.moTa}</p>
-
-                <div>
-                    <button onclick="viewApprovalDetail(${item.id})">Chi tiết</button>
-                    <button onclick="editApproval(${item.id})">Sửa</button>
-                    <button onclick="cancelApproval(${item.id})">Hủy</button>
+                <div class="approval-header">
+                    <div class="approval-title-section">
+                        <h3>${item.tieuDe}</h3>
+                        <span class="approval-type ${item.loai}">${typeText}</span>
+                    </div>
+                    <span class="status-badge ${status.class}">${status.text}</span>
+                </div>
+                <div class="approval-body">
+                    <div class="approval-info">
+                        <div class="info-item">
+                            <i class="fas fa-user"></i>
+                            <span>Người gửi: ${item.nguoiGui || "Người dùng"}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Ngày gửi: ${item.ngayGui}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Người duyệt: ${item.nguoiDuyet || "Ban Giám hiệu"}</span>
+                        </div>
+                    </div>
+                    <div class="approval-description">
+                        <p>${item.moTa}</p>
+                    </div>
+                </div>
+                <div class="approval-footer">
+                    <button class="btn-action-secondary" onclick="viewApprovalDetail(${item.id})">
+                        <i class="fas fa-eye"></i> Xem chi tiết
+                    </button>
+                    ${item.trangThai === 'draft' || item.trangThai === 'rejected' ? `
+                        <button class="btn-action-secondary" onclick="editApproval(${item.id})">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </button>
+                    ` : ''}
+                    ${item.trangThai === 'pending' ? `
+                        <button class="btn-action-danger" onclick="cancelApproval(${item.id})">
+                            <i class="fas fa-times"></i> Hủy yêu cầu
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -56,18 +204,19 @@ function initializeFilterTabs() {
     const tabButtons = document.querySelectorAll(".tab-btn");
 
     tabButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            tabButtons.forEach(btn => btn.classList.remove("active"));
+        // Remove existing listeners by cloning
+        const newBtn = button.cloneNode(true);
+        button.parentNode.replaceChild(newBtn, button);
+
+        newBtn.addEventListener("click", function () {
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
             this.classList.add("active");
 
             const status = this.dataset.status;
-
             if (status === "all") {
-                renderApprovals(approvals);
+                renderApprovals(approvalPageData.approvals);
             } else {
-                renderApprovals(
-                    approvals.filter(a => a.trangThai === status)
-                );
+                renderApprovals(approvalPageData.approvals.filter(a => a.trangThai === status));
             }
         });
     });
@@ -80,8 +229,7 @@ function initializeApprovalTypeChange() {
 
     if (approvalTypeSelect && budgetSection) {
         approvalTypeSelect.addEventListener("change", function () {
-            budgetSection.style.display =
-                this.value === "budget" ? "block" : "none";
+            budgetSection.style.display = this.value === "budget" ? "block" : "none";
         });
     }
 }
@@ -89,56 +237,53 @@ function initializeApprovalTypeChange() {
 // ================= FILE UPLOAD =================
 function initializeFileUpload() {
     const fileInput = document.getElementById("fileInput");
-
     if (!fileInput) return;
 
     fileInput.addEventListener("change", function (e) {
         const files = Array.from(e.target.files);
-
         files.forEach(file => {
             if (file.size <= 10 * 1024 * 1024) {
-                uploadedFiles.push(file);
+                approvalPageData.uploadedFiles.push(file);
                 addFileToList(file);
             } else {
                 alert(`${file.name} vượt quá 10MB`);
             }
         });
-
         fileInput.value = "";
     });
 }
 
 function addFileToList(file) {
     const fileList = document.getElementById("fileList");
-
-    fileList.innerHTML += `
-        <div class="file-item">
-            <span>${file.name}</span>
-            <button onclick="removeFile('${file.name}')">X</button>
-        </div>
-    `;
+    if (fileList) {
+        fileList.innerHTML += `
+            <div class="file-item">
+                <span>${file.name}</span>
+                <button type="button" onclick="removeFile('${file.name}')">X</button>
+            </div>
+        `;
+    }
 }
 
 function removeFile(filename) {
-    uploadedFiles = uploadedFiles.filter(f => f.name !== filename);
+    approvalPageData.uploadedFiles = approvalPageData.uploadedFiles.filter(f => f.name !== filename);
     loadFileList();
 }
 
 function loadFileList() {
     const fileList = document.getElementById("fileList");
-    fileList.innerHTML = "";
-
-    uploadedFiles.forEach(addFileToList);
+    if (fileList) {
+        fileList.innerHTML = "";
+        approvalPageData.uploadedFiles.forEach(addFileToList);
+    }
 }
 
-// ================= MODAL =================
+// ================= MODAL CONTROLS =================
 function openCreateApprovalModal() {
-    currentApprovalId = null;
-
+    approvalPageData.currentApprovalId = null;
     document.getElementById("approvalForm").reset();
-    uploadedFiles = [];
+    approvalPageData.uploadedFiles = [];
     loadFileList();
-
     document.getElementById("approvalModal").classList.add("active");
 }
 
@@ -150,178 +295,185 @@ function closeApprovalDetailModal() {
     document.getElementById("approvalDetailModal").classList.remove("active");
 }
 
-// ================= COLLECT =================
+// ================= FORM UTILS =================
 function collectFormData() {
     return {
         loai: document.getElementById("approvalType").value,
-        nguoiDuyet: document.getElementById("approver").value,
+        nguoiDuyet: document.getElementById("approver").options[document.getElementById("approver").selectedIndex]?.text || "Cấp trên",
         tieuDe: document.getElementById("approvalTitle").value,
         moTa: document.getElementById("approvalDescription").value,
-        ngayDuKien: document.getElementById("expectedDate").value,
-        mucDo: document.getElementById("priority").value,
-        tongKinhPhi: document.getElementById("totalBudget")?.value || null,
-        ghiChu: document.getElementById("additionalNotes").value
+        ngayGui: new Date().toLocaleDateString("vi-VN"),
+        nguoiGui: "Trưởng Ban Tổ chức"
     };
 }
 
-// ================= SAVE DRAFT =================
-async function saveDraft() {
-    const data = collectFormData();
-    data.trangThai = "draft";
+// ================= SAVE / SUBMIT =================
+async function saveApproval(trangThai) {
+    const eventId = approvalPageData.selectedEventId;
+    if (!eventId) return;
 
-    await saveApproval(data);
+    const formData = collectFormData();
+    const payload = {
+        eventId: parseInt(eventId),
+        tieuDe: formData.tieuDe,
+        loai: formData.loai,
+        trangThai: trangThai,
+        nguoiGui: formData.nguoiGui,
+        nguoiDuyet: formData.nguoiDuyet,
+        moTa: formData.moTa
+    };
 
-    alert("Đã lưu nháp");
-}
-
-// ================= SAVE =================
-async function saveApproval(data) {
     try {
-        if (currentApprovalId) {
-            await fetch(`${API_URL}/${currentApprovalId}`, {
+        const token = localStorage.getItem("token");
+        let res;
+
+        if (approvalPageData.currentApprovalId) {
+            res = await fetch(`${window.API_BASE}/PheDuyet/${approvalPageData.currentApprovalId}`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             });
         } else {
-            await fetch(API_URL, {
+            res = await fetch(`${window.API_BASE}/PheDuyet`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             });
         }
 
-        await loadApprovals();
+        if (!res.ok) throw new Error("Lỗi lưu phê duyệt");
+
         closeApprovalModal();
+        await loadApprovalsForSelectedEvent();
 
     } catch (error) {
-        console.error(error);
-        alert("Lưu thất bại");
+        console.error("Lỗi lưu phê duyệt:", error);
+        alert("Lưu yêu cầu phê duyệt thất bại!");
     }
 }
+
+document.getElementById("approvalForm")?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    await saveApproval("pending"); // Gửi phê duyệt
+    alert("Đã gửi yêu cầu phê duyệt thành công!");
+});
+
+window.saveDraft = async function() {
+    await saveApproval("draft");
+    alert("Đã lưu bản nháp thành công!");
+};
 
 // ================= EDIT =================
-async function editApproval(id) {
-    try {
-        const response = await fetch(`${API_URL}/${id}`);
-        const data = await response.json();
+function editApproval(id) {
+    const item = approvalPageData.approvals.find(a => a.id == id);
+    if (!item) return;
 
-        currentApprovalId = id;
+    approvalPageData.currentApprovalId = id;
 
-        document.getElementById("approvalType").value = data.loai;
-        document.getElementById("approver").value = data.nguoiDuyet;
-        document.getElementById("approvalTitle").value = data.tieuDe;
-        document.getElementById("approvalDescription").value = data.moTa;
-        document.getElementById("expectedDate").value = data.ngayDuKien;
-        document.getElementById("priority").value = data.mucDo;
-
-        document.getElementById("approvalModal").classList.add("active");
-
-    } catch (error) {
-        console.error(error);
-        alert("Không tải được dữ liệu");
+    document.getElementById("approvalType").value = item.loai;
+    document.getElementById("approvalTitle").value = item.tieuDe;
+    document.getElementById("approvalDescription").value = item.moTa;
+    
+    // Trigger display of budget section if needed
+    const budgetSection = document.getElementById("budgetSection");
+    if (budgetSection) {
+        budgetSection.style.display = item.loai === "budget" ? "block" : "none";
     }
+
+    document.getElementById("approvalModal").classList.add("active");
 }
 
-// ================= DETAIL =================
-async function viewApprovalDetail(id) {
-    try {
-        const response = await fetch(`${API_URL}/${id}`);
-        const data = await response.json();
+// ================= VIEW DETAIL =================
+function viewApprovalDetail(id) {
+    const item = approvalPageData.approvals.find(a => a.id == id);
+    if (!item) return;
 
-        document.getElementById("detailTitle").textContent = data.tieuDe;
-        document.getElementById("detailDescription").textContent = data.moTa;
-        document.getElementById("detailStatus").textContent = data.trangThai;
+    document.getElementById("detailTitle").textContent = item.tieuDe;
+    document.getElementById("detailDescription").textContent = item.moTa;
+    document.getElementById("detailSender").textContent = item.nguoiGui || "Trưởng Ban Tổ chức";
+    document.getElementById("detailSentDate").textContent = item.ngayGui;
+    document.getElementById("detailApprover").textContent = item.nguoiDuyet || "Ban Giám hiệu";
 
-        document.getElementById("approvalDetailModal").classList.add("active");
+    const statusMap = {
+        pending: { text: "Chờ duyệt", class: "pending" },
+        approved: { text: "Đã duyệt", class: "approved" },
+        rejected: { text: "Từ chối", class: "rejected" },
+        draft: { text: "Nháp", class: "draft" }
+    };
+    const status = statusMap[item.trangThai] || { text: item.trangThai, class: "pending" };
+    document.getElementById("detailStatus").textContent = status.text;
+    document.getElementById("detailStatus").className = `status-badge ${status.class}`;
 
-    } catch (error) {
-        console.error(error);
-        alert("Không tải được chi tiết");
-    }
+    document.getElementById("approvalDetailModal").classList.add("active");
 }
 
 // ================= CANCEL =================
 async function cancelApproval(id) {
-    if (!confirm("Hủy yêu cầu này?")) return;
+    if (!confirm("Hủy yêu cầu phê duyệt này?")) return;
 
     try {
-        await fetch(`${API_URL}/cancel/${id}`, {
-            method: "PUT"
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/PheDuyet/cancel/${id}`, {
+            method: "PUT",
+            headers: { "Authorization": `Bearer ${token}` }
         });
 
-        await loadApprovals();
+        if (!res.ok) throw new Error("Lỗi hủy phê duyệt");
+        await loadApprovalsForSelectedEvent();
 
     } catch (error) {
-        console.error(error);
+        console.error("Lỗi hủy phê duyệt:", error);
+        alert("Hủy yêu cầu thất bại!");
     }
 }
 
 // ================= DELETE =================
 async function deleteApproval(id) {
-    if (!confirm("Xóa bản nháp?")) return;
+    if (!confirm("Xóa bản nháp này?")) return;
 
     try {
-        await fetch(`${API_URL}/${id}`, {
-            method: "DELETE"
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/PheDuyet/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
         });
 
-        await loadApprovals();
+        if (!res.ok) throw new Error("Lỗi xóa phê duyệt");
+        await loadApprovalsForSelectedEvent();
 
     } catch (error) {
-        console.error(error);
+        console.error("Lỗi xóa phê duyệt:", error);
+        alert("Xóa bản nháp thất bại!");
     }
 }
-
-// ================= RESUBMIT =================
-function resubmitApproval(id) {
-    editApproval(id);
-}
-
-// ================= SUBMIT =================
-document.getElementById("approvalForm")?.addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const data = collectFormData();
-    data.trangThai = "pending";
-
-    await saveApproval(data);
-
-    alert("Đã gửi yêu cầu phê duyệt");
-});
 
 // ================= FILTER SELECT =================
 function initializeFilterSelect() {
     const filterSelect = document.querySelector(".filter-select");
-
     if (!filterSelect) return;
 
     filterSelect.addEventListener("change", function () {
-        const value = this.value;
-
-        if (value === "all") {
-            renderApprovals(approvals);
+        const val = this.value;
+        if (val === "all") {
+            renderApprovals(approvalPageData.approvals);
         } else {
-            renderApprovals(
-                approvals.filter(a => a.loai === value)
-            );
+            renderApprovals(approvalPageData.approvals.filter(a => a.loai === val));
         }
     });
 }
 
-// ================= MODAL CLOSE =================
-window.addEventListener("click", function (e) {
-    if (e.target.id === "approvalModal") closeApprovalModal();
-    if (e.target.id === "approvalDetailModal") closeApprovalDetailModal();
-});
-
-document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") {
-        closeApprovalModal();
-        closeApprovalDetailModal();
-    }
-});
+// Export functions to window
+window.openCreateApprovalModal = openCreateApprovalModal;
+window.closeApprovalModal = closeApprovalModal;
+window.closeApprovalDetailModal = closeApprovalDetailModal;
+window.editApproval = editApproval;
+window.viewApprovalDetail = viewApprovalDetail;
+window.cancelApproval = cancelApproval;
+window.deleteApproval = deleteApproval;
+window.removeFile = removeFile;

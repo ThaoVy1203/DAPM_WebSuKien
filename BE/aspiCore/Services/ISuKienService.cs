@@ -7,8 +7,10 @@ namespace aspiCore.Services
         Task<IEnumerable<SuKienDto>> GetAllAsync();
         Task<SuKienDto?> GetByIdAsync(int id);
         Task<IEnumerable<SuKienDto>> GetByTrangThaiAsync(string trangThai);
+        Task<IEnumerable<SuKienDto>> GetByNguoiTaoAsync(string idNguoiTao);
         Task<SuKienDto> CreateAsync(CreateSuKienDto dto);
         Task<SuKienDto?> UpdateAsync(int id, UpdateSuKienDto dto);
+        Task<SuKienDto?> CancelAsync(int id, string? lyDoHuy);
         Task<bool> DeleteAsync(int id);
     }
 }

@@ -1,61 +1,6 @@
 // js/home-user.js
 const API_BASE = "https://localhost:7160/api";
 
-<<<<<<< HEAD
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuthentication();
-    loadUserInfo();
-    initializeUserMenu();
-    initializeNotifications();
-    initializeEventCards();
-    initializeScrollAnimations();
-});
-
-// Check if user is logged in
-function checkAuthentication() {
-    const user = localStorage.getItem('user');
-    if (!user) {
-        // Redirect to login if not authenticated
-        window.location.href = 'login.html';
-        return;
-    }
-}
-
-// Load user info
-function loadUserInfo() {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return;
-    
-    try {
-        const user = JSON.parse(userStr);
-        
-        // Update user avatar
-        const userAvatar = document.querySelector('.user-avatar');
-        if (userAvatar) {
-            if (user.anhDaiDien) {
-                userAvatar.src = user.anhDaiDien;
-            } else {
-                // Use UI Avatars with user name
-                const name = user.hoTen || 'User';
-                userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D5A9C&color=fff`;
-            }
-            userAvatar.alt = user.hoTen || 'User';
-        }
-        
-        // You can also update other user info in the page
-        console.log('User logged in:', user.hoTen);
-    } catch (error) {
-        console.error('Error loading user info:', error);
-    }
-}
-
-// User Menu Functionality
-function initializeUserMenu() {
-    const userMenu = document.querySelector('.user-menu');
-    
-    if (userMenu) {
-        userMenu.addEventListener('click', function(e) {
-=======
 // ==========================
 // INIT
 // ==========================
@@ -72,13 +17,15 @@ document.addEventListener("DOMContentLoaded", async function () {
     await loadFeaturedEvents();
     await loadNotificationCount();
     initScrollAnimations();
+    initUIEnhancements(); // Khởi tạo các hiệu ứng UI từ nhánh cũ
 });
 
 // ==========================
 // USER INFO
 // ==========================
 function loadUserInfo() {
-    const raw = localStorage.getItem("userData");
+    // Hỗ trợ cả 2 key lưu trữ
+    const raw = localStorage.getItem("userData") || localStorage.getItem("user");
     if (!raw) return;
 
     try {
@@ -90,7 +37,7 @@ function loadUserInfo() {
         const nameEl = document.getElementById("userName");
         if (nameEl) nameEl.textContent = hoTen;
 
-        const avatarEl = document.getElementById("userAvatar");
+        const avatarEl = document.getElementById("userAvatar") || document.querySelector(".user-avatar");
         if (avatarEl) {
             const name = encodeURIComponent(hoTen);
             avatarEl.src = user.AnhDaiDien || user.anhDaiDien
@@ -98,6 +45,7 @@ function loadUserInfo() {
             avatarEl.onerror = function () {
                 this.src = `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff`;
             };
+            avatarEl.alt = hoTen;
         }
     } catch (e) {
         console.error("Lỗi parse userData:", e);
@@ -108,7 +56,7 @@ function loadUserInfo() {
 // USER MENU DROPDOWN
 // ==========================
 function initUserMenu() {
-    const wrapper = document.getElementById("userMenuWrapper");
+    const wrapper = document.getElementById("userMenuWrapper") || document.querySelector(".user-menu");
     const dropdown = document.getElementById("userDropdown");
     const logoutBtn = document.getElementById("logoutBtn");
 
@@ -130,7 +78,6 @@ function initUserMenu() {
     if (logoutBtn) {
         logoutBtn.addEventListener("click", function (e) {
             e.preventDefault();
->>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
             e.stopPropagation();
             handleLogout();
         });
@@ -141,9 +88,18 @@ function initUserMenu() {
 // LOGOUT
 // ==========================
 function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userData");
-    window.location.href = "login.html";
+    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+        // Clear toàn bộ user session 
+        localStorage.removeItem("token");
+        localStorage.removeItem("userData");
+        localStorage.removeItem("user");
+        localStorage.removeItem("rememberMe");
+        localStorage.removeItem("savedEmail");
+        sessionStorage.clear();
+        
+        // Redirect to login page
+        window.location.href = "login.html";
+    }
 }
 
 // ==========================
@@ -221,12 +177,8 @@ function renderFeaturedEvents(events, container) {
         const tenSuKien = event.TenSuKien ?? event.tenSuKien ?? "Chưa có tên";
         const batDau = event.ThoiGianBatDau ?? event.thoiGianBatDau;
         const ketThuc = event.ThoiGianKetThuc ?? event.thoiGianKetThuc;
-        const startDate = batDau
-            ? new Date(batDau).toLocaleDateString("vi-VN")
-            : "Chưa có";
-        const endDate = ketThuc
-            ? new Date(ketThuc).toLocaleDateString("vi-VN")
-            : "";
+        const startDate = batDau ? new Date(batDau).toLocaleDateString("vi-VN") : "Chưa có";
+        const endDate = ketThuc ? new Date(ketThuc).toLocaleDateString("vi-VN") : "";
         const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
 
         const diaDiem = event.TenDiaDiem ?? event.tenDiaDiem ?? event.DiaDiem?.TenDiaDiem ?? "Đang cập nhật";
@@ -261,7 +213,7 @@ function getBadgeClass(trangThai) {
 }
 
 // ==========================
-// SCROLL ANIMATIONS
+// SCROLL ANIMATIONS & UI ENHANCEMENTS
 // ==========================
 function initScrollAnimations() {
     const observer = new IntersectionObserver(entries => {
@@ -281,32 +233,51 @@ function initScrollAnimations() {
     });
 }
 
-<<<<<<< HEAD
-// Logout Handler
-function handleLogout(event) {
-    event.preventDefault();
-    
-    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-        // Clear user session
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        localStorage.removeItem('rememberMe');
-        localStorage.removeItem('savedEmail');
-        sessionStorage.clear();
-        
-        // Redirect to login page
-        window.location.href = 'login.html';
-    }
-}
+function initUIEnhancements() {
+    // Hero Section Parallax Effect
+    window.addEventListener('scroll', function() {
+        const heroBackground = document.querySelector('.hero-background');
+        if (heroBackground) {
+            const scrolled = window.pageYOffset;
+            heroBackground.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+    });
 
-// Hero Section Parallax Effect
-window.addEventListener('scroll', function() {
-    const heroBackground = document.querySelector('.hero-background');
-    if (heroBackground) {
-        const scrolled = window.pageYOffset;
-        heroBackground.style.transform = `translateY(${scrolled * 0.5}px)`;
+    // Trigger counter animation when stats section is visible
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const statNumbers = entry.target.querySelectorAll('.stat-number');
+                statNumbers.forEach(stat => {
+                    const target = parseInt(stat.textContent.replace(/[^0-9]/g, ''));
+                    if(!isNaN(target)) animateCounter(stat, target);
+                });
+                statsObserver.unobserve(entry.target);
+            }
+        });
+    });
+
+    const statsSection = document.querySelector('.stats-section, .stat-item');
+    if (statsSection) {
+        statsObserver.observe(statsSection);
     }
-});
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            const target = document.querySelector(targetId);
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
 
 // Stats Counter Animation
 function animateCounter(element, target, duration = 2000) {
@@ -331,18 +302,6 @@ function formatNumber(num) {
     return num + '+';
 }
 
-// Trigger counter animation when stats section is visible
-const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const statNumbers = entry.target.querySelectorAll('.stat-number');
-            statNumbers.forEach(stat => {
-                const target = parseInt(stat.textContent.replace(/[^0-9]/g, ''));
-                animateCounter(stat, target);
-            });
-            statsObserver.unobserve(entry.target);
-        }
-=======
 // ==========================
 // HELPERS
 // ==========================
@@ -350,23 +309,5 @@ function escapeHtml(str) {
     if (!str) return "";
     return String(str).replace(/[&<>"']/g, function (m) {
         return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
->>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
     });
 }
-<<<<<<< HEAD
-
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-=======
->>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241

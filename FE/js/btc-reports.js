@@ -1,608 +1,431 @@
 // Reports Management JavaScript
-const API_BASE_URL = "https://localhost:7160/api";
-// Global variables
-let currentReportId = null;
-let uploadedFiles = [];
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = "https://localhost:7160/api";
+}
+
+let reportPageData = {
+    events: [],
+    selectedEventId: null,
+    reports: [],
+    currentReportId: null,
+    uploadedFiles: []
+};
 
 // Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    initializeFilterTabs();
-    initializeFilterControls();
+document.addEventListener('DOMContentLoaded', async function() {
+    setupModals();
+    initializeApprovalTypeChange();
     initializeFileUpload();
+    await loadEventsSelector();
+    await loadReportsForSelectedEvent();
 });
 
-// Filter Tabs
-function initializeFilterTabs() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const reportCards = document.querySelectorAll('.report-card');
+// Setup Modals and click outside
+function setupModals() {
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeReportModal();
+            closeUploadReportModal();
+            closeViewReportModal();
+        }
+    });
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-
-            const filterType = this.getAttribute('data-type');
-
-            reportCards.forEach(card => {
-                if (filterType === 'all') {
-                    card.style.display = 'block';
-                } else {
-                    const cardType = card.getAttribute('data-type');
-                    card.style.display = cardType === filterType ? 'block' : 'none';
-                }
-            });
-        });
+    window.addEventListener('click', function(e) {
+        const reportModal = document.getElementById('reportModal');
+        const uploadModal = document.getElementById('uploadReportModal');
+        const viewModal = document.getElementById('viewReportModal');
+        
+        if (e.target === reportModal) closeReportModal();
+        if (e.target === uploadModal) closeUploadReportModal();
+        if (e.target === viewModal) closeViewReportModal();
     });
 }
 
-// Filter Controls
-function initializeFilterControls() {
-    const eventFilter = document.getElementById('eventFilter');
-    const statusFilter = document.getElementById('statusFilter');
+// ================= LOAD EVENTS SELECTOR =================
+async function loadEventsSelector() {
+    const selector = document.getElementById("eventSelector");
+    if (!selector) return;
 
-    if (eventFilter) {
-        eventFilter.addEventListener('change', applyFilters);
-    }
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/SuKien`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
 
-    if (statusFilter) {
-        statusFilter.addEventListener('change', applyFilters);
+        if (!res.ok) throw new Error("Lỗi tải sự kiện");
+
+        const events = await res.json();
+        reportPageData.events = events;
+
+        selector.innerHTML = "";
+        events.forEach(e => {
+            selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
+        });
+
+        // Initialize relatedEvent dropdown inside forms
+        const formEventSelect1 = document.getElementById("relatedEvent");
+        if (formEventSelect1) {
+            formEventSelect1.innerHTML = '<option value="">Chọn sự kiện</option>';
+            events.forEach(e => {
+                formEventSelect1.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
+            });
+        }
+
+        // Get saved selected event
+        let savedId = localStorage.getItem("btc_reports_selected_event_id");
+        if (savedId && events.some(e => e.idSuKien == savedId)) {
+            selector.value = savedId;
+            reportPageData.selectedEventId = savedId;
+        } else if (events.length > 0) {
+            selector.value = events[0].idSuKien;
+            reportPageData.selectedEventId = events[0].idSuKien;
+            localStorage.setItem("btc_reports_selected_event_id", events[0].idSuKien);
+        }
+
+        // Change listener
+        selector.addEventListener("change", function () {
+            reportPageData.selectedEventId = this.value;
+            localStorage.setItem("btc_reports_selected_event_id", this.value);
+            loadReportsForSelectedEvent();
+        });
+
+    } catch (error) {
+        console.error("Lỗi tải selector:", error);
     }
 }
 
-function applyFilters() {
-    const eventValue = document.getElementById('eventFilter').value;
-    const statusValue = document.getElementById('statusFilter').value;
-    const reportCards = document.querySelectorAll('.report-card');
+// ================= LOAD REPORTS FOR SELECTED EVENT =================
+async function loadReportsForSelectedEvent() {
+    const eventId = reportPageData.selectedEventId;
+    if (!eventId) return;
 
-    reportCards.forEach(card => {
-        let showCard = true;
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/reports/su-kien/${eventId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
 
-        if (statusValue !== 'all') {
-            const cardStatus = card.getAttribute('data-status');
-            if (cardStatus !== statusValue) {
-                showCard = false;
+        if (!res.ok) throw new Error("Lỗi tải báo cáo");
+
+        let reports = await res.json();
+        
+        let customRepStr = localStorage.getItem(`reports_custom_event_${eventId}`);
+        if (customRepStr) {
+            try {
+                let customReports = JSON.parse(customRepStr) || [];
+                reports = reports.concat(customReports);
+            } catch (e) {
+                console.error("Lỗi parse custom reports:", e);
             }
         }
 
-        card.style.display = showCard ? 'block' : 'none';
-    });
-}
+        reportPageData.reports = reports;
+        renderReports(reports);
+        updateStats(reports);
+        initializeFilterTabs();
 
-// File Upload Handler
-function initializeFileUpload() {
-    const reportFileInput = document.getElementById('reportFileInput');
-    const uploadFileInput = document.getElementById('uploadFileInput');
-
-    if (reportFileInput) {
-        reportFileInput.addEventListener('change', function(e) {
-            handleFileSelection(e.target.files, 'reportFileList');
-        });
-    }
-
-    if (uploadFileInput) {
-        uploadFileInput.addEventListener('change', function(e) {
-            handleSingleFileSelection(e.target.files[0], 'uploadFileDisplay');
-        });
+    } catch (error) {
+        console.error("Lỗi load reports:", error);
     }
 }
 
-function handleFileSelection(files, listId) {
-    const fileList = document.getElementById(listId);
-    Array.from(files).forEach(file => {
-        if (file.size <= 20 * 1024 * 1024) { // 20MB limit
-            uploadedFiles.push(file);
-            addFileToList(file, listId);
-        } else {
-            alert(`File ${file.name} vượt quá 20MB`);
-        }
-    });
+// ================= UPDATE STATS =================
+function updateStats(data) {
+    const total = data.length;
+    const completed = data.filter(r => r.status === "completed").length;
+    const pending = data.filter(r => r.status === "pending").length;
+    const draft = data.filter(r => r.status === "draft").length;
+
+    const stats = document.querySelectorAll(".report-stats .stat-card");
+    if (stats.length >= 4) {
+        stats[0].querySelector(".stat-number").textContent = total;
+        stats[1].querySelector(".stat-number").textContent = completed;
+        stats[2].querySelector(".stat-number").textContent = pending;
+        stats[3].querySelector(".stat-number").textContent = draft;
+    }
 }
 
-function handleSingleFileSelection(file, displayId) {
-    const fileDisplay = document.getElementById(displayId);
-    if (!file) return;
+// ================= RENDER REPORTS =================
+function renderReports(data) {
+    const container = document.querySelector(".reports-grid");
+    if (!container) return;
 
-    if (file.size <= 20 * 1024 * 1024) {
-        const fileIcon = getFileIcon(file.name);
-        fileDisplay.innerHTML = `
-            <div class="file-item">
-                <div class="file-item-info">
-                    <i class="${fileIcon}"></i>
-                    <span>${file.name}</span>
+    container.innerHTML = "";
+
+    if (data.length === 0) {
+        container.innerHTML = '<div class="loading" style="grid-column: 1/-1;">Chưa có báo cáo nào cho sự kiện này.</div>';
+        return;
+    }
+
+    data.forEach(item => {
+        const typeIcon = item.typeIcon || 'fas fa-file';
+        const typeLabel = item.typeLabel || 'Khác';
+        const statusClass = item.status || 'draft';
+        const statusLabel = item.statusLabel || 'Bản nháp';
+
+        container.innerHTML += `
+            <div class="report-card" data-type="${item.type}" data-status="${item.status}">
+                <div class="report-header">
+                    <div class="report-type ${item.type}">
+                        <i class="${typeIcon}"></i>
+                        <span>${typeLabel}</span>
+                    </div>
+                    <span class="status-badge ${statusClass}">${statusLabel}</span>
+                </div>
+                <div class="report-body">
+                    <h3>${item.title}</h3>
+                    <p class="report-description">${item.description || ''}</p>
+                    <div class="report-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Ngày tạo: ${item.date}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>Người tạo: ${item.creator || 'Nguyễn Văn A'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="report-footer">
+                    <button class="btn-action-secondary" onclick="viewReport(${item.id})">
+                        <i class="fas fa-eye"></i> Xem
+                    </button>
+                    <button class="btn-action-secondary" onclick="downloadReport(${item.id}, 'pdf')">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button class="btn-action-secondary" onclick="downloadReport(${item.id}, 'excel')">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    ${item.status === 'draft' || item.status === 'pending' ? `
+                        <button class="btn-action-primary" onclick="editReport(${item.id})">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
-    } else {
-        alert(`File ${file.name} vượt quá 20MB`);
-        document.getElementById('uploadFileInput').value = '';
-    }
-}
-
-function addFileToList(file, listId) {
-    const fileList = document.getElementById(listId);
-    const fileItem = document.createElement('div');
-    fileItem.className = 'file-item';
-    
-    const fileIcon = getFileIcon(file.name);
-    
-    fileItem.innerHTML = `
-        <div class="file-item-info">
-            <i class="${fileIcon}"></i>
-            <span>${file.name}</span>
-        </div>
-        <button class="btn-remove-file" onclick="removeFile('${file.name}', '${listId}')">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    fileList.appendChild(fileItem);
-}
-
-function getFileIcon(filename) {
-    const ext = filename.split('.').pop().toLowerCase();
-    const iconMap = {
-        'pdf': 'fas fa-file-pdf',
-        'doc': 'fas fa-file-word',
-        'docx': 'fas fa-file-word',
-        'xls': 'fas fa-file-excel',
-        'xlsx': 'fas fa-file-excel',
-        'ppt': 'fas fa-file-powerpoint',
-        'pptx': 'fas fa-file-powerpoint',
-        'default': 'fas fa-file'
-    };
-    return iconMap[ext] || iconMap['default'];
-}
-
-function removeFile(filename, listId) {
-    uploadedFiles = uploadedFiles.filter(file => file.name !== filename);
-    
-    const fileList = document.getElementById(listId);
-    const fileItems = fileList.querySelectorAll('.file-item');
-    fileItems.forEach(item => {
-        if (item.textContent.includes(filename)) {
-            item.remove();
-        }
     });
 }
 
-// Modal Functions
+// ================= FILTER TABS =================
+function initializeFilterTabs() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        const newBtn = button.cloneNode(true);
+        button.parentNode.replaceChild(newBtn, button);
+
+        newBtn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+
+            const filterType = this.getAttribute('data-type');
+            if (filterType === 'all') {
+                renderReports(reportPageData.reports);
+            } else {
+                renderReports(reportPageData.reports.filter(r => r.type === filterType));
+            }
+        });
+    });
+}
+
+function initializeApprovalTypeChange() {
+    // dummy needed for compatibility
+}
+
+function initializeFileUpload() {
+    // dummy needed for compatibility
+}
+
+// ================= MODALS CONTROLS =================
 function openCreateReportModal() {
     const modal = document.getElementById('reportModal');
-    const modalTitle = document.getElementById('reportModalTitle');
-    
-    modalTitle.textContent = 'Tạo báo cáo mới';
+    if (!modal) return;
+
+    reportPageData.currentReportId = null;
     document.getElementById('reportForm').reset();
-    currentReportId = null;
-    uploadedFiles = [];
-    document.getElementById('reportFileList').innerHTML = '';
     
+    // Set default related event
+    const formEvent = document.getElementById('relatedEvent');
+    if (formEvent && reportPageData.selectedEventId) {
+        formEvent.value = reportPageData.selectedEventId;
+    }
+
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
 function closeReportModal() {
-    const modal = document.getElementById('reportModal');
-    modal.classList.remove('active');
+    document.getElementById('reportModal').classList.remove('active');
     document.body.style.overflow = 'auto';
 }
 
 function openUploadReportModal() {
-    const modal = document.getElementById('uploadReportModal');
     document.getElementById('uploadReportForm').reset();
-    document.getElementById('uploadFileDisplay').innerHTML = '';
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    document.getElementById('uploadReportModal').classList.add('active');
 }
 
 function closeUploadReportModal() {
-    const modal = document.getElementById('uploadReportModal');
-    modal.classList.remove('active');
+    document.getElementById('uploadReportModal').classList.remove('active');
     document.body.style.overflow = 'auto';
-}
-
-function editReport(reportId) {
-    const modal = document.getElementById('reportModal');
-    const modalTitle = document.getElementById('reportModalTitle');
-    
-    modalTitle.textContent = 'Chỉnh sửa báo cáo';
-    currentReportId = reportId;
-    
-    // Load report data (mock data for now)
-    loadReportData(reportId);
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function loadReportData(reportId) {
-    // Mock data - replace with actual API call
-    const mockData = {
-        1: {
-            type: 'event',
-            title: 'Báo cáo Hội thảo Công nghệ 2024',
-            event: '1',
-            date: '2024-12-20',
-            description: 'Báo cáo tổng kết sự kiện Hội thảo Công nghệ Thường niên 2024',
-            content: 'Nội dung chi tiết báo cáo...'
-        }
-    };
-
-    const data = mockData[reportId];
-    if (data) {
-        document.querySelector(`input[name="reportType"][value="${data.type}"]`).checked = true;
-        document.getElementById('reportTitle').value = data.title;
-        document.getElementById('relatedEvent').value = data.event;
-        document.getElementById('reportDate').value = data.date;
-        document.getElementById('reportDescription').value = data.description;
-        document.getElementById('reportContent').value = data.content;
-    }
-}
-
-function viewReport(reportId) {
-    const modal = document.getElementById('viewReportModal');
-    
-    // Load report data (mock data for now)
-    loadViewReportData(reportId);
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function loadViewReportData(reportId) {
-    // Mock data - replace with actual API call
-    const mockData = {
-        1: {
-            type: 'event',
-            typeLabel: 'Báo cáo sự kiện',
-            typeIcon: 'fas fa-calendar-check',
-            title: 'Báo cáo Hội thảo Công nghệ 2024',
-            status: 'completed',
-            statusLabel: 'Hoàn thành',
-            date: '20/12/2024',
-            creator: 'Nguyễn Văn A',
-            event: 'Hội thảo Công nghệ 2024',
-            updated: '20/12/2024 10:30',
-            description: 'Báo cáo tổng kết sự kiện Hội thảo Công nghệ Thường niên 2024 với 500 người tham dự, bao gồm các hoạt động chính, kết quả đạt được và đánh giá tổng thể.',
-            content: `
-                <p><strong>I. Tổng quan sự kiện</strong></p>
-                <p>Hội thảo Công nghệ Thường niên 2024 đã được tổ chức thành công vào ngày 15/12/2024 tại Hội trường A1 với sự tham gia của 500 người bao gồm sinh viên, giảng viên và các chuyên gia trong ngành.</p>
-                
-                <p><strong>II. Các hoạt động chính</strong></p>
-                <ul>
-                    <li>Phiên khai mạc và phát biểu của Ban Giám hiệu</li>
-                    <li>3 phiên thảo luận chuyên đề về AI, Blockchain và IoT</li>
-                    <li>Workshop thực hành với các công nghệ mới</li>
-                    <li>Triển lãm công nghệ từ các doanh nghiệp đối tác</li>
-                </ul>
-
-                <p><strong>III. Kết quả đạt được</strong></p>
-                <ul>
-                    <li>500 người tham dự (vượt 25% so với kế hoạch)</li>
-                    <li>15 diễn giả chuyên gia chia sẻ kinh nghiệm</li>
-                    <li>20 doanh nghiệp tham gia triển lãm</li>
-                    <li>Tỷ lệ hài lòng: 95%</li>
-                </ul>
-
-                <p><strong>IV. Đánh giá và kiến nghị</strong></p>
-                <p>Sự kiện đã đạt được mục tiêu đề ra, tạo được sự quan tâm lớn từ cộng đồng sinh viên. Đề xuất mở rộng quy mô và thời gian tổ chức cho các năm tiếp theo.</p>
-            `,
-            attachments: [
-                { name: 'Báo cáo chi tiết.pdf', size: '2.5 MB', type: 'pdf' },
-                { name: 'Thống kê tham dự.xlsx', size: '1.2 MB', type: 'excel' },
-                { name: 'Slide trình bày.pptx', size: '5.8 MB', type: 'ppt' }
-            ]
-        },
-        2: {
-            type: 'budget',
-            typeLabel: 'Báo cáo tài chính',
-            typeIcon: 'fas fa-money-bill-wave',
-            title: 'Báo cáo Tài chính Q4/2024',
-            status: 'completed',
-            statusLabel: 'Hoàn thành',
-            date: '28/12/2024',
-            creator: 'Trần Thị B',
-            event: 'Tất cả sự kiện Q4',
-            updated: '28/12/2024 14:20',
-            description: 'Báo cáo chi tiết về tình hình thu chi, ngân sách các sự kiện trong quý 4 năm 2024.',
-            content: `
-                <p><strong>I. Tổng quan tài chính Q4/2024</strong></p>
-                <p>Quý 4 năm 2024 đã tổ chức thành công 8 sự kiện với tổng ngân sách 450 triệu đồng.</p>
-                
-                <p><strong>II. Chi tiết thu chi</strong></p>
-                <ul>
-                    <li>Tổng thu: 480 triệu đồng</li>
-                    <li>Tổng chi: 420 triệu đồng</li>
-                    <li>Dư: 60 triệu đồng</li>
-                </ul>
-
-                <p><strong>III. Phân tích chi phí</strong></p>
-                <ul>
-                    <li>Chi phí tổ chức: 250 triệu (59.5%)</li>
-                    <li>Chi phí marketing: 80 triệu (19%)</li>
-                    <li>Chi phí nhân sự: 60 triệu (14.3%)</li>
-                    <li>Chi phí khác: 30 triệu (7.2%)</li>
-                </ul>
-
-                <p><strong>IV. Đánh giá và kiến nghị</strong></p>
-                <p>Tình hình tài chính ổn định, có lãi. Đề xuất tăng ngân sách cho các sự kiện lớn trong năm tới.</p>
-            `,
-            attachments: [
-                { name: 'Báo cáo tài chính Q4.pdf', size: '3.2 MB', type: 'pdf' },
-                { name: 'Bảng kê chi tiết.xlsx', size: '2.1 MB', type: 'excel' }
-            ]
-        },
-        3: {
-            type: 'attendance',
-            typeLabel: 'Báo cáo tham dự',
-            typeIcon: 'fas fa-users',
-            title: 'Báo cáo Người tham dự Workshop',
-            status: 'pending',
-            statusLabel: 'Đang xử lý',
-            date: '15/12/2024',
-            creator: 'Lê Văn C',
-            event: 'Workshop Khởi nghiệp',
-            updated: '15/12/2024 16:45',
-            description: 'Thống kê số lượng và thông tin người tham dự Workshop Khởi nghiệp.',
-            content: `
-                <p><strong>I. Tổng quan</strong></p>
-                <p>Workshop Khởi nghiệp đã thu hút 250 người đăng ký và 220 người tham dự thực tế.</p>
-                
-                <p><strong>II. Phân tích người tham dự</strong></p>
-                <ul>
-                    <li>Sinh viên năm 3-4: 180 người (82%)</li>
-                    <li>Sinh viên năm 1-2: 30 người (13%)</li>
-                    <li>Khách mời: 10 người (5%)</li>
-                </ul>
-
-                <p><strong>III. Đánh giá</strong></p>
-                <p>Tỷ lệ tham dự đạt 88%, cao hơn mức trung bình. Cần tiếp tục duy trì chất lượng nội dung.</p>
-            `,
-            attachments: [
-                { name: 'Danh sách tham dự.xlsx', size: '1.5 MB', type: 'excel' }
-            ]
-        },
-        4: {
-            type: 'summary',
-            typeLabel: 'Báo cáo tổng kết',
-            typeIcon: 'fas fa-chart-line',
-            title: 'Tổng kết hoạt động năm 2024',
-            status: 'draft',
-            statusLabel: 'Bản nháp',
-            date: '30/12/2024',
-            creator: 'Nguyễn Văn A',
-            event: 'Tất cả sự kiện 2024',
-            updated: '30/12/2024 09:15',
-            description: 'Báo cáo tổng kết toàn bộ hoạt động, sự kiện trong năm 2024.',
-            content: `
-                <p><strong>I. Tổng quan năm 2024</strong></p>
-                <p>Năm 2024 đã tổ chức thành công 24 sự kiện với tổng số 5,000 người tham dự.</p>
-                
-                <p><strong>II. Các sự kiện nổi bật</strong></p>
-                <ul>
-                    <li>Hội thảo Công nghệ Thường niên</li>
-                    <li>Ngày hội Việc làm</li>
-                    <li>Workshop Khởi nghiệp</li>
-                </ul>
-
-                <p><em>Nội dung đang được hoàn thiện...</em></p>
-            `,
-            attachments: []
-        }
-    };
-
-    const data = mockData[reportId];
-    if (data) {
-        // Update modal content
-        document.getElementById('viewReportTitle').textContent = data.title;
-        
-        // Update type badge
-        const typeElement = document.getElementById('viewReportType');
-        typeElement.className = `report-type ${data.type}`;
-        typeElement.innerHTML = `<i class="${data.typeIcon}"></i><span>${data.typeLabel}</span>`;
-        
-        // Update status badge
-        const statusElement = document.getElementById('viewReportStatus');
-        statusElement.className = `status-badge ${data.status}`;
-        statusElement.textContent = data.statusLabel;
-        
-        // Update meta information
-        document.getElementById('viewReportDate').textContent = data.date;
-        document.getElementById('viewReportCreator').textContent = data.creator;
-        document.getElementById('viewReportEvent').textContent = data.event;
-        document.getElementById('viewReportUpdated').textContent = data.updated;
-        
-        // Update description and content
-        document.getElementById('viewReportDescription').textContent = data.description;
-        document.getElementById('viewReportContent').innerHTML = data.content;
-        
-        // Update attachments
-        const attachmentsContainer = document.getElementById('viewReportAttachments');
-        if (data.attachments.length > 0) {
-            attachmentsContainer.innerHTML = data.attachments.map(file => {
-                const iconClass = getFileIconClass(file.type);
-                return `
-                    <div class="attachment-card">
-                        <div class="attachment-icon ${file.type}">
-                            <i class="${iconClass}"></i>
-                        </div>
-                        <div class="attachment-info">
-                            <span class="attachment-name">${file.name}</span>
-                            <span class="attachment-size">${file.size}</span>
-                        </div>
-                        <button class="btn-download-attachment" onclick="downloadAttachment('${file.name}')">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            attachmentsContainer.innerHTML = '<p style="color: var(--text-gray); font-style: italic;">Không có tài liệu đính kèm</p>';
-        }
-        
-        // Store current report ID for edit function
-        currentReportId = reportId;
-    }
-}
-
-function getFileIconClass(type) {
-    const iconMap = {
-        'pdf': 'fas fa-file-pdf',
-        'excel': 'fas fa-file-excel',
-        'ppt': 'fas fa-file-powerpoint',
-        'word': 'fas fa-file-word',
-        'default': 'fas fa-file'
-    };
-    return iconMap[type] || iconMap['default'];
 }
 
 function closeViewReportModal() {
-    const modal = document.getElementById('viewReportModal');
-    modal.classList.remove('active');
+    document.getElementById('viewReportModal').classList.remove('active');
     document.body.style.overflow = 'auto';
 }
 
-function downloadReportFromView(format) {
-    if (!currentReportId) return;
+// ================= CREATE / SAVE REPORT =================
+async function saveReport(status = "completed") {
+    const eventId = reportPageData.selectedEventId;
+    if (!eventId) return;
+
+    const title = document.getElementById('reportTitle').value;
+    const desc = document.getElementById('reportDescription').value;
+    const content = document.getElementById('reportContent').value;
     
-    console.log(`Downloading report ${currentReportId} as ${format}`);
-    alert(`Đang xuất báo cáo dưới định dạng ${format.toUpperCase()}...`);
+    const types = document.getElementsByName('reportType');
+    let selectedType = 'event';
+    types.forEach(t => {
+        if (t.checked) selectedType = t.value;
+    });
+
+    const typeLabels = {
+        event: { label: 'Báo cáo sự kiện', icon: 'fas fa-calendar-check' },
+        budget: { label: 'Báo cáo tài chính', icon: 'fas fa-money-bill-wave' },
+        attendance: { label: 'Báo cáo tham dự', icon: 'fas fa-users' },
+        summary: { label: 'Báo cáo tổng kết', icon: 'fas fa-chart-line' }
+    };
+    const details = typeLabels[selectedType];
+
+    const data = {
+        type: selectedType,
+        typeLabel: details.label,
+        typeIcon: details.icon,
+        title: title,
+        status: status,
+        statusLabel: status === "completed" ? "Hoàn thành" : (status === "pending" ? "Đang xử lý" : "Bản nháp"),
+        date: new Date().toLocaleDateString("vi-VN"),
+        creator: 'Nguyễn Văn A',
+        event: reportPageData.events.find(e => e.idSuKien == eventId)?.tenSuKien || "Sự kiện",
+        updated: new Date().toLocaleDateString("vi-VN") + " 12:00",
+        description: desc,
+        content: content,
+        attachments: [],
+        isCustom: true
+    };
+
+    let customReports = reportPageData.reports.filter(r => r.isCustom) || [];
+
+    if (reportPageData.currentReportId) {
+        const index = customReports.findIndex(r => r.id == reportPageData.currentReportId);
+        if (index !== -1) {
+            data.id = reportPageData.currentReportId;
+            customReports[index] = data;
+        }
+    } else {
+        data.id = Date.now();
+        customReports.push(data);
+    }
+
+    localStorage.setItem(`reports_custom_event_${eventId}`, JSON.stringify(customReports));
+    closeReportModal();
+    await loadReportsForSelectedEvent();
+}
+
+document.getElementById('reportForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await saveReport("completed");
+    alert("Đã lưu báo cáo thành công!");
+});
+
+window.saveReportDraft = async function() {
+    await saveReport("draft");
+    alert("Đã lưu bản nháp báo cáo!");
+};
+
+// ================= VIEW REPORT =================
+function viewReport(id) {
+    const item = reportPageData.reports.find(r => r.id == id);
+    if (!item) return;
+
+    reportPageData.currentReportId = id;
+
+    document.getElementById('viewReportTitle').textContent = item.title;
     
-    // Simulate download
-    // In real implementation, call API to generate and download file
+    const typeElement = document.getElementById('viewReportType');
+    typeElement.className = `report-type ${item.type}`;
+    typeElement.innerHTML = `<i class="${item.typeIcon}"></i><span>${item.typeLabel}</span>`;
+
+    const statusElement = document.getElementById('viewReportStatus');
+    statusElement.className = `status-badge ${item.status}`;
+    statusElement.textContent = item.statusLabel;
+
+    document.getElementById('viewReportDate').textContent = item.date;
+    document.getElementById('viewReportCreator').textContent = item.creator;
+    document.getElementById('viewReportEvent').textContent = item.event;
+    document.getElementById('viewReportUpdated').textContent = item.updated;
+    document.getElementById('viewReportDescription').textContent = item.description;
+    document.getElementById('viewReportContent').innerHTML = item.content || '<p>Không có nội dung chi tiết.</p>';
+
+    document.getElementById('viewReportModal').classList.add('active');
+}
+
+// ================= EDIT REPORT =================
+function editReport(id) {
+    const item = reportPageData.reports.find(r => r.id == id);
+    if (!item) return;
+
+    reportPageData.currentReportId = id;
+
+    // Prepopulate inputs
+    const typeRadio = document.querySelector(`input[name="reportType"][value="${item.type}"]`);
+    if (typeRadio) typeRadio.checked = true;
+
+    document.getElementById('reportTitle').value = item.title;
+    document.getElementById('relatedEvent').value = reportPageData.selectedEventId;
+    document.getElementById('reportDescription').value = item.description || '';
+    document.getElementById('reportContent').value = item.content || '';
+
+    closeViewReportModal();
+    document.getElementById('reportModal').classList.add('active');
 }
 
 function editReportFromView() {
-    if (!currentReportId) return;
-    
-    // Close view modal
-    closeViewReportModal();
-    
-    // Open edit modal
-    setTimeout(() => {
-        editReport(currentReportId);
-    }, 300);
-}
-
-function downloadAttachment(filename) {
-    console.log('Downloading attachment:', filename);
-    alert(`Đang tải file: ${filename}`);
-    
-    // Simulate download
-    // In real implementation, call API to download file
-}
-
-function downloadReport(reportId, format) {
-    console.log(`Downloading report ${reportId} as ${format}`);
-    alert(`Đang tải báo cáo dưới định dạng ${format.toUpperCase()}...`);
-    
-    // Simulate download
-    // In real implementation, call API to generate and download file
-}
-
-function deleteReport(reportId) {
-    if (confirm('Bạn có chắc chắn muốn xóa báo cáo này?')) {
-        console.log('Deleting report:', reportId);
-        alert('Đã xóa báo cáo');
-        
-        // Remove from UI
-        const reportCard = document.querySelector(`.report-card[data-status="draft"]`);
-        if (reportCard) {
-            reportCard.remove();
-        }
+    if (reportPageData.currentReportId) {
+        editReport(reportPageData.currentReportId);
     }
 }
 
-function saveReportDraft() {
-    const formData = collectReportFormData();
-    
-    console.log('Saving report draft:', formData);
-    
-    alert('Đã lưu bản nháp thành công');
-    closeReportModal();
+// ================= ACTIONS =================
+function downloadReport(id, format) {
+    alert(`Đang xuất báo cáo và tải xuống dạng ${format.toUpperCase()}...`);
 }
 
-function collectReportFormData() {
-    const reportType = document.querySelector('input[name="reportType"]:checked')?.value;
-    
-    return {
-        type: reportType,
-        title: document.getElementById('reportTitle').value,
-        event: document.getElementById('relatedEvent').value,
-        date: document.getElementById('reportDate').value,
-        description: document.getElementById('reportDescription').value,
-        content: document.getElementById('reportContent').value,
-        files: uploadedFiles
-    };
+function downloadReportFromView(format) {
+    downloadReport(reportPageData.currentReportId, format);
 }
 
-// Form Submissions
-document.getElementById('reportForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = collectReportFormData();
-    
-    // Validate required fields
-    if (!formData.type || !formData.title || !formData.description) {
-        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
-        return;
+function deleteReport(id) {
+    if (!confirm("Xác nhận xóa báo cáo này?")) return;
+    const eventId = reportPageData.selectedEventId;
+    let customRepStr = localStorage.getItem(`reports_custom_event_${eventId}`);
+    if (customRepStr) {
+        let customReports = JSON.parse(customRepStr) || [];
+        customReports = customReports.filter(r => r.id != id);
+        localStorage.setItem(`reports_custom_event_${eventId}`, JSON.stringify(customReports));
     }
+    loadReportsForSelectedEvent();
+}
 
-    console.log('Submitting report:', formData);
-
-    // Call API to save report
-    if (currentReportId) {
-        alert('Đã cập nhật báo cáo thành công');
-    } else {
-        alert('Đã tạo báo cáo mới thành công');
-    }
-
-    closeReportModal();
-});
-
-document.getElementById('uploadReportForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const title = document.getElementById('uploadReportTitle').value;
-    const type = document.getElementById('uploadReportType').value;
-    const file = document.getElementById('uploadFileInput').files[0];
-    const notes = document.getElementById('uploadNotes').value;
-    
-    if (!title || !type || !file) {
-        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
-        return;
-    }
-
-    console.log('Uploading report:', { title, type, file, notes });
-
-    alert('Đã upload báo cáo thành công');
-    closeUploadReportModal();
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(e) {
-    const reportModal = document.getElementById('reportModal');
-    const uploadModal = document.getElementById('uploadReportModal');
-    const viewModal = document.getElementById('viewReportModal');
-    
-    if (e.target === reportModal) {
-        closeReportModal();
-    }
-    
-    if (e.target === uploadModal) {
-        closeUploadReportModal();
-    }
-    
-    if (e.target === viewModal) {
-        closeViewReportModal();
-    }
-});
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeReportModal();
-        closeUploadReportModal();
-        closeViewReportModal();
-    }
-});
+// Export functions
+window.openCreateReportModal = openCreateReportModal;
+window.closeReportModal = closeReportModal;
+window.openUploadReportModal = openUploadReportModal;
+window.closeUploadReportModal = closeUploadReportModal;
+window.closeViewReportModal = closeViewReportModal;
+window.editReport = editReport;
+window.viewReport = viewReport;
+window.downloadReport = downloadReport;
+window.downloadReportFromView = downloadReportFromView;
+window.editReportFromView = editReportFromView;
+window.deleteReport = deleteReport;

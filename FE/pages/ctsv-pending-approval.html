@@ -10,8 +10,37 @@
     <link rel="stylesheet" href="../css/btc-dashboard.css">
     <link rel="stylesheet" href="../css/ctsv-approval.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #059669;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            z-index: 1001;
+            border-radius: 0 0 4px 0;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .btn-close:hover {
+            color: #000;
+        }
+    </style>
 </head>
 <body>
+    <!-- Skip navigation link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <!-- Header -->
     <header class="header">
         <div class="header-left">
@@ -19,61 +48,61 @@
                 <img src="../images/logo.png" alt="UTE Events">
             </div>
             <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm hồ sơ, sự kiện...">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" placeholder="Tìm kiếm hồ sơ, sự kiện..." aria-label="Tìm kiếm hồ sơ, sự kiện">
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-notification">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">5</span>
+            <button type="button" class="btn-notification" aria-label="Thông báo" title="Thông báo">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                <span class="notification-badge" aria-label="5 thông báo chưa đọc">5</span>
             </button>
-            <div class="user-profile">
+            <div class="user-profile" tabindex="0" role="button" aria-label="Menu người dùng">
                 <div class="user-info">
                     <span class="user-name">Nguyễn Thị Mai</span>
                     <span class="user-role">Cán bộ phê duyệt cấp 1</span>
                 </div>
-                <img src="../images/avatar-ctsv.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Thi+Mai&background=059669&color=fff'">
+                <img src="../images/avatar-ctsv.jpg" alt="Avatar Nguyễn Thị Mai" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Thi+Mai&background=059669&color=fff'">
             </div>
         </div>
     </header>
 
     <div class="main-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" aria-label="Thanh điều hướng phòng CTSV">
             <nav class="sidebar-nav">
                 <a href="ctsv-pending-approval.html" class="nav-item active">
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-clock" aria-hidden="true"></i>
                     <span>Chờ duyệt</span>
                 </a>
                 <a href="ctsv-approval-history.html" class="nav-item">
-                    <i class="fas fa-history"></i>
+                    <i class="fas fa-history" aria-hidden="true"></i>
                     <span>Lịch sử duyệt</span>
                 </a>
                 <a href="ctsv-reports.html" class="nav-item">
-                    <i class="fas fa-chart-bar"></i>
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
                     <span>Báo cáo</span>
                 </a>
             </nav>
 
             <div class="sidebar-footer">
                 <a href="#" class="nav-item">
-                    <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog" aria-hidden="true"></i>
                     <span>Cài đặt</span>
                 </a>
                 <a href="#" class="nav-item">
-                    <i class="fas fa-question-circle"></i>
+                    <i class="fas fa-question-circle" aria-hidden="true"></i>
                     <span>Trợ giúp</span>
                 </a>
                 <a href="#" class="nav-item danger">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span>Đăng xuất</span>
                 </a>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content" id="main-content" tabindex="-1">
             <!-- Page Header -->
             <div class="page-header">
                 <div>
@@ -81,12 +110,12 @@
                     <p>Danh sách hồ sơ mới cần xét duyệt từ Ban Tổ chức</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-secondary" onclick="exportPendingList()">
-                        <i class="fas fa-file-export"></i>
+                    <button type="button" class="btn-secondary" onclick="exportPendingList()" aria-label="Xuất danh sách hồ sơ chờ duyệt">
+                        <i class="fas fa-file-export" aria-hidden="true"></i>
                         Xuất danh sách
                     </button>
-                    <button class="btn-primary" onclick="openBulkApprovalModal()">
-                        <i class="fas fa-check-double"></i>
+                    <button type="button" class="btn-primary" onclick="openBulkApprovalModal()" aria-label="Duyệt hàng loạt hồ sơ">
+                        <i class="fas fa-check-double" aria-hidden="true"></i>
                         Duyệt hàng loạt
                     </button>
                 </div>
@@ -96,7 +125,7 @@
             <div class="stats-grid">
                 <div class="stat-card pending-stat">
                     <div class="stat-header">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-clock" aria-hidden="true"></i>
                         <span class="stat-change warning">+1 mới</span>
                     </div>
                     <div class="stat-number">1</div>
@@ -106,7 +135,7 @@
 
                 <div class="stat-card urgent-stat">
                     <div class="stat-header">
-                        <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                         <span class="stat-change danger">Khẩn cấp</span>
                     </div>
                     <div class="stat-number">0</div>
@@ -116,7 +145,7 @@
 
                 <div class="stat-card approved-stat">
                     <div class="stat-header">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                     </div>
                     <div class="stat-number">2</div>
                     <div class="stat-label">ĐÃ DUYỆT</div>
@@ -125,7 +154,7 @@
 
                 <div class="stat-card rejected-stat">
                     <div class="stat-header">
-                        <i class="fas fa-times-circle"></i>
+                        <i class="fas fa-times-circle" aria-hidden="true"></i>
                     </div>
                     <div class="stat-number">0</div>
                     <div class="stat-label">TỪ CHỐI</div>
@@ -135,28 +164,30 @@
 
             <!-- Filter Section -->
             <div class="filter-section">
-                <div class="filter-tabs">
-                    <button class="tab-btn active" data-filter="all">Tất cả (1)</button>
-                    <button class="tab-btn" data-filter="urgent">Khẩn cấp (0)</button>
-                    <button class="tab-btn" data-filter="normal">Bình thường (1)</button>
-                    <button class="tab-btn" data-filter="low">Không khẩn (0)</button>
+                <div class="filter-tabs" role="tablist" aria-label="Bộ lọc mức độ ưu tiên">
+                    <button type="button" class="tab-btn active" data-filter="all" role="tab" aria-selected="true">Tất cả (1)</button>
+                    <button type="button" class="tab-btn" data-filter="urgent" role="tab" aria-selected="false">Khẩn cấp (0)</button>
+                    <button type="button" class="tab-btn" data-filter="normal" role="tab" aria-selected="false">Bình thường (1)</button>
+                    <button type="button" class="tab-btn" data-filter="low" role="tab" aria-selected="false">Không khẩn (0)</button>
                 </div>
                 <div class="filter-controls">
-                    <select class="filter-select" id="eventTypeFilter">
+                    <label for="eventTypeFilter" class="visually-hidden" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;">Loại sự kiện</label>
+                    <select class="filter-select" id="eventTypeFilter" aria-label="Lọc theo loại sự kiện">
                         <option value="all">Tất cả loại sự kiện</option>
                         <option value="hoi-thao">Hội thảo</option>
                         <option value="workshop">Workshop</option>
                         <option value="thi-dau">Thi đấu</option>
                         <option value="van-nghe">Văn nghệ</option>
                     </select>
-                    <select class="filter-select" id="dateFilter">
+                    <label for="dateFilter" class="visually-hidden" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;">Thời gian</label>
+                    <select class="filter-select" id="dateFilter" aria-label="Lọc theo thời gian">
                         <option value="all">Tất cả thời gian</option>
                         <option value="today">Hôm nay</option>
                         <option value="week">Tuần này</option>
                         <option value="month">Tháng này</option>
                     </select>
-                    <button class="btn-filter" onclick="applyFilters()">
-                        <i class="fas fa-filter"></i>
+                    <button type="button" class="btn-filter" onclick="applyFilters()" aria-label="Áp dụng bộ lọc">
+                        <i class="fas fa-filter" aria-hidden="true"></i>
                         Lọc
                     </button>
                 </div>
@@ -171,12 +202,12 @@
                             <span class="approval-badge normal">BÌNH THƯỜNG</span>
                             <span class="approval-id">#HS2024-003</span>
                             <span class="approval-date">
-                                <i class="fas fa-calendar"></i>
+                                <i class="fas fa-calendar" aria-hidden="true"></i>
                                 Gửi: 29/11/2026 14:30
                             </span>
                         </div>
                         <div class="approval-deadline">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-clock" aria-hidden="true"></i>
                             <span class="deadline-text">Còn 5 ngày</span>
                         </div>
                     </div>
@@ -184,19 +215,19 @@
                         <h3>Workshop Kỹ năng thuyết trình chuyên nghiệp</h3>
                         <div class="approval-meta">
                             <div class="meta-item">
-                                <i class="fas fa-user"></i>
+                                <i class="fas fa-user" aria-hidden="true"></i>
                                 <span>Gửi bởi: <strong>Lê Văn Cường</strong> (Trưởng BTC)</span>
                             </div>
                             <div class="meta-item">
-                                <i class="fas fa-calendar-check"></i>
+                                <i class="fas fa-calendar-check" aria-hidden="true"></i>
                                 <span>Ngày tổ chức: <strong>05/12/2025</strong></span>
                             </div>
                             <div class="meta-item">
-                                <i class="fas fa-users"></i>
+                                <i class="fas fa-users" aria-hidden="true"></i>
                                 <span>Quy mô: <strong>80 người</strong></span>
                             </div>
                             <div class="meta-item">
-                                <i class="fas fa-money-bill-wave"></i>
+                                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
                                 <span>Ngân sách: <strong>2,000,000 đ</strong></span>
                             </div>
                         </div>
@@ -206,29 +237,29 @@
                         <div class="approval-documents">
                             <span class="doc-label">Tài liệu đính kèm:</span>
                             <div class="doc-list">
-                                <span class="doc-item"><i class="fas fa-file-pdf"></i> Kế hoạch workshop.pdf</span>
-                                <span class="doc-item"><i class="fas fa-file-excel"></i> Dự toán ngân sách.xlsx</span>
+                                <span class="doc-item"><i class="fas fa-file-pdf" aria-hidden="true"></i> Kế hoạch workshop.pdf</span>
+                                <span class="doc-item"><i class="fas fa-file-excel" aria-hidden="true"></i> Dự toán ngân sách.xlsx</span>
                             </div>
                         </div>
                         <div class="approval-comment" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-top: 12px; border-radius: 6px;">
                             <div class="comment-label" style="color: #f59e0b; font-weight: 600; margin-bottom: 6px;">
-                                <i class="fas fa-exclamation-circle"></i>
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                                 Yêu cầu bổ sung:
                             </div>
                             <p style="margin: 0; color: #92400e;">Cần bổ sung danh sách giảng viên hỗ trợ</p>
                         </div>
                     </div>
                     <div class="approval-footer">
-                        <button class="btn-view" onclick="viewApprovalDetail(1)">
-                            <i class="fas fa-eye"></i>
+                        <button type="button" class="btn-view" onclick="viewApprovalDetail(1)" aria-label="Xem chi tiết hồ sơ Workshop Kỹ năng thuyết trình">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
                             Xem chi tiết
                         </button>
-                        <button class="btn-reject" onclick="openRejectModal(1)">
-                            <i class="fas fa-times"></i>
+                        <button type="button" class="btn-reject" onclick="openRejectModal(1)" aria-label="Từ chối hồ sơ này">
+                            <i class="fas fa-times" aria-hidden="true"></i>
                             Từ chối
                         </button>
-                        <button class="btn-approve" onclick="openApproveModal(1)">
-                            <i class="fas fa-check"></i>
+                        <button type="button" class="btn-approve" onclick="openApproveModal(1)" aria-label="Phê duyệt hồ sơ này">
+                            <i class="fas fa-check" aria-hidden="true"></i>
                             Phê duyệt
                         </button>
                     </div>
@@ -236,15 +267,15 @@
             </div>
 
             <!-- Pagination -->
-            <div class="pagination">
-                <button class="page-btn" disabled>
-                    <i class="fas fa-chevron-left"></i>
+            <div class="pagination" aria-label="Phân trang">
+                <button type="button" class="page-btn" disabled aria-label="Trang trước">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
                 </button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn">
-                    <i class="fas fa-chevron-right"></i>
+                <button type="button" class="page-btn active" aria-label="Trang 1, đang chọn">1</button>
+                <button type="button" class="page-btn" aria-label="Trang 2">2</button>
+                <button type="button" class="page-btn" aria-label="Trang 3">3</button>
+                <button type="button" class="page-btn" aria-label="Trang sau">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
                 </button>
             </div>
         </main>
@@ -268,27 +299,27 @@
                 <div class="footer-col">
                     <h4>Thông tin liên lạc</h4>
                     <ul class="footer-links">
-                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
-                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                        <li><i class="fas fa-phone" aria-hidden="true"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope" aria-hidden="true"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt" aria-hidden="true"></i> 48 Cao Thắng, Đà Nẵng</li>
                     </ul>
                 </div>
 
                 <div class="footer-col">
                     <h4>Bản đồ chỉ dẫn</h4>
                     <div class="map-placeholder">
-                        <img src="../images/map.png" alt="Bản đồ">
+                        <img src="../images/map.png" alt="Bản đồ trường Đại học Sư phạm Kỹ thuật">
                     </div>
                 </div>
 
                 <div class="footer-col">
                     <h4>Kết nối</h4>
                     <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-google"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Google"><i class="fab fa-google" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
@@ -299,22 +330,22 @@
     </footer>
 
     <!-- Approve Modal -->
-    <div id="approveModal" class="modal">
+    <div id="approveModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="approveModalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Phê duyệt Hồ sơ</h2>
-                <button class="btn-close" onclick="closeApproveModal()">
-                    <i class="fas fa-times"></i>
+                <h2 id="approveModalTitle">Phê duyệt Hồ sơ</h2>
+                <button type="button" class="btn-close" onclick="closeApproveModal()" aria-label="Đóng modal phê duyệt">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="approval-confirm-info">
-                    <i class="fas fa-check-circle success-icon"></i>
+                    <i class="fas fa-check-circle success-icon" aria-hidden="true"></i>
                     <h3>Xác nhận phê duyệt hồ sơ</h3>
                     <p id="approveEventName">Hội thảo Công nghệ AI và Ứng dụng 2024</p>
                 </div>
                 <div class="form-group">
-                    <label>Ý kiến phê duyệt</label>
+                    <label for="approveComment">Ý kiến phê duyệt</label>
                     <textarea id="approveComment" rows="4" placeholder="Nhập ý kiến của bạn (không bắt buộc)..."></textarea>
                 </div>
                 <div class="form-group">
@@ -326,8 +357,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel-modal" onclick="closeApproveModal()">Hủy</button>
-                <button type="button" class="btn-submit success" onclick="confirmApprove()">
-                    <i class="fas fa-check"></i>
+                <button type="button" class="btn-submit success" onclick="confirmApprove()" aria-label="Xác nhận phê duyệt hồ sơ">
+                    <i class="fas fa-check" aria-hidden="true"></i>
                     Xác nhận phê duyệt
                 </button>
             </div>
@@ -335,26 +366,26 @@
     </div>
 
     <!-- Reject Modal -->
-    <div id="rejectModal" class="modal">
+    <div id="rejectModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Từ chối Hồ sơ</h2>
-                <button class="btn-close" onclick="closeRejectModal()">
-                    <i class="fas fa-times"></i>
+                <h2 id="rejectModalTitle">Từ chối Hồ sơ</h2>
+                <button type="button" class="btn-close" onclick="closeRejectModal()" aria-label="Đóng modal từ chối">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="approval-confirm-info reject">
-                    <i class="fas fa-times-circle error-icon"></i>
+                    <i class="fas fa-times-circle error-icon" aria-hidden="true"></i>
                     <h3>Xác nhận từ chối hồ sơ</h3>
                     <p id="rejectEventName">Hội thảo Công nghệ AI và Ứng dụng 2024</p>
                 </div>
                 <div class="form-group">
-                    <label>Lý do từ chối <span class="required">*</span></label>
+                    <label for="rejectReason">Lý do từ chối <span class="required">*</span></label>
                     <textarea id="rejectReason" rows="4" placeholder="Nhập lý do từ chối (bắt buộc)..." required></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Yêu cầu chỉnh sửa</label>
+                    <label for="rejectSuggestion">Yêu cầu chỉnh sửa</label>
                     <textarea id="rejectSuggestion" rows="3" placeholder="Gợi ý những điểm cần chỉnh sửa..."></textarea>
                 </div>
                 <div class="form-group">
@@ -366,8 +397,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel-modal" onclick="closeRejectModal()">Hủy</button>
-                <button type="button" class="btn-submit danger" onclick="confirmReject()">
-                    <i class="fas fa-times"></i>
+                <button type="button" class="btn-submit danger" onclick="confirmReject()" aria-label="Xác nhận từ chối hồ sơ">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     Xác nhận từ chối
                 </button>
             </div>
@@ -375,16 +406,15 @@
     </div>
 
     <!-- View Detail Modal -->
-    <div id="viewDetailModal" class="modal">
+    <div id="viewDetailModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="viewDetailModalTitle">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h2>Chi tiết Hồ sơ</h2>
-                <button class="btn-close" onclick="closeViewDetailModal()">
-                    <i class="fas fa-times"></i>
+                <h2 id="viewDetailModalTitle">Chi tiết Hồ sơ</h2>
+                <button type="button" class="btn-close" onclick="closeViewDetailModal()" aria-label="Đóng modal chi tiết">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Detail Header -->
                 <div class="detail-header">
                     <div class="detail-title-section">
                         <h3 id="detailEventName">Hội thảo Công nghệ AI và Ứng dụng 2024</h3>
@@ -395,59 +425,58 @@
                     </div>
                 </div>
 
-                <!-- Detail Meta -->
                 <div class="detail-meta-grid">
                     <div class="meta-box">
-                        <i class="fas fa-user"></i>
+                        <i class="fas fa-user" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Người gửi</span>
                             <span class="meta-value" id="detailSender">Nguyễn Văn A (Trưởng BTC)</span>
                         </div>
                     </div>
                     <div class="meta-box">
-                        <i class="fas fa-calendar"></i>
+                        <i class="fas fa-calendar" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Ngày gửi</span>
                             <span class="meta-value" id="detailSubmitDate">30/12/2024 09:15</span>
                         </div>
                     </div>
                     <div class="meta-box">
-                        <i class="fas fa-calendar-check"></i>
+                        <i class="fas fa-calendar-check" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Ngày tổ chức</span>
                             <span class="meta-value" id="detailEventDate">15/01/2025</span>
                         </div>
                     </div>
                     <div class="meta-box">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-clock" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Thời hạn duyệt</span>
                             <span class="meta-value danger" id="detailDeadline">Còn 8 giờ</span>
                         </div>
                     </div>
                     <div class="meta-box">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-users" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Quy mô</span>
                             <span class="meta-value" id="detailScale">500 người</span>
                         </div>
                     </div>
                     <div class="meta-box">
-                        <i class="fas fa-money-bill-wave"></i>
+                        <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Ngân sách</span>
                             <span class="meta-value" id="detailBudget">150,000,000 đ</span>
                         </div>
                     </div>
                     <div class="meta-box">
-                        <i class="fas fa-map-marker-alt"></i>
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Địa điểm</span>
                             <span class="meta-value" id="detailLocation">Hội trường A1</span>
                         </div>
                     </div>
                     <div class="meta-box">
-                        <i class="fas fa-tag"></i>
+                        <i class="fas fa-tag" aria-hidden="true"></i>
                         <div>
                             <span class="meta-label">Loại sự kiện</span>
                             <span class="meta-value" id="detailType">Hội thảo</span>
@@ -455,17 +484,15 @@
                     </div>
                 </div>
 
-                <!-- Detail Description -->
                 <div class="detail-section">
-                    <h4><i class="fas fa-align-left"></i> Mô tả sự kiện</h4>
+                    <h4><i class="fas fa-align-left" aria-hidden="true"></i> Mô tả sự kiện</h4>
                     <div class="detail-content" id="detailDescription">
                         <p>Hội thảo về công nghệ AI với sự tham gia của các chuyên gia hàng đầu trong lĩnh vực. Bao gồm 3 phiên thảo luận chính và workshop thực hành về Machine Learning, Deep Learning và ứng dụng AI trong thực tế.</p>
                     </div>
                 </div>
 
-                <!-- Detail Objectives -->
                 <div class="detail-section">
-                    <h4><i class="fas fa-bullseye"></i> Mục tiêu</h4>
+                    <h4><i class="fas fa-bullseye" aria-hidden="true"></i> Mục tiêu</h4>
                     <div class="detail-content" id="detailObjectives">
                         <ul>
                             <li>Cung cấp kiến thức cơ bản và nâng cao về AI cho sinh viên</li>
@@ -475,9 +502,8 @@
                     </div>
                 </div>
 
-                <!-- Detail Schedule -->
                 <div class="detail-section">
-                    <h4><i class="fas fa-calendar-alt"></i> Lịch trình</h4>
+                    <h4><i class="fas fa-calendar-alt" aria-hidden="true"></i> Lịch trình</h4>
                     <div class="detail-content" id="detailSchedule">
                         <ul>
                             <li><strong>08:00 - 08:30:</strong> Đón tiếp và đăng ký</li>
@@ -492,44 +518,43 @@
                     </div>
                 </div>
 
-                <!-- Detail Documents -->
                 <div class="detail-section">
-                    <h4><i class="fas fa-paperclip"></i> Tài liệu đính kèm</h4>
+                    <h4><i class="fas fa-paperclip" aria-hidden="true"></i> Tài liệu đính kèm</h4>
                     <div class="documents-grid" id="detailDocuments">
                         <div class="document-card">
                             <div class="doc-icon pdf">
-                                <i class="fas fa-file-pdf"></i>
+                                <i class="fas fa-file-pdf" aria-hidden="true"></i>
                             </div>
                             <div class="doc-info">
                                 <span class="doc-name">Kế hoạch chi tiết.pdf</span>
                                 <span class="doc-size">2.5 MB</span>
                             </div>
-                            <button class="btn-download-doc">
-                                <i class="fas fa-download"></i>
+                            <button type="button" class="btn-download-doc" aria-label="Tải xuống Kế hoạch chi tiết.pdf">
+                                <i class="fas fa-download" aria-hidden="true"></i>
                             </button>
                         </div>
                         <div class="document-card">
                             <div class="doc-icon excel">
-                                <i class="fas fa-file-excel"></i>
+                                <i class="fas fa-file-excel" aria-hidden="true"></i>
                             </div>
                             <div class="doc-info">
                                 <span class="doc-name">Dự toán ngân sách.xlsx</span>
                                 <span class="doc-size">1.2 MB</span>
                             </div>
-                            <button class="btn-download-doc">
-                                <i class="fas fa-download"></i>
+                            <button type="button" class="btn-download-doc" aria-label="Tải xuống Dự toán ngân sách.xlsx">
+                                <i class="fas fa-download" aria-hidden="true"></i>
                             </button>
                         </div>
                         <div class="document-card">
                             <div class="doc-icon word">
-                                <i class="fas fa-file-word"></i>
+                                <i class="fas fa-file-word" aria-hidden="true"></i>
                             </div>
                             <div class="doc-info">
                                 <span class="doc-name">Đề cương chương trình.docx</span>
                                 <span class="doc-size">800 KB</span>
                             </div>
-                            <button class="btn-download-doc">
-                                <i class="fas fa-download"></i>
+                            <button type="button" class="btn-download-doc" aria-label="Tải xuống Đề cương chương trình.docx">
+                                <i class="fas fa-download" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -537,12 +562,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel-modal" onclick="closeViewDetailModal()">Đóng</button>
-                <button type="button" class="btn-submit danger" onclick="rejectFromDetail()">
-                    <i class="fas fa-times"></i>
+                <button type="button" class="btn-submit danger" onclick="rejectFromDetail()" aria-label="Từ chối hồ sơ từ chi tiết">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                     Từ chối
                 </button>
-                <button type="button" class="btn-submit success" onclick="approveFromDetail()">
-                    <i class="fas fa-check"></i>
+                <button type="button" class="btn-submit success" onclick="approveFromDetail()" aria-label="Phê duyệt hồ sơ từ chi tiết">
+                    <i class="fas fa-check" aria-hidden="true"></i>
                     Phê duyệt
                 </button>
             </div>

@@ -9,8 +9,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/events.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #0D5A9C;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            z-index: 1001;
+            border-radius: 0 0 4px 0;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+        .user-menu {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 40px;
+            transition: background 0.3s;
+        }
+        .user-menu:hover {
+            background: rgba(0,0,0,0.05);
+        }
+    </style>
 </head>
 <body>
+    <!-- Skip navigation link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <!-- Header -->
     <header class="header">
         <div class="container">
@@ -18,28 +50,28 @@
                 <div class="logo">
                     <img src="../images/logo.png" alt="UTE Events" onerror="this.src='https://via.placeholder.com/150x50/0D5A9C/FFFFFF?text=UTE+Events'">
                 </div>
-                <nav class="nav-menu">
+                <nav class="nav-menu" aria-label="Điều hướng chính">
                     <a href="home-user.html" class="nav-link">Trang chủ</a>
                     <a href="events.html" class="nav-link active">Sự kiện</a>
                     <a href="calender.html" class="nav-link">Lịch cá nhân</a>
                     <a href="notifications.html" class="nav-link">Thông báo</a>
                 </nav>
                 <div class="header-actions">
-                    <button class="btn-notification" onclick="window.location.href='notifications.html'" title="Thông báo">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+                    <button type="button" class="btn-notification" onclick="window.location.href='notifications.html'" aria-label="Thông báo" title="Thông báo">
+                        <i class="fas fa-bell" aria-hidden="true"></i>
+                        <span class="notification-badge" id="notifBadge" style="display:none;" aria-label="0 thông báo chưa đọc">0</span>
                     </button>
-                    <div class="user-menu" id="userMenuWrapper">
-                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="User" class="user-avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                    <div class="user-menu" id="userMenuWrapper" tabindex="0" role="button" aria-label="Menu người dùng" aria-expanded="false">
+                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="Avatar người dùng" class="user-avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
                         <span id="userName" style="font-size:14px;font-weight:600;color:#1a1a2e;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">...</span>
-                        <i class="fas fa-chevron-down" style="font-size:12px;color:#666;"></i>
+                        <i class="fas fa-chevron-down" style="font-size:12px;color:#666;" aria-hidden="true"></i>
                         <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:210px;z-index:9999;overflow:hidden;">
-                            <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;"></i> Hồ sơ cá nhân</a>
-                            <a href="my-tickets.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;width:16px;"></i> Vé của tôi</a>
-                            <a href="history.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;width:16px;"></i> Lịch sử tham gia</a>
-                            <a href="notifications.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-bell" style="color:#0D5A9C;width:16px;"></i> Thông báo</a>
+                            <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Hồ sơ cá nhân</a>
+                            <a href="my-tickets.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Vé của tôi</a>
+                            <a href="history.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Lịch sử tham gia</a>
+                            <a href="notifications.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-bell" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Thông báo</a>
                             <hr style="margin:0;border:none;border-top:1px solid #eee;">
-                            <a href="#" id="logoutBtn" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;width:16px;"></i> Đăng xuất</a>
+                            <a href="#" id="logoutBtn" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;width:16px;" aria-hidden="true"></i> Đăng xuất</a>
                         </div>
                     </div>
                 </div>
@@ -48,138 +80,142 @@
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" id="main-content" tabindex="-1">
         <div class="container">
             <div class="content-layout">
                 <!-- Left Column - Navigation & Filters -->
                 <div class="left-column">
-                    <aside class="sidebar">
+                    <aside class="sidebar" aria-label="Thanh điều hướng phụ">
                         <nav class="sidebar-nav">
                             <a href="home-user.html" class="nav-item">
-                                <i class="fas fa-home"></i>
+                                <i class="fas fa-home" aria-hidden="true"></i>
                                 <span>Trang chủ</span>
                             </a>
                             <a href="events.html" class="nav-item active">
-                                <i class="fas fa-calendar-alt"></i>
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                                 <span>Sự kiện</span>
                             </a>
                             <a href="calender.html" class="nav-item">
-                                <i class="fas fa-calendar-check"></i>
+                                <i class="fas fa-calendar-check" aria-hidden="true"></i>
                                 <span>Lịch cá nhân</span>
                             </a>
                             <a href="profile.html" class="nav-item">
-                                <i class="fas fa-user"></i>
+                                <i class="fas fa-user" aria-hidden="true"></i>
                                 <span>Hồ sơ cá nhân</span>
                             </a>
                             <a href="history.html" class="nav-item">
-                                <i class="fas fa-history"></i>
+                                <i class="fas fa-history" aria-hidden="true"></i>
                                 <span>Lịch sử tham gia</span>
                             </a>
                             <a href="notifications.html" class="nav-item">
-                                <i class="fas fa-bell"></i>
+                                <i class="fas fa-bell" aria-hidden="true"></i>
                                 <span>Thông báo</span>
                             </a>
                         </nav>
 
                         <div class="help-section">
                             <h4>HỖ TRỢ SINH VIÊN</h4>
-                            <button class="btn-help">Gửi yêu cầu</button>
+                            <button type="button" class="btn-help" aria-label="Gửi yêu cầu hỗ trợ">Gửi yêu cầu</button>
                         </div>
                     </aside>
 
                     <!-- Filters Sidebar -->
-                    <aside class="sidebar filters-sidebar">
-                    <div class="filter-section">
-                        <h3>Bộ lọc tìm kiếm</h3>
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Tìm sự kiện...">
+                    <aside class="sidebar filters-sidebar" aria-label="Bộ lọc sự kiện">
+                        <div class="filter-section">
+                            <h3>Bộ lọc tìm kiếm</h3>
+                            <div class="search-box">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                <input type="text" placeholder="Tìm sự kiện..." aria-label="Tìm kiếm sự kiện">
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="filter-section">
-                        <h4>Khoa / Đơn vị</h4>
-                        <select class="filter-select">
-                            <option>Tất cả các khoa</option>
-                            <option>Khoa CNTT</option>
-                            <option>Khoa Điện</option>
-                            <option>Khoa Cơ khí</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-section">
-                        <h4>Loại sự kiện</h4>
-                        <label class="checkbox-label">
-                            <input type="checkbox" checked>
-                            <span>Hội thảo</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" checked>
-                            <span>Cuộc thi</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" checked>
-                            <span>Tình nguyện</span>
-                        </label>
-                    </div>
-
-                    <div class="filter-section">
-                        <h4>Trạng thái</h4>
-                        <div class="status-buttons">
-                            <button class="status-btn active" data-status="open">Đang mở đăng ký</button>
-                            <button class="status-btn" data-status="ongoing">Đang diễn ra</button>
-                            <button class="status-btn" data-status="ended">Đã kết thúc</button>
-                            <button class="status-btn" data-status="all">Tất cả</button>
+                        <div class="filter-section">
+                            <label for="facultyFilter" style="display:block; font-weight:600; margin-bottom:8px;">Khoa / Đơn vị</label>
+                            <select class="filter-select" id="facultyFilter" aria-label="Lọc theo khoa đơn vị">
+                                <option value="all">Tất cả các khoa</option>
+                                <option value="cntt">Khoa CNTT</option>
+                                <option value="dien">Khoa Điện</option>
+                                <option value="cokhi">Khoa Cơ khí</option>
+                            </select>
                         </div>
-                    </div>
 
-                    <button class="btn-apply-filter">Áp dụng bộ lọc</button>
+                        <div class="filter-section">
+                            <h4>Loại sự kiện</h4>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked aria-label="Lọc hội thảo">
+                                <span>Hội thảo</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked aria-label="Lọc cuộc thi">
+                                <span>Cuộc thi</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked aria-label="Lọc tình nguyện">
+                                <span>Tình nguyện</span>
+                            </label>
+                        </div>
+
+                        <div class="filter-section">
+                            <h4>Trạng thái</h4>
+                            <div class="status-buttons" role="group" aria-label="Lọc theo trạng thái sự kiện">
+                                <button type="button" class="status-btn active" data-status="open" aria-label="Đang mở đăng ký">Đang mở đăng ký</button>
+                                <button type="button" class="status-btn" data-status="ongoing" aria-label="Đang diễn ra">Đang diễn ra</button>
+                                <button type="button" class="status-btn" data-status="ended" aria-label="Đã kết thúc">Đã kết thúc</button>
+                                <button type="button" class="status-btn" data-status="all" aria-label="Tất cả sự kiện">Tất cả</button>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-apply-filter" aria-label="Áp dụng bộ lọc">Áp dụng bộ lọc</button>
                     </aside>
                 </div>
 
                 <!-- Main Events List -->
-                <section class="events-section">
+                <section class="events-section" aria-label="Danh sách sự kiện">
                     <div class="section-header">
                         <div>
                             <h2>Sự kiện sinh viên</h2>
                             <p>Khám phá và tham gia các hoạt động ngoại khóa tại UTE</p>
                         </div>
-                        <div class="results-count" id="resultsCount">Đang tải...</div>
+                        <div class="results-count" id="resultsCount" aria-live="polite">Đang tải...</div>
                     </div>
 
                     <!-- Loading state -->
-                    <div id="eventsLoading" style="text-align:center;padding:60px;color:#666;">
-                        <i class="fas fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:12px;color:#0D5A9C;"></i>
+                    <div id="eventsLoading" style="text-align:center;padding:60px;color:#666;" role="status" aria-live="polite">
+                        <i class="fas fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:12px;color:#0D5A9C;" aria-hidden="true"></i>
                         Đang tải sự kiện...
                     </div>
 
                     <!-- Events container (filled by JS) -->
-                    <div id="eventsContainer"></div>
+                    <div id="eventsContainer" aria-live="polite"></div>
 
                     <!-- Pagination -->
-                    <div class="pagination" id="paginationBar" style="display:none;">
-                        <button class="page-btn" id="btnPrevPage"><i class="fas fa-chevron-left"></i></button>
+                    <div class="pagination" id="paginationBar" style="display:none;" aria-label="Phân trang">
+                        <button type="button" class="page-btn" id="btnPrevPage" aria-label="Trang trước">
+                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        </button>
                         <span id="pageInfo" style="padding:8px 16px;font-size:14px;color:#666;"></span>
-                        <button class="page-btn" id="btnNextPage"><i class="fas fa-chevron-right"></i></button>
+                        <button type="button" class="page-btn" id="btnNextPage" aria-label="Trang sau">
+                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </section>
 
                 <!-- Right Sidebar - Highlights -->
-                <aside class="highlights-sidebar">
+                <aside class="highlights-sidebar" aria-label="Sự kiện nổi bật và thông báo">
                     <div class="highlight-card">
                         <div class="highlight-header">
-                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
                             <h4>Sự kiện nổi bật</h4>
                         </div>
                         <div class="highlight-item">
-                            <img src="../images/UTE Tech Showcase.png" alt="Event" onerror="this.src='https://via.placeholder.com/80x80/0D5A9C/FFFFFF?text=Event'">
+                            <img src="../images/UTE Tech Showcase.png" alt="Lễ trao giải Sinh viên 5 tốt" onerror="this.src='https://via.placeholder.com/80x80/0D5A9C/FFFFFF?text=Event'">
                             <div>
                                 <h5>Lễ trao giải Sinh viên 5 tốt Cấp Trường 2024</h5>
                                 <span>Ngày 15/12/2024</span>
                             </div>
                         </div>
                         <div class="highlight-item">
-                            <img src="../images/Skills Talk.png" alt="Event" onerror="this.src='https://via.placeholder.com/80x80/1976D2/FFFFFF?text=Event'">
+                            <img src="../images/Skills Talk.png" alt="Ngày hội việc làm CNTT" onerror="this.src='https://via.placeholder.com/80x80/1976D2/FFFFFF?text=Event'">
                             <div>
                                 <h5>Ngày hội việc làm CNTT - IT Job Fair</h5>
                                 <span>Ngày 18/11/2024</span>
@@ -190,7 +226,7 @@
 
                     <div class="highlight-card">
                         <div class="highlight-header">
-                            <i class="fas fa-bullhorn"></i>
+                            <i class="fas fa-bullhorn" aria-hidden="true"></i>
                             <h4>Thông báo mới</h4>
                         </div>
                         <div class="notification-item">
@@ -212,7 +248,7 @@
 
                     <div class="activity-card">
                         <div class="activity-header">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fas fa-chart-line" aria-hidden="true"></i>
                             <span>HOẠT ĐỘNG CỦA BẠN</span>
                         </div>
                         <div class="activity-stats">
@@ -226,7 +262,7 @@
                             </div>
                         </div>
                         <a href="history.html" class="view-history-link">
-                            <i class="fas fa-history"></i>
+                            <i class="fas fa-history" aria-hidden="true"></i>
                             Xem lịch sử chi tiết
                         </a>
                     </div>
@@ -253,27 +289,27 @@
                 <div class="footer-col">
                     <h4>Thông tin liên lạc</h4>
                     <ul class="footer-links">
-                        <li><i class="fas fa-phone"></i> Số điện thoại: 0905030302</li>
-                        <li><i class="fas fa-envelope"></i> Email: eventdhspkt@ute.udn.vn</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 48 Cao Thắng, Đà Nẵng</li>
+                        <li><i class="fas fa-phone" aria-hidden="true"></i> Số điện thoại: 0905030302</li>
+                        <li><i class="fas fa-envelope" aria-hidden="true"></i> Email: eventdhspkt@ute.udn.vn</li>
+                        <li><i class="fas fa-map-marker-alt" aria-hidden="true"></i> 48 Cao Thắng, Đà Nẵng</li>
                     </ul>
                 </div>
 
                 <div class="footer-col">
                     <h4>Bản đồ chỉ dẫn</h4>
                     <div class="map-placeholder">
-                        <img src="../images/map.png" alt="Bản đồ">
+                        <img src="../images/map.png" alt="Bản đồ trường Đại học Sư phạm Kỹ thuật">
                     </div>
                 </div>
 
                 <div class="footer-col">
                     <h4>Kết nối</h4>
                     <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-google"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Google"><i class="fab fa-google" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
@@ -283,12 +319,36 @@
         </div>
     </footer>
 
-<<<<<<< HEAD
+    <!-- Fixed: Removed Git merge conflict -->
     <script src="../js/config.js"></script>
-=======
-    <script src="../js/ticket-business.js"></script>
->>>>>>> 3675e6bf9c1604e0af65330f5fd5998454919241
     <script src="../js/events.js"></script>
     <script src="../js/header-user.js"></script>
+    <script>
+        // User dropdown toggle with accessibility
+        (function() {
+            const userMenu = document.getElementById('userMenuWrapper');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', function(e) {
+                    const isExpanded = userDropdown.style.display === 'block';
+                    userDropdown.style.display = isExpanded ? 'none' : 'block';
+                    userMenu.setAttribute('aria-expanded', !isExpanded);
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() {
+                    userDropdown.style.display = 'none';
+                    userMenu.setAttribute('aria-expanded', 'false');
+                });
+                userMenu.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const isExpanded = userDropdown.style.display === 'block';
+                        userDropdown.style.display = isExpanded ? 'none' : 'block';
+                        userMenu.setAttribute('aria-expanded', !isExpanded);
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
