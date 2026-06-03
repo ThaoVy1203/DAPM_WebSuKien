@@ -230,6 +230,366 @@ namespace aspiCore.Services
             };
         }
 
+<<<<<<< HEAD
+=======
+        public async Task<FileResult> XuatExcelCtsvAsync(string outputDir)
+        {
+            // Lấy tất cả sự kiện kèm thông tin
+            var suKienList = await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .Include(s => s.DangKySuKiens)
+                .OrderBy(s => s.TrangThai)
+                .ThenByDescending(s => s.ThoiGianBatDau)
+                .ToListAsync();
+
+            using var wb = new XLWorkbook();
+
+            // ==================== SHEET 1: Danh sách sự kiện ====================
+            var ws1 = wb.Worksheets.Add("Danh sách sự kiện");
+
+            ws1.Cell("A1").Value = "BÁO CÁO DANH SÁCH SỰ KIỆN - PHÒNG CTSV";
+            ws1.Range("A1:H1").Merge();
+            ws1.Cell("A1").Style
+                .Font.SetBold(true)
+                .Font.SetFontSize(14)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#059669"))
+                .Font.SetFontColor(XLColor.White);
+
+            ws1.Cell("A2").Value = $"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}";
+            ws1.Range("A2:H2").Merge();
+            ws1.Cell("A2").Style
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right)
+                .Font.SetItalic(true);
+
+            // Header
+            int hr = 4;
+            string[] headers = { "STT", "Tên sự kiện", "Người tổ chức", "Địa điểm",
+                                  "Ngày tổ chức", "Số đăng ký", "Sức chứa", "Trạng thái" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws1.Cell(hr, i + 1);
+                cell.Value = headers[i];
+                cell.Style
+                    .Font.SetBold(true)
+                    .Fill.SetBackgroundColor(XLColor.FromHtml("#059669"))
+                    .Font.SetFontColor(XLColor.White)
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            }
+
+            // Dữ liệu
+            for (int i = 0; i < suKienList.Count; i++)
+            {
+                var sk = suKienList[i];
+                int r = hr + 1 + i;
+                int soDangKy = sk.DangKySuKiens?.Count(dk => dk.TrangThai != "Đã hủy") ?? 0;
+
+                ws1.Cell(r, 1).Value = i + 1;
+                ws1.Cell(r, 2).Value = sk.TenSuKien;
+                ws1.Cell(r, 3).Value = sk.NguoiTao?.HoTen ?? "";
+                ws1.Cell(r, 4).Value = sk.DiaDiem?.TenDiaDiem ?? "Chưa xác định";
+                ws1.Cell(r, 5).Value = sk.ThoiGianBatDau.ToString("dd/MM/yyyy");
+                ws1.Cell(r, 6).Value = soDangKy;
+                ws1.Cell(r, 7).Value = sk.SoLuongToiDa.HasValue ? sk.SoLuongToiDa.Value.ToString() : "Không giới hạn";
+                ws1.Cell(r, 8).Value = sk.TrangThai;
+
+                // Màu trạng thái
+                var statusCell = ws1.Cell(r, 8);
+                statusCell.Style.Font.SetFontColor(sk.TrangThai switch
+                {
+                    "Đã duyệt" => XLColor.FromHtml("#059669"),
+                    "Từ chối" => XLColor.FromHtml("#EF4444"),
+                    "Chờ duyệt" => XLColor.FromHtml("#D97706"),
+                    _ => XLColor.FromHtml("#6B7280")
+                });
+
+                if (i % 2 == 1)
+                    ws1.Range(r, 1, r, 8).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F0FDF4"));
+
+                ws1.Range(r, 1, r, 8).Style
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                    .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            }
+
+            ws1.Column(1).Width = 6;
+            ws1.Column(2).Width = 40;
+            ws1.Column(3).Width = 22;
+            ws1.Column(4).Width = 22;
+            ws1.Column(5).Width = 16;
+            ws1.Column(6).Width = 12;
+            ws1.Column(7).Width = 16;
+            ws1.Column(8).Width = 14;
+
+            // ==================== SHEET 2: Thống kê tổng hợp ====================
+            var ws2 = wb.Worksheets.Add("Thống kê tổng hợp");
+
+            ws2.Cell("A1").Value = "THỐNG KÊ TỔNG HỢP - PHÒNG CTSV";
+            ws2.Range("A1:B1").Merge();
+            ws2.Cell("A1").Style
+                .Font.SetBold(true)
+                .Font.SetFontSize(14)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#059669"))
+                .Font.SetFontColor(XLColor.White);
+
+            // Thống kê theo trạng thái
+            int tongSuKien = suKienList.Count;
+            int daDuyet = suKienList.Count(s => s.TrangThai == "Đã duyệt");
+            int tuChoi = suKienList.Count(s => s.TrangThai == "Từ chối");
+            int choDuyet = suKienList.Count(s => s.TrangThai == "Chờ duyệt");
+            int nhap = suKienList.Count(s => s.TrangThai == "Nháp");
+            int tongDangKy = suKienList.Sum(s => s.DangKySuKiens?.Count(dk => dk.TrangThai != "Đã hủy") ?? 0);
+            string tiLeDuyet = tongSuKien > 0
+                ? Math.Round((double)daDuyet / tongSuKien * 100, 1) + "%"
+                : "0%";
+
+            int r2 = 3;
+            ws2.Cell(r2, 1).Value = "THỐNG KÊ THEO TRẠNG THÁI";
+            ws2.Range(r2, 1, r2, 2).Merge();
+            ws2.Cell(r2, 1).Style
+                .Font.SetBold(true)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#059669"))
+                .Font.SetFontColor(XLColor.White)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            r2++;
+
+            var statRows = new[]
+            {
+                ("Tổng số sự kiện", tongSuKien.ToString()),
+                ("Đã duyệt", daDuyet.ToString()),
+                ("Từ chối", tuChoi.ToString()),
+                ("Chờ duyệt", choDuyet.ToString()),
+                ("Bản nháp", nhap.ToString()),
+                ("Tổng lượt đăng ký", tongDangKy.ToString()),
+                ("Tỷ lệ phê duyệt", tiLeDuyet),
+            };
+
+            foreach (var (label, value) in statRows)
+            {
+                ws2.Cell(r2, 1).Value = label;
+                ws2.Cell(r2, 2).Value = value;
+                ws2.Cell(r2, 1).Style.Font.SetBold(true);
+                ws2.Range(r2, 1, r2, 2).Style
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                    .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                r2++;
+            }
+
+            r2++;
+            ws2.Cell(r2, 1).Value = "Ngày xuất báo cáo:";
+            ws2.Cell(r2, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            ws2.Cell(r2, 1).Style.Font.SetBold(true);
+
+            ws2.Column(1).Width = 30;
+            ws2.Column(2).Width = 20;
+
+            // ==================== LƯU FILE ====================
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            string tenFile = $"BaoCao_CTSV_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            string fullPath = Path.Combine(outputDir, tenFile);
+            wb.SaveAs(fullPath);
+
+            var fileBytes = await File.ReadAllBytesAsync(fullPath);
+            return new FileContentResult(fileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = tenFile
+            };
+        }
+
+        public async Task<FileResult> XuatExcelBghAsync(string outputDir)
+        {
+            var suKienList = await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .Include(s => s.DangKySuKiens)
+                .OrderBy(s => s.TrangThai)
+                .ThenByDescending(s => s.ThoiGianBatDau)
+                .ToListAsync();
+
+            using var wb = new XLWorkbook();
+
+            // ==================== SHEET 1: Danh sách sự kiện ====================
+            var ws1 = wb.Worksheets.Add("Danh sách sự kiện");
+
+            ws1.Cell("A1").Value = "BÁO CÁO TỔNG THỂ - BAN GIÁM HIỆU";
+            ws1.Range("A1:H1").Merge();
+            ws1.Cell("A1").Style
+                .Font.SetBold(true).Font.SetFontSize(14)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"))
+                .Font.SetFontColor(XLColor.White);
+
+            ws1.Cell("A2").Value = $"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}";
+            ws1.Range("A2:H2").Merge();
+            ws1.Cell("A2").Style
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right)
+                .Font.SetItalic(true);
+
+            int hr = 4;
+            string[] headers = { "STT", "Tên sự kiện", "Người tổ chức", "Địa điểm",
+                                  "Ngày tổ chức", "Số đăng ký", "Sức chứa", "Trạng thái" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws1.Cell(hr, i + 1);
+                cell.Value = headers[i];
+                cell.Style
+                    .Font.SetBold(true)
+                    .Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"))
+                    .Font.SetFontColor(XLColor.White)
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            }
+
+            for (int i = 0; i < suKienList.Count; i++)
+            {
+                var sk = suKienList[i];
+                int r = hr + 1 + i;
+                int soDangKy = sk.DangKySuKiens?.Count(dk => dk.TrangThai != "Đã hủy") ?? 0;
+
+                ws1.Cell(r, 1).Value = i + 1;
+                ws1.Cell(r, 2).Value = sk.TenSuKien;
+                ws1.Cell(r, 3).Value = sk.NguoiTao?.HoTen ?? "";
+                ws1.Cell(r, 4).Value = sk.DiaDiem?.TenDiaDiem ?? "Chưa xác định";
+                ws1.Cell(r, 5).Value = sk.ThoiGianBatDau.ToString("dd/MM/yyyy");
+                ws1.Cell(r, 6).Value = soDangKy;
+                ws1.Cell(r, 7).Value = sk.SoLuongToiDa.HasValue ? sk.SoLuongToiDa.Value.ToString() : "Không giới hạn";
+                ws1.Cell(r, 8).Value = sk.TrangThai;
+
+                ws1.Cell(r, 8).Style.Font.SetFontColor(sk.TrangThai switch
+                {
+                    "Đã duyệt" => XLColor.FromHtml("#059669"),
+                    "Từ chối" => XLColor.FromHtml("#DC2626"),
+                    "Chờ duyệt" => XLColor.FromHtml("#D97706"),
+                    _ => XLColor.FromHtml("#6B7280")
+                });
+
+                if (i % 2 == 1)
+                    ws1.Range(r, 1, r, 8).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#FEF2F2"));
+
+                ws1.Range(r, 1, r, 8).Style
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                    .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            }
+
+            ws1.Column(1).Width = 6;  ws1.Column(2).Width = 40;
+            ws1.Column(3).Width = 22; ws1.Column(4).Width = 22;
+            ws1.Column(5).Width = 16; ws1.Column(6).Width = 12;
+            ws1.Column(7).Width = 16; ws1.Column(8).Width = 14;
+
+            // ==================== SHEET 2: Thống kê tổng hợp ====================
+            var ws2 = wb.Worksheets.Add("Thống kê tổng hợp");
+
+            ws2.Cell("A1").Value = "THỐNG KÊ TỔNG HỢP - BAN GIÁM HIỆU";
+            ws2.Range("A1:B1").Merge();
+            ws2.Cell("A1").Style
+                .Font.SetBold(true).Font.SetFontSize(14)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"))
+                .Font.SetFontColor(XLColor.White);
+
+            int tongSuKien = suKienList.Count;
+            int daDuyet = suKienList.Count(s => s.TrangThai == "Đã duyệt");
+            int tuChoi = suKienList.Count(s => s.TrangThai == "Từ chối");
+            int choDuyet = suKienList.Count(s => s.TrangThai == "Chờ duyệt");
+            int tongDangKy = suKienList.Sum(s => s.DangKySuKiens?.Count(dk => dk.TrangThai != "Đã hủy") ?? 0);
+            string tiLeDuyet = tongSuKien > 0
+                ? Math.Round((double)daDuyet / tongSuKien * 100, 1) + "%" : "0%";
+
+            int r2 = 3;
+            ws2.Cell(r2, 1).Value = "THỐNG KÊ THEO TRẠNG THÁI";
+            ws2.Range(r2, 1, r2, 2).Merge();
+            ws2.Cell(r2, 1).Style
+                .Font.SetBold(true)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"))
+                .Font.SetFontColor(XLColor.White)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            r2++;
+
+            var statRows = new[]
+            {
+                ("Tổng số sự kiện", tongSuKien.ToString()),
+                ("Đã duyệt", daDuyet.ToString()),
+                ("Từ chối", tuChoi.ToString()),
+                ("Chờ duyệt", choDuyet.ToString()),
+                ("Tổng lượt đăng ký", tongDangKy.ToString()),
+                ("Tỷ lệ phê duyệt", tiLeDuyet),
+            };
+
+            foreach (var (label, value) in statRows)
+            {
+                ws2.Cell(r2, 1).Value = label;
+                ws2.Cell(r2, 2).Value = value;
+                ws2.Cell(r2, 1).Style.Font.SetBold(true);
+                ws2.Range(r2, 1, r2, 2).Style
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                    .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                r2++;
+            }
+
+            // Top 5 sự kiện có đăng ký nhiều nhất
+            r2++;
+            ws2.Cell(r2, 1).Value = "TOP 5 SỰ KIỆN QUY MÔ LỚN NHẤT";
+            ws2.Range(r2, 1, r2, 2).Merge();
+            ws2.Cell(r2, 1).Style
+                .Font.SetBold(true)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"))
+                .Font.SetFontColor(XLColor.White)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            r2++;
+
+            var top5 = suKienList
+                .Where(s => s.TrangThai == "Đã duyệt")
+                .OrderByDescending(s => s.DangKySuKiens?.Count(dk => dk.TrangThai != "Đã hủy") ?? 0)
+                .Take(5)
+                .ToList();
+
+            ws2.Cell(r2, 1).Value = "Tên sự kiện";
+            ws2.Cell(r2, 2).Value = "Số đăng ký";
+            ws2.Row(r2).Style.Font.SetBold(true)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#FEE2E2"));
+            r2++;
+
+            foreach (var sk in top5)
+            {
+                int soDk = sk.DangKySuKiens?.Count(dk => dk.TrangThai != "Đã hủy") ?? 0;
+                ws2.Cell(r2, 1).Value = sk.TenSuKien;
+                ws2.Cell(r2, 2).Value = soDk;
+                ws2.Range(r2, 1, r2, 2).Style
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                    .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                r2++;
+            }
+
+            r2++;
+            ws2.Cell(r2, 1).Value = "Ngày xuất báo cáo:";
+            ws2.Cell(r2, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            ws2.Cell(r2, 1).Style.Font.SetBold(true);
+
+            ws2.Column(1).Width = 40;
+            ws2.Column(2).Width = 20;
+
+            // ==================== LƯU FILE ====================
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            string tenFile = $"BaoCao_BGH_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            string fullPath = Path.Combine(outputDir, tenFile);
+            wb.SaveAs(fullPath);
+
+            var fileBytes = await File.ReadAllBytesAsync(fullPath);
+            return new FileContentResult(fileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = tenFile
+            };
+        }
+
+>>>>>>> origin/VanHuy
         private static string SanitizeFileName(string name)
         {
             foreach (char c in Path.GetInvalidFileNameChars())

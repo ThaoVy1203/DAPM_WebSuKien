@@ -4,7 +4,10 @@ const API_BASE = "https://localhost:7160/api";
 =======
 // API Configuration
 const API_BASE_URL = 'http://localhost:5103/api';
+<<<<<<< HEAD
 >>>>>>> origin/Nguyen
+=======
+>>>>>>> origin/VanHuy
 
 document.addEventListener("DOMContentLoaded", function () {
     // 1. Kiểm tra nếu đã có token hợp lệ thì chuyển thẳng
@@ -252,7 +255,26 @@ window.addEventListener('DOMContentLoaded', function() {
         document.getElementById('remember').checked = true;
     }
     
+<<<<<<< HEAD
     // Không tự redirect khi đã đăng nhập — để người dùng đăng nhập lại nếu muốn
+=======
+    // Check if user is already logged in
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (user) {
+        const vaiTros = user.vaiTros || [];
+        if (vaiTros.includes('TruongBanToChuc') || vaiTros.includes('ThanhVienBanToChuc')) {
+            window.location.href = 'btc-dashboard.html';
+        } else if (vaiTros.includes('CanBoPheDuyetCap1')) {
+            window.location.href = 'ctsv-pending-approval.html';
+        } else if (vaiTros.includes('CanBoPheDuyetCap2')) {
+            window.location.href = 'bgh-pending-approval.html';
+        } else if (vaiTros.includes('Admin')) {
+            window.location.href = 'admin-dashboard.html';
+        } else {
+            window.location.href = 'home-user.html';
+        }
+    }
+>>>>>>> origin/VanHuy
 });
 
 // Handle Enter key press

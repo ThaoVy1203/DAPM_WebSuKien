@@ -54,7 +54,10 @@ builder.Services.AddAuthentication(options =>
 =======
 builder.Services.AddScoped<IDanhMucService, DanhMucService>();
 builder.Services.AddScoped<IBaoCaoService, BaoCaoService>();
+<<<<<<< HEAD
 >>>>>>> origin/Nguyen
+=======
+>>>>>>> origin/VanHuy
 
 // Add CORS
 builder.Services.AddCors(options =>

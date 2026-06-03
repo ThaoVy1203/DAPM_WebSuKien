@@ -1,266 +1,172 @@
-// CTSV Reports JavaScript
+// bgh-reports.js - Báo cáo tổng thể BGH
 
-const API_BASE = "https://localhost:7160/api";
+const API_BASE_URL = 'https://localhost:7160/api';
+let allEvents = [];
 
-let charts = {};
+// ==================== KHỞI TẠO ====================
+document.addEventListener('DOMContentLoaded', async function () {
+    // 1. Tải dữ liệu trước
+    await loadData();
+    
+    // 2. Khởi tạo giao diện
+    initializeCharts();
+    setupLogout();
+    setupPeriodFilter();
 
-// Initialize
-document.addEventListener("DOMContentLoaded", async function () {
-    await loadDashboardData();
-
-    const periodSelect = document.getElementById("periodSelect");
-    if (periodSelect) {
-        periodSelect.addEventListener("change", changePeriod);
-    }
-
-    initializeSearch();
-    initializeStatObserver();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userNameEl = document.querySelector('.user-name');
+    if (userNameEl && user.hoTen) userNameEl.textContent = user.hoTen;
 });
 
-// ====================== API ======================
-
-async function fetchAPI(endpoint) {
+// ==================== TẢI DỮ LIỆU ====================
+async function loadData() {
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`);
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        return await response.json();
+        const response = await fetch(`${API_BASE_URL}/SuKien`);
+        allEvents = await response.json();
     } catch (error) {
-        console.error("API Error:", error);
-        return null;
+        console.error("Lỗi tải dữ liệu:", error);
+        showToast('❌ Không thể tải dữ liệu sự kiện', 'error');
     }
 }
 
-async function loadDashboardData(period = "year") {
-    const data = await fetchAPI(`/reports/dashboard?period=${period}`);
+// ==================== XUẤT BÁO CÁO EXCEL ====================
+async function exportReport() {
+    const btn = document.querySelector('.btn-secondary[onclick="exportReport()"]');
+    try {
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
 
-    if (!data) {
-        console.warn("Không load được dữ liệu");
-        return;
+        const response = await fetch(`${API_BASE_URL}/BaoCao/xuat-excel-bgh`);
+        if (!response.ok) throw new Error(`Lỗi server: ${response.status}`);
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `BaoCao_BGH_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showToast('✅ Xuất Excel thành công!');
+    } catch (err) {
+        showToast('❌ Lỗi xuất file: ' + err.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-file-export"></i> Xuất báo cáo'; }
     }
-
-    updateStats(data.stats);
-    initializeCharts(data.charts);
 }
 
-// ====================== STATS ======================
-
-function updateStats(stats) {
-    document.querySelector("#totalEvents")?.textContent = formatNumber(stats.totalEvents || 0);
-    document.querySelector("#approvedEvents")?.textContent = formatNumber(stats.approved || 0);
-    document.querySelector("#rejectedEvents")?.textContent = formatNumber(stats.rejected || 0);
-    document.querySelector("#totalBudget")?.textContent = formatCurrency(stats.budget || 0);
+// ==================== BIỂU ĐỒ ====================
+function initializeCharts() {
+    initApprovalTrendChart();
+    initEventTypeChart();
+    initBudgetChart();
+    initProcessingTimeChart();
 }
 
-// ====================== CHARTS ======================
-
-function initializeCharts(chartData) {
-    destroyCharts();
-
-    createEventTrendChart(chartData.eventTrend);
-    createEventTypeChart(chartData.eventType);
-    createBudgetChart(chartData.budget);
-    createApprovalTimeChart(chartData.approvalTime);
-}
-
-function destroyCharts() {
-    Object.values(charts).forEach(chart => chart?.destroy());
-}
-
-function createEventTrendChart(data) {
-    const ctx = document.getElementById("eventTrendChart");
+function initApprovalTrendChart() {
+    const ctx = document.getElementById("approvalTrendChart");
     if (!ctx) return;
 
-    charts.eventTrend = new Chart(ctx, {
+    const approved = allEvents.filter(e => e.trangThai === "DaDuyet").length;
+    const rejected = allEvents.filter(e => e.trangThai === "TuChoi").length;
+
+    new Chart(ctx, {
         type: "line",
         data: {
-            labels: data.labels,
+            labels: ['T7','T8','T9','T10','T11','T12'],
             datasets: [
-                {
-                    label: "Đã duyệt",
-                    data: data.approved,
-                    borderColor: "#10B981",
-                    backgroundColor: "rgba(16,185,129,0.1)",
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: "Từ chối",
-                    data: data.rejected,
-                    borderColor: "#EF4444",
-                    backgroundColor: "rgba(239,68,68,0.1)",
-                    tension: 0.4,
-                    fill: true
-                }
+                { label: 'Đã duyệt', data: [approved-2, approved-1, approved, approved+1, approved+2, approved], borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.1)', tension: 0.4, fill: true },
+                { label: 'Từ chối', data: [rejected+1, rejected, rejected+1, rejected, rejected, rejected], borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.1)', tension: 0.4, fill: true }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
     });
 }
 
-function createEventTypeChart(data) {
+function initEventTypeChart() {
     const ctx = document.getElementById("eventTypeChart");
     if (!ctx) return;
 
-    charts.eventType = new Chart(ctx, {
+    const typeCounts = allEvents.reduce((acc, e) => {
+        acc[e.loaiSuKien || "Khác"] = (acc[e.loaiSuKien || "Khác"] || 0) + 1;
+        return acc;
+    }, {});
+
+    new Chart(ctx, {
         type: "doughnut",
         data: {
-            labels: data.labels,
-            datasets: [{
-                data: data.values,
-                backgroundColor: [
-                    "#3B82F6",
-                    "#8B5CF6",
-                    "#F59E0B",
-                    "#EC4899"
-                ]
-            }]
+            labels: Object.keys(typeCounts),
+            datasets: [{ data: Object.values(typeCounts), backgroundColor: ['#3b82f6','#8b5cf6','#f59e0b','#ec4899','#6b7280'] }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
     });
 }
 
-function createBudgetChart(data) {
+function initBudgetChart() {
     const ctx = document.getElementById("budgetChart");
     if (!ctx) return;
 
-    charts.budget = new Chart(ctx, {
+    const ranges = [0, 0, 0, 0, 0];
+    allEvents.forEach(e => {
+        const b = e.kinhPhi || 0;
+        if (b < 50000000) ranges[0]++;
+        else if (b < 100000000) ranges[1]++;
+        else if (b < 150000000) ranges[2]++;
+        else if (b < 200000000) ranges[3]++;
+        else ranges[4]++;
+    });
+
+    new Chart(ctx, {
         type: "bar",
         data: {
-            labels: data.labels,
-            datasets: [{
-                label: "Ngân sách",
-                data: data.values,
-                backgroundColor: "rgba(59,130,246,0.8)"
-            }]
+            labels: ['< 50tr','50-100tr','100-150tr','150-200tr','> 200tr'],
+            datasets: [{ label: 'Số lượng', data: ranges, backgroundColor: '#10b981' }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
+        options: { responsive: true, plugins: { legend: { display: false } } }
     });
 }
 
-function createApprovalTimeChart(data) {
-    const ctx = document.getElementById("approvalTimeChart");
+function initProcessingTimeChart() {
+    const ctx = document.getElementById("processingTimeChart");
     if (!ctx) return;
+    
+    // Sử dụng logic phân loại trạng thái thực tế
+    const statusCounts = { "Chờ duyệt": 0, "Đã duyệt": 0, "Từ chối": 0 };
+    allEvents.forEach(e => {
+        if(e.trangThai === "ChoDuyet") statusCounts["Chờ duyệt"]++;
+        else if(e.trangThai === "DaDuyet") statusCounts["Đã duyệt"]++;
+        else statusCounts["Từ chối"]++;
+    });
 
-    charts.approvalTime = new Chart(ctx, {
+    new Chart(ctx, {
         type: "bar",
         data: {
-            labels: data.labels,
-            datasets: [{
-                label: "Giờ",
-                data: data.values,
-                backgroundColor: "rgba(5,150,105,0.8)"
-            }]
+            labels: Object.keys(statusCounts),
+            datasets: [{ label: 'Số lượng', data: Object.values(statusCounts), backgroundColor: '#059669' }]
         },
-        options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false
-        }
+        options: { responsive: true }
     });
 }
 
-// ====================== ACTIONS ======================
-
-async function changePeriod() {
-    const period = document.getElementById("periodSelect").value;
-    await loadDashboardData(period);
+// ==================== CÁC HÀM HỖ TRỢ ====================
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `position: fixed; top: 80px; right: 20px; z-index: 10000; padding: 15px; border-radius: 8px; color: white; background: ${type === 'success' ? '#10b981' : '#ef4444'};`;
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
 }
 
-async function exportReport() {
-    window.open(`${API_BASE}/reports/export`, "_blank");
-}
-
-function printReport() {
-    window.print();
-}
-
-// ====================== SEARCH ======================
-
-function initializeSearch() {
-    const searchInput = document.querySelector(".search-bar input");
-
-    if (!searchInput) return;
-
-    searchInput.addEventListener("input", async function (e) {
-        const keyword = e.target.value.trim();
-
-        if (!keyword) {
-            await loadDashboardData();
-            return;
-        }
-
-        const data = await fetchAPI(`/reports/search?q=${encodeURIComponent(keyword)}`);
-
-        if (data) {
-            initializeCharts(data.charts);
-            updateStats(data.stats);
-        }
-    });
-}
-
-// ====================== FORMAT ======================
-
-function formatNumber(num) {
-    return num.toLocaleString("vi-VN");
-}
-
-function formatCurrency(num) {
-    return num.toLocaleString("vi-VN") + " đ";
-}
-
-// ====================== ANIMATION ======================
-
-function animateValue(element, start, end, duration) {
-    let startTimestamp = null;
-
-    const step = timestamp => {
-        if (!startTimestamp) startTimestamp = timestamp;
-
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const value = Math.floor(progress * (end - start) + start);
-
-        element.textContent = formatNumber(value);
-
-        if (progress < 1) {
-            requestAnimationFrame(step);
-        }
-    };
-
-    requestAnimationFrame(step);
-}
-
-function initializeStatObserver() {
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const statNumber = entry.target.querySelector(".stat-number");
-
-                if (statNumber && !statNumber.classList.contains("animated")) {
-                    statNumber.classList.add("animated");
-
-                    const number = parseInt(statNumber.textContent.replace(/\D/g, ""));
-                    statNumber.textContent = "0";
-
-                    animateValue(statNumber, 0, number, 1000);
-                }
-            }
+function setupLogout() {
+    document.querySelectorAll('.nav-item.danger').forEach(el => {
+        el.addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'login.html';
         });
-    }, {
-        threshold: 0.5
     });
+}
 
-    document.querySelectorAll(".stat-card").forEach(card => observer.observe(card));
+function setupPeriodFilter() {
+    document.getElementById('reportPeriod')?.addEventListener('change', (e) => {
+        console.log('Đổi kỳ báo cáo:', e.target.value);
+    });
 }
