@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -163,45 +163,37 @@
                 <p>Cùng tìm hiểu những hoạt động nổi bật đang diễn ra tại trường</p>
                 <a href="events.html" class="link-view-all">Xem tất cả →</a>
             </div>
-            
-            <div class="events-grid">
-                <div class="event-card featured">
-                    <div class="event-badge">Sắp diễn ra</div>
-                    <img src="../images/UTE Tech Showcase.png" alt="UTE Tech Showcase 2024" onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=UTE+Tech+2024'">
-                    <div class="event-card-content">
-                        <h3>UTE Tech Showcase 2024</h3>
-                        <div class="event-meta">
-                            <span><i class="far fa-calendar"></i> 15/12/2024 - 20/12</span>
-                            <span><i class="fas fa-map-marker-alt"></i> Hội trường A - Tòa nhà chính</span>
-                        </div>
-                        <a href="event-detail.html" class="btn-view-detail">Xem chi tiết</a>
-                    </div>
-                </div>
 
-                <div class="event-card">
-                    <div class="event-badge blue">Đang diễn ra</div>
-                    <img src="../images/Skills Talk.png" alt="Top đầm tay công Thế kỷ 21" onerror="this.src='https://via.placeholder.com/400x250/1976D2/FFFFFF?text=Workshop'">
-                    <div class="event-card-content">
-                        <h3>Top đầm tay công Thế kỷ 21</h3>
-                        <div class="event-meta">
-                            <span><i class="far fa-calendar"></i> 10/12/2024 - 12/12</span>
-                            <span><i class="fas fa-map-marker-alt"></i> Phòng hội thảo A2, Tòa nhà</span>
-                        </div>
-                        <a href="event-detail.html" class="btn-view-detail">Xem chi tiết</a>
-                    </div>
+            <!-- Thanh tìm kiếm & lọc -->
+            <div class="hu-search-bar">
+                <div class="hu-search-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="huKeyword" placeholder="Tìm kiếm sự kiện theo tên, địa điểm...">
+                    <button id="huClearSearch" style="display:none;" title="Xóa">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
+                <select id="huFilterDanhMuc">
+                    <option value="">Tất cả danh mục</option>
+                </select>
+                <select id="huFilterTrangThai">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Đã duyệt">Sắp diễn ra</option>
+                    <option value="Đang diễn ra">Đang diễn ra</option>
+                    <option value="Đã kết thúc">Đã kết thúc</option>
+                </select>
+                <button class="hu-btn-reset" id="huResetFilter">
+                    <i class="fas fa-undo"></i> Đặt lại
+                </button>
+            </div>
 
-                <div class="event-card">
-                    <div class="event-badge green">Đã kết thúc</div>
-                    <img src="../images/Culture Festival.png" alt="Ngày hội Văn hóa UTE" onerror="this.src='https://via.placeholder.com/400x250/10B981/FFFFFF?text=Culture+Day'">
-                    <div class="event-card-content">
-                        <h3>Ngày hội Văn hóa UTE</h3>
-                        <div class="event-meta">
-                            <span><i class="far fa-calendar"></i> 01/12/2024 - 03/12</span>
-                            <span><i class="fas fa-map-marker-alt"></i> Sân vận động trường</span>
-                        </div>
-                        <a href="event-detail.html" class="btn-view-detail">Xem chi tiết</a>
-                    </div>
+            <p class="hu-result-count" id="huResultCount"></p>
+
+            <!-- Grid sự kiện — render bởi JS -->
+            <div class="events-grid" id="huEventsGrid">
+                <div class="hu-loading" id="huLoading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Đang tải sự kiện...</span>
                 </div>
             </div>
         </div>
@@ -348,6 +340,8 @@
         </div>
     </footer>
 
+    <script src="../js/config.js"></script>
     <script src="../js/home-user.js"></script>
 </body>
 </html>
+

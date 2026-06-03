@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 // BTC Dashboard JavaScript
+=======
+// BTC Dashboard - API Integration (với mock data cho tasks/budget)
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+let currentUserId = currentUser.idNguoiDung || 'ND004';
+let myEvents = [];
+>>>>>>> origin/Nguyen
 
 // Gộp chuẩn logic khai báo biến từ nhánh ThaoVy
 if (typeof window.API_BASE === 'undefined') {
@@ -246,11 +253,26 @@ function renderSampleData() {
 // EVENT HANDLERS
 // ==========================
 function initializeEventHandlers() {
+<<<<<<< HEAD
     const createBtn = document.querySelector('.btn-create');
     if (createBtn) createBtn.addEventListener('click', () => {
         alert('Tính năng tạo sự kiện mới đang được phát triển');
     });
 
+=======
+    // Tìm kiếm realtime trong dashboard
+    initDashboardSearch();
+
+    // Create event button
+    const createBtn = document.querySelector('.btn-create');
+    if (createBtn) {
+        createBtn.addEventListener('click', () => {
+            window.location.href = 'btc-events.html';
+        });
+    }
+    
+    // Send report button
+>>>>>>> origin/Nguyen
     const reportBtn = document.querySelector('.btn-secondary');
     if (reportBtn) reportBtn.addEventListener('click', exportReport);
 
@@ -270,6 +292,7 @@ function initializeEventHandlers() {
     });
 }
 
+<<<<<<< HEAD
 // ==========================
 // CÁC HÀM CHỨC NĂNG
 // ==========================
@@ -307,3 +330,74 @@ document.addEventListener("DOMContentLoaded", function () {
     loadDashboardData();
     initializeEventHandlers();
 });
+=======
+// ===== Tìm kiếm Dashboard =====
+function initDashboardSearch() {
+    const input = document.querySelector('.search-bar input');
+    if (!input) return;
+
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => applyDashboardSearch(input.value.trim()), 300);
+    });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { clearTimeout(timer); applyDashboardSearch(input.value.trim()); }
+        if (e.key === 'Escape') { input.value = ''; applyDashboardSearch(''); }
+    });
+}
+
+function applyDashboardSearch(keyword) {
+    const kw = keyword.toLowerCase();
+
+    // Lọc danh sách task-item (dùng div, không phải tr)
+    const taskItems = document.querySelectorAll('.task-item');
+    let taskVisible = 0;
+    taskItems.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const show = !kw || text.includes(kw);
+        item.style.display = show ? '' : 'none';
+        if (show) taskVisible++;
+    });
+
+    // Lọc danh sách "Yêu cầu cần Phê duyệt"
+    const approvalItems = document.querySelectorAll('.approval-item, .request-item, .approval-card');
+    approvalItems.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = !kw || text.includes(kw) ? '' : 'none';
+    });
+
+    // Hiện badge kết quả tìm kiếm
+    showSearchBadge(keyword, taskVisible);
+}
+
+function showSearchBadge(keyword, count) {
+    let badge = document.getElementById('dashboardSearchBadge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'dashboardSearchBadge';
+        badge.style.cssText = `
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            background: #0D5A9C; color: white; padding: 8px 20px;
+            border-radius: 20px; font-size: 13px; font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999;
+            display: flex; align-items: center; gap: 8px;
+        `;
+        document.body.appendChild(badge);
+    }
+    if (keyword) {
+        badge.innerHTML = `<i class="fas fa-search"></i> Tìm "<strong>${keyword}</strong>": ${count} kết quả`;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+// Note: Tasks, Budget, Approvals sẽ cần API riêng trong tương lai
+// Hiện tại sử dụng mock data để demo giao diện
+console.log('BTC Dashboard: Sử dụng mock data cho Tasks, Budget, Approvals');
+console.log('Cần tạo API endpoints:');
+console.log('- GET /api/CongViec (Tasks)');
+console.log('- GET /api/NganSach (Budget)');
+console.log('- GET /api/PheDuyet (Approvals)');
+>>>>>>> origin/Nguyen

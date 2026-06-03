@@ -1,10 +1,11 @@
 // API Configuration
 const API_CONFIG = {
-    BASE_URL: 'https://localhost:7160/api',
+    BASE_URL: 'http://localhost:5103/api',
     ENDPOINTS: {
         // Sự kiện
         SUKIEN: '/SuKien',
         SUKIEN_BY_ID: (id) => `/SuKien/${id}`,
+        SUKIEN_SEARCH: '/SuKien/search',
         
         // Địa điểm
         DIADIEM: '/DiaDiem',
@@ -47,6 +48,34 @@ const API = {
             return await response.json();
         } catch (error) {
             console.error('API GET Error:', error);
+            throw error;
+        }
+    },
+
+    // GET request với query params (object)
+    async getWithParams(endpoint, params = {}) {
+        try {
+            // Loại bỏ các giá trị null/undefined/rỗng
+            const filtered = Object.fromEntries(
+                Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')
+            );
+            const qs = new URLSearchParams(filtered).toString();
+            const url = qs
+                ? `${API_CONFIG.BASE_URL}${endpoint}?${qs}`
+                : `${API_CONFIG.BASE_URL}${endpoint}`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API GET (params) Error:', error);
             throw error;
         }
     },

@@ -10,5 +10,6 @@ namespace aspiCore.Services
         Task<NguoiDungDto> CreateAsync(CreateNguoiDungDto dto);
         Task<NguoiDungDto?> UpdateAsync(string id, UpdateNguoiDungDto dto);
         Task<bool> DeleteAsync(string id);
+        Task<bool> GanVaiTroAsync(string idNguoiDung, int idVaiTro);
     }
 }

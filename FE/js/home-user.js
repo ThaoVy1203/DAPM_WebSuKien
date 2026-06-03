@@ -1,6 +1,7 @@
 // js/home-user.js
 const API_BASE = "https://localhost:7160/api";
 
+<<<<<<< HEAD
 // ==========================
 // INIT
 // ==========================
@@ -9,6 +10,30 @@ document.addEventListener("DOMContentLoaded", async function () {
     const token = localStorage.getItem("token");
     if (!token) {
         window.location.href = "login.html";
+=======
+// ===== State sự kiện =====
+let huAllEvents = [];
+let huAllDanhMucs = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuthentication();
+    loadUserInfo();
+    initializeUserMenu();
+    initializeNotifications();
+    initializeScrollAnimations();
+
+    // Load sự kiện từ API
+    loadHuDanhMucs().then(() => loadHuEvents());
+    initHuSearch();
+});
+
+// Check if user is logged in
+function checkAuthentication() {
+    const user = localStorage.getItem('user');
+    if (!user) {
+        // Redirect to login if not authenticated
+        window.location.href = 'login.html';
+>>>>>>> origin/Nguyen
         return;
     }
 
@@ -161,6 +186,7 @@ async function loadFeaturedEvents() {
     }
 }
 
+<<<<<<< HEAD
 function renderFeaturedEvents(events, container) {
     if (!events || events.length === 0) {
         container.innerHTML = `
@@ -217,6 +243,208 @@ function getBadgeClass(trangThai) {
 // ==========================
 function initScrollAnimations() {
     const observer = new IntersectionObserver(entries => {
+=======
+// Event Cards Functionality (legacy — giữ cho các card tĩnh nếu còn)
+function initializeEventCards() {
+    const eventCards = document.querySelectorAll('.event-card');
+    eventCards.forEach(card => {
+        const detailBtn = card.querySelector('.btn-view-detail');
+        if (detailBtn) {
+            detailBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const eventId = card.dataset.eventId || '1';
+                window.location.href = `event-detail.html?id=${eventId}`;
+            });
+        }
+    });
+}
+
+// ===== Load danh mục =====
+async function loadHuDanhMucs() {
+    try {
+        const data = await API.get(API_CONFIG.ENDPOINTS.DANHMUC);
+        huAllDanhMucs = data || [];
+        const sel = document.getElementById('huFilterDanhMuc');
+        if (!sel) return;
+        huAllDanhMucs.forEach(dm => {
+            const opt = document.createElement('option');
+            opt.value = dm.idDanhMuc;
+            opt.textContent = dm.tenDanhMuc;
+            sel.appendChild(opt);
+        });
+    } catch (e) {
+        console.warn('Không tải được danh mục:', e);
+    }
+}
+
+// ===== Load sự kiện từ API =====
+async function loadHuEvents() {
+    showHuLoading(true);
+    try {
+        const events = await API.get(API_CONFIG.ENDPOINTS.SUKIEN);
+        huAllEvents = events || [];
+        renderHuEvents(huAllEvents);
+    } catch (e) {
+        console.error('Lỗi tải sự kiện:', e);
+        showHuError('Không thể tải sự kiện. Vui lòng thử lại sau.');
+    } finally {
+        showHuLoading(false);
+    }
+}
+
+// ===== Render card sự kiện =====
+function renderHuEvents(events) {
+    const grid = document.getElementById('huEventsGrid');
+    if (!grid) return;
+    grid.querySelectorAll('.event-card, .hu-empty, .hu-error').forEach(el => el.remove());
+
+    if (events.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'hu-empty';
+        empty.innerHTML = `
+            <i class="fas fa-calendar-times"></i>
+            <h4>Không tìm thấy sự kiện nào</h4>
+            <p>Thử thay đổi từ khóa hoặc bộ lọc.</p>
+        `;
+        grid.appendChild(empty);
+    } else {
+        // Hiển thị tối đa 6 sự kiện nổi bật ở trang chủ
+        events.slice(0, 6).forEach(event => {
+            grid.appendChild(createHuEventCard(event));
+        });
+    }
+
+    const count = document.getElementById('huResultCount');
+    if (count) {
+        count.textContent = events.length > 0
+            ? `Hiển thị ${Math.min(events.length, 6)} / ${huAllEvents.length} sự kiện`
+            : '';
+    }
+}
+
+function createHuEventCard(event) {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+
+    const startDate = new Date(event.thoiGianBatDau);
+    const dateStr = `${String(startDate.getDate()).padStart(2,'0')}/${String(startDate.getMonth()+1).padStart(2,'0')}/${startDate.getFullYear()}`;
+    const endDate = new Date(event.thoiGianKetThuc);
+    const endDateStr = `${String(endDate.getDate()).padStart(2,'0')}/${String(endDate.getMonth()+1).padStart(2,'0')}`;
+
+    let badgeClass = '';
+    let badgeText = event.trangThai || 'Nháp';
+    if (event.trangThai === 'Đã duyệt') { badgeClass = ''; badgeText = 'Sắp diễn ra'; }
+    else if (event.trangThai === 'Đang diễn ra') { badgeClass = 'blue'; badgeText = 'Đang diễn ra'; }
+    else if (event.trangThai === 'Đã kết thúc') { badgeClass = 'green'; badgeText = 'Đã kết thúc'; }
+
+    card.innerHTML = `
+        <div class="event-badge ${badgeClass}">${badgeText}</div>
+        <img src="../images/event${event.idSuKien}.png" alt="${event.tenSuKien}"
+             onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=Su+Kien'">
+        <div class="event-card-content">
+            <h3>${event.tenSuKien}</h3>
+            <div class="event-meta">
+                <span><i class="far fa-calendar"></i> ${dateStr} - ${endDateStr}</span>
+                <span><i class="fas fa-map-marker-alt"></i> ${event.tenDiaDiem || 'Chưa xác định'}</span>
+            </div>
+            <a href="event-detail.html?id=${event.idSuKien}" class="btn-view-detail">Xem chi tiết</a>
+        </div>
+    `;
+    return card;
+}
+
+// ===== Tìm kiếm & lọc =====
+function initHuSearch() {
+    const input = document.getElementById('huKeyword');
+    const clearBtn = document.getElementById('huClearSearch');
+    const selDanhMuc = document.getElementById('huFilterDanhMuc');
+    const selTrangThai = document.getElementById('huFilterTrangThai');
+    const resetBtn = document.getElementById('huResetFilter');
+
+    if (!input) return;
+
+    let debounce;
+    input.addEventListener('input', () => {
+        clearTimeout(debounce);
+        if (clearBtn) clearBtn.style.display = input.value ? 'flex' : 'none';
+        debounce = setTimeout(applyHuFilters, 300);
+    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(debounce); applyHuFilters(); } });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            clearBtn.style.display = 'none';
+            applyHuFilters();
+            input.focus();
+        });
+    }
+    if (selDanhMuc) selDanhMuc.addEventListener('change', applyHuFilters);
+    if (selTrangThai) selTrangThai.addEventListener('change', applyHuFilters);
+    if (resetBtn) resetBtn.addEventListener('click', resetHuFilters);
+}
+
+function applyHuFilters() {
+    const keyword = (document.getElementById('huKeyword')?.value || '').trim().toLowerCase();
+    const idDanhMuc = document.getElementById('huFilterDanhMuc')?.value || '';
+    const trangThai = document.getElementById('huFilterTrangThai')?.value || '';
+
+    const filtered = huAllEvents.filter(event => {
+        if (keyword) {
+            const target = [event.tenSuKien || '', event.moTa || '', event.tenDiaDiem || ''].join(' ').toLowerCase();
+            if (!target.includes(keyword)) return false;
+        }
+        if (idDanhMuc) {
+            const ids = event.danhMucIds || [];
+            if (!ids.includes(parseInt(idDanhMuc))) return false;
+        }
+        if (trangThai && event.trangThai !== trangThai) return false;
+        return true;
+    });
+
+    renderHuEvents(filtered);
+}
+
+function resetHuFilters() {
+    const input = document.getElementById('huKeyword');
+    const clearBtn = document.getElementById('huClearSearch');
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    const sel1 = document.getElementById('huFilterDanhMuc');
+    const sel2 = document.getElementById('huFilterTrangThai');
+    if (sel1) sel1.value = '';
+    if (sel2) sel2.value = '';
+    renderHuEvents(huAllEvents);
+}
+
+function showHuLoading(show) {
+    const el = document.getElementById('huLoading');
+    if (el) el.style.display = show ? 'flex' : 'none';
+}
+
+function showHuError(msg) {
+    const grid = document.getElementById('huEventsGrid');
+    if (!grid) return;
+    grid.querySelectorAll('.event-card, .hu-empty, .hu-error').forEach(el => el.remove());
+    const err = document.createElement('div');
+    err.className = 'hu-error';
+    err.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <h4>Có lỗi xảy ra</h4>
+        <p>${msg}</p>
+    `;
+    grid.appendChild(err);
+}
+
+// Scroll Animations
+function initializeScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+>>>>>>> origin/Nguyen
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = "1";

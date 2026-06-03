@@ -48,10 +48,21 @@ namespace aspiCore.Controllers
             return Ok(result);
         }
 
+<<<<<<< HEAD
         [HttpGet("nguoi-tao/{idNguoiTao}")]
         public async Task<ActionResult<IEnumerable<SuKienDto>>> GetByNguoiTao(string idNguoiTao)
         {
             var result = await _suKienService.GetByNguoiTaoAsync(idNguoiTao);
+=======
+        /// <summary>
+        /// Tìm kiếm và lọc sự kiện theo nhiều tiêu chí.
+        /// GET /api/SuKien/search?keyword=...&idDanhMuc=...&idDiaDiem=...&trangThai=...&tuNgay=...&denNgay=...
+        /// </summary>
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<SuKienDto>>> Search([FromQuery] SuKienQueryDto query)
+        {
+            var result = await _suKienService.SearchAsync(query);
+>>>>>>> origin/Nguyen
             return Ok(result);
         }
 

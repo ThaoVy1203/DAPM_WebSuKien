@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 // js/login.js
 const API_BASE = "https://localhost:7160/api";
+=======
+// API Configuration
+const API_BASE_URL = 'http://localhost:5103/api';
+>>>>>>> origin/Nguyen
 
 document.addEventListener("DOMContentLoaded", function () {
     // 1. Kiểm tra nếu đã có token hợp lệ thì chuyển thẳng
@@ -189,11 +194,33 @@ async function handleLogin(e) {
                 localStorage.removeItem('savedEmail');
             }
             
+<<<<<<< HEAD
             const vaiTros = data.nguoiDung?.vaiTros || data.nguoiDung?.VaiTros || [];
             console.log("Vai trò người dùng:", vaiTros);
             
             // Chuyển hướng theo vai trò (Role-based Routing)
             redirectBasedOnRole(vaiTros);
+=======
+            // Redirect to home-user page after 1.5 seconds
+            setTimeout(() => {
+                const user = data.nguoiDung;
+                const vaiTros = user.vaiTros || [];
+
+                if (vaiTros.includes('TruongBanToChuc')) {
+                    window.location.href = 'btc-dashboard.html';
+                } else if (vaiTros.includes('ThanhVienBanToChuc')) {
+                    window.location.href = 'btc-dashboard.html';
+                } else if (vaiTros.includes('CanBoPheDuyetCap1')) {
+                    window.location.href = 'ctsv-pending-approval.html';
+                } else if (vaiTros.includes('CanBoPheDuyetCap2')) {
+                    window.location.href = 'bgh-pending-approval.html';
+                } else if (vaiTros.includes('Admin')) {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'home-user.html';
+                }
+            }, 1500);
+>>>>>>> origin/Nguyen
             
         } else {
             if (errorMessage) errorMessage.textContent = data.message || "Sai tài khoản hoặc mật khẩu";
@@ -210,4 +237,41 @@ async function handleLogin(e) {
             submitBtn.innerHTML = '<span>Đăng nhập</span><i class="fas fa-arrow-right"></i>';
         }
     }
+<<<<<<< HEAD
 }
+=======
+});
+
+// Load saved email if "Remember Me" was checked
+window.addEventListener('DOMContentLoaded', function() {
+    const rememberMe = localStorage.getItem('rememberMe');
+    const savedEmail = localStorage.getItem('savedEmail');
+    
+    if (rememberMe === 'true' && savedEmail) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('remember').checked = true;
+    }
+    
+    // Không tự redirect khi đã đăng nhập — để người dùng đăng nhập lại nếu muốn
+});
+
+// Handle Enter key press
+document.getElementById('email').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('password').focus();
+    }
+});
+
+// Clear error on input
+document.getElementById('email').addEventListener('input', hideAlerts);
+document.getElementById('password').addEventListener('input', hideAlerts);
+
+// Forgot Password (Placeholder)
+const forgotPasswordLink = document.querySelector('.forgot-password');
+if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        showAlert('error', 'Vui lòng liên hệ Phòng Đào tạo để được hỗ trợ khôi phục mật khẩu');
+    });
+}
+>>>>>>> origin/Nguyen

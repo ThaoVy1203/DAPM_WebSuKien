@@ -22,8 +22,31 @@ namespace aspiCore.Services
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
                 .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+<<<<<<< HEAD
                 .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
                 .Include(s => s.NganSachDuKiens)
+=======
+                .Select(s => new SuKienDto
+                {
+                    IdSuKien = s.IdSuKien,
+                    TenSuKien = s.TenSuKien,
+                    MoTa = s.MoTa,
+                    ThoiGianBatDau = s.ThoiGianBatDau,
+                    ThoiGianKetThuc = s.ThoiGianKetThuc,
+                    IdDiaDiem = s.IdDiaDiem,
+                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
+                    IdNguoiTao = s.IdNguoiTao,
+                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
+                    SoLuongToiDa = s.SoLuongToiDa,
+                    TrangThai = s.TrangThai,
+                    ThoiGianTao = s.ThoiGianTao,
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                    DanhMucIds = s.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
+                    TenDanhMucs = s.SuKien_DanhMucs
+                        .Where(sd => sd.DanhMuc != null)
+                        .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
+                })
+>>>>>>> origin/Nguyen
                 .ToListAsync();
             return suKiens.Select(MapToDto);
         }
@@ -35,13 +58,39 @@ namespace aspiCore.Services
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
                 .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+<<<<<<< HEAD
                 .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
                 .Include(s => s.NganSachDuKiens)
+=======
+>>>>>>> origin/Nguyen
                 .FirstOrDefaultAsync(s => s.IdSuKien == id);
 
             if (suKien == null) return null;
 
+<<<<<<< HEAD
             return MapToDto(suKien);
+=======
+            return new SuKienDto
+            {
+                IdSuKien = suKien.IdSuKien,
+                TenSuKien = suKien.TenSuKien,
+                MoTa = suKien.MoTa,
+                ThoiGianBatDau = suKien.ThoiGianBatDau,
+                ThoiGianKetThuc = suKien.ThoiGianKetThuc,
+                IdDiaDiem = suKien.IdDiaDiem,
+                TenDiaDiem = suKien.DiaDiem?.TenDiaDiem,
+                IdNguoiTao = suKien.IdNguoiTao,
+                TenNguoiTao = suKien.NguoiTao?.HoTen,
+                SoLuongToiDa = suKien.SoLuongToiDa,
+                TrangThai = suKien.TrangThai,
+                ThoiGianTao = suKien.ThoiGianTao,
+                SoDaDangKy = suKien.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                DanhMucIds = suKien.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
+                TenDanhMucs = suKien.SuKien_DanhMucs
+                    .Where(sd => sd.DanhMuc != null)
+                    .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
+            };
+>>>>>>> origin/Nguyen
         }
 
         public async Task<IEnumerable<SuKienDto>> GetByTrangThaiAsync(string trangThai)
@@ -51,9 +100,107 @@ namespace aspiCore.Services
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
                 .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+<<<<<<< HEAD
                 .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
                 .Include(s => s.NganSachDuKiens)
                 .Where(s => s.TrangThai == trangThai)
+=======
+                .Where(s => s.TrangThai == trangThai)
+                .Select(s => new SuKienDto
+                {
+                    IdSuKien = s.IdSuKien,
+                    TenSuKien = s.TenSuKien,
+                    MoTa = s.MoTa,
+                    ThoiGianBatDau = s.ThoiGianBatDau,
+                    ThoiGianKetThuc = s.ThoiGianKetThuc,
+                    IdDiaDiem = s.IdDiaDiem,
+                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
+                    IdNguoiTao = s.IdNguoiTao,
+                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
+                    SoLuongToiDa = s.SoLuongToiDa,
+                    TrangThai = s.TrangThai,
+                    ThoiGianTao = s.ThoiGianTao,
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                    DanhMucIds = s.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
+                    TenDanhMucs = s.SuKien_DanhMucs
+                        .Where(sd => sd.DanhMuc != null)
+                        .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<SuKienDto>> SearchAsync(SuKienQueryDto query)
+        {
+            var q = _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .Include(s => s.DangKySuKiens)
+                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .AsQueryable();
+
+            // Lọc theo từ khóa (tên, mô tả, địa điểm)
+            if (!string.IsNullOrWhiteSpace(query.Keyword))
+            {
+                var kw = query.Keyword.Trim().ToLower();
+                q = q.Where(s =>
+                    s.TenSuKien.ToLower().Contains(kw) ||
+                    (s.MoTa != null && s.MoTa.ToLower().Contains(kw)) ||
+                    (s.DiaDiem != null && s.DiaDiem.TenDiaDiem.ToLower().Contains(kw))
+                );
+            }
+
+            // Lọc theo danh mục
+            if (query.IdDanhMuc.HasValue)
+            {
+                q = q.Where(s => s.SuKien_DanhMucs.Any(sd => sd.IdDanhMuc == query.IdDanhMuc.Value));
+            }
+
+            // Lọc theo địa điểm
+            if (query.IdDiaDiem.HasValue)
+            {
+                q = q.Where(s => s.IdDiaDiem == query.IdDiaDiem.Value);
+            }
+
+            // Lọc theo trạng thái
+            if (!string.IsNullOrWhiteSpace(query.TrangThai))
+            {
+                q = q.Where(s => s.TrangThai == query.TrangThai);
+            }
+
+            // Lọc theo khoảng thời gian bắt đầu
+            if (query.TuNgay.HasValue)
+            {
+                q = q.Where(s => s.ThoiGianBatDau >= query.TuNgay.Value);
+            }
+            if (query.DenNgay.HasValue)
+            {
+                var denNgayCuoi = query.DenNgay.Value.Date.AddDays(1).AddTicks(-1);
+                q = q.Where(s => s.ThoiGianBatDau <= denNgayCuoi);
+            }
+
+            return await q
+                .OrderBy(s => s.ThoiGianBatDau)
+                .Select(s => new SuKienDto
+                {
+                    IdSuKien = s.IdSuKien,
+                    TenSuKien = s.TenSuKien,
+                    MoTa = s.MoTa,
+                    ThoiGianBatDau = s.ThoiGianBatDau,
+                    ThoiGianKetThuc = s.ThoiGianKetThuc,
+                    IdDiaDiem = s.IdDiaDiem,
+                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
+                    IdNguoiTao = s.IdNguoiTao,
+                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
+                    SoLuongToiDa = s.SoLuongToiDa,
+                    TrangThai = s.TrangThai,
+                    ThoiGianTao = s.ThoiGianTao,
+                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                    DanhMucIds = s.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
+                    TenDanhMucs = s.SuKien_DanhMucs
+                        .Where(sd => sd.DanhMuc != null)
+                        .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
+                })
+>>>>>>> origin/Nguyen
                 .ToListAsync();
             return suKiens.Select(MapToDto);
         }

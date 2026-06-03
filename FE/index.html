@@ -166,8 +166,9 @@
                 </nav>
                 <div class="header-actions">
                     <div class="search-wrapper">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Tìm kiếm sự kiện...">
+                        <i class="fas fa-search" id="homeSearchIcon" style="cursor:pointer;" onclick="doHomeSearch()"></i>
+                        <input type="text" id="homeSearchInput" placeholder="Tìm kiếm sự kiện..."
+                               onkeydown="if(event.key==='Enter') doHomeSearch()">
                     </div>
                     <!-- Phần này sẽ được JavaScript cập nhật -->
                     <div id="auth-section"></div>
@@ -382,6 +383,7 @@
     </footer>
 
     <script>
+<<<<<<< HEAD
     // ======================
     // API URL
     // ======================
@@ -601,5 +603,23 @@
         loadEvents();
     });
 </script>
+=======
+    function doHomeSearch() {
+        const kw = document.getElementById('homeSearchInput').value.trim();
+        if (!kw) {
+            document.getElementById('homeSearchInput').focus();
+            return;
+        }
+        // Nếu đã đăng nhập → vào events với từ khóa
+        // Nếu chưa → vào login rồi redirect
+        const user = localStorage.getItem('user');
+        if (user) {
+            window.location.href = 'pages/events.html?q=' + encodeURIComponent(kw);
+        } else {
+            window.location.href = 'pages/login.html';
+        }
+    }
+    </script>
+>>>>>>> origin/Nguyen
 </body>
 </html>

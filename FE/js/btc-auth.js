@@ -45,7 +45,20 @@ const PERMISSIONS = {
     }
 };
 
+<<<<<<< HEAD
 let currentUser = null;
+=======
+// Get current user role from localStorage or session
+function getCurrentUserRole() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const vaiTros = user.vaiTros || [];
+    
+    if (vaiTros.includes('TruongBanToChuc')) return BTC_ROLES.LEADER;
+    if (vaiTros.includes('ThanhVienBanToChuc')) return BTC_ROLES.MEMBER;
+    
+    return BTC_ROLES.MEMBER;
+}
+>>>>>>> origin/Nguyen
 
 // ==========================
 // LOAD USER — ưu tiên localStorage, fallback API

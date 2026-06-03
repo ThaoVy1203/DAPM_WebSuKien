@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -65,13 +65,13 @@
                         <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="Avatar người dùng" class="user-avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
                         <span id="userName" style="font-size:14px;font-weight:600;color:#1a1a2e;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">...</span>
                         <i class="fas fa-chevron-down" style="font-size:12px;color:#666;" aria-hidden="true"></i>
-                        <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:210px;z-index:9999;overflow:hidden;">
-                            <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Hồ sơ cá nhân</a>
-                            <a href="my-tickets.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Vé của tôi</a>
-                            <a href="history.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Lịch sử tham gia</a>
-                            <a href="notifications.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-bell" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Thông báo</a>
+                        <div id="userDropdown" role="menu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:210px;z-index:9999;overflow:hidden;">
+                            <a href="profile.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Hồ sơ cá nhân</a>
+                            <a href="my-tickets.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Vé của tôi</a>
+                            <a href="history.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Lịch sử tham gia</a>
+                            <a href="notifications.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-bell" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Thông báo</a>
                             <hr style="margin:0;border:none;border-top:1px solid #eee;">
-                            <a href="#" id="logoutBtn" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;width:16px;" aria-hidden="true"></i> Đăng xuất</a>
+                            <a href="#" id="logoutBtn" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;width:16px;" aria-hidden="true"></i> Đăng xuất</a>
                         </div>
                     </div>
                 </div>
@@ -122,15 +122,16 @@
                     <!-- Filters Sidebar -->
                     <aside class="sidebar filters-sidebar" aria-label="Bộ lọc sự kiện">
                         <div class="filter-section">
-                            <h3>Bộ lọc tìm kiếm</h3>
+                            <h3><i class="fas fa-sliders-h" aria-hidden="true"></i> Bộ lọc tìm kiếm</h3>
                             <div class="search-box">
                                 <i class="fas fa-search" aria-hidden="true"></i>
-                                <input type="text" placeholder="Tìm sự kiện..." aria-label="Tìm kiếm sự kiện">
+                                <input type="text" placeholder="Tìm theo tên, địa điểm..." aria-label="Tìm kiếm sự kiện">
                             </div>
                         </div>
 
                         <div class="filter-section">
-                            <label for="facultyFilter" style="display:block; font-weight:600; margin-bottom:8px;">Khoa / Đơn vị</label>
+                            <h4>Khoa / Đơn vị</h4>
+                            <label for="facultyFilter" class="visually-hidden">Lọc theo khoa đơn vị</label>
                             <select class="filter-select" id="facultyFilter" aria-label="Lọc theo khoa đơn vị">
                                 <option value="all">Tất cả các khoa</option>
                                 <option value="cntt">Khoa CNTT</option>
@@ -141,31 +142,63 @@
 
                         <div class="filter-section">
                             <h4>Loại sự kiện</h4>
-                            <label class="checkbox-label">
-                                <input type="checkbox" checked aria-label="Lọc hội thảo">
-                                <span>Hội thảo</span>
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" checked aria-label="Lọc cuộc thi">
-                                <span>Cuộc thi</span>
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" checked aria-label="Lọc tình nguyện">
-                                <span>Tình nguyện</span>
-                            </label>
+                            <div class="category-checkboxes">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="category-filter" value="1" checked>
+                                    <span>Hội thảo</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="category-filter" value="2" checked>
+                                    <span>Cuộc thi</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="category-filter" value="3" checked>
+                                    <span>Tình nguyện</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="category-filter" value="4" checked>
+                                    <span>Workshop</span>
+                                </label>
+                            </div>
                         </div>
 
                         <div class="filter-section">
                             <h4>Trạng thái</h4>
                             <div class="status-buttons" role="group" aria-label="Lọc theo trạng thái sự kiện">
-                                <button type="button" class="status-btn active" data-status="open" aria-label="Đang mở đăng ký">Đang mở đăng ký</button>
-                                <button type="button" class="status-btn" data-status="ongoing" aria-label="Đang diễn ra">Đang diễn ra</button>
-                                <button type="button" class="status-btn" data-status="ended" aria-label="Đã kết thúc">Đã kết thúc</button>
-                                <button type="button" class="status-btn" data-status="all" aria-label="Tất cả sự kiện">Tất cả</button>
+                                <button type="button" class="status-btn active" data-status="all">Tất cả</button>
+                                <button type="button" class="status-btn" data-status="open">Đang mở đăng ký</button>
+                                <button type="button" class="status-btn" data-status="ongoing">Đang diễn ra</button>
+                                <button type="button" class="status-btn" data-status="ended">Đã kết thúc</button>
                             </div>
                         </div>
 
-                        <button type="button" class="btn-apply-filter" aria-label="Áp dụng bộ lọc">Áp dụng bộ lọc</button>
+                        <div class="filter-section">
+                            <h4>Địa điểm</h4>
+                            <label for="filterDiaDiem" class="visually-hidden">Lọc theo địa điểm</label>
+                            <select id="filterDiaDiem" class="filter-select" aria-label="Lọc theo địa điểm">
+                                <option value="">Tất cả địa điểm</option>
+                                <!-- Được render động từ API -->
+                            </select>
+                        </div>
+
+                        <div class="filter-section">
+                            <h4>Khoảng thời gian</h4>
+                            <div class="date-range">
+                                <label for="dateFrom" class="date-label">Từ ngày</label>
+                                <input type="date" id="dateFrom" class="filter-date" aria-label="Từ ngày">
+                                <label for="dateTo" class="date-label">Đến ngày</label>
+                                <input type="date" id="dateTo" class="filter-date" aria-label="Đến ngày">
+                            </div>
+                        </div>
+
+                        <div class="filter-actions">
+                            <button type="button" class="btn-apply-filter" aria-label="Áp dụng bộ lọc">
+                                <i class="fas fa-check" aria-hidden="true"></i> Áp dụng
+                            </button>
+                            <button type="button" class="btn-reset-filter" aria-label="Đặt lại bộ lọc">
+                                <i class="fas fa-undo" aria-hidden="true"></i> Đặt lại
+                            </button>
+                        </div>
                     </aside>
                 </div>
 
@@ -319,7 +352,6 @@
         </div>
     </footer>
 
-    <!-- Fixed: Removed Git merge conflict -->
     <script src="../js/config.js"></script>
     <script src="../js/events.js"></script>
     <script src="../js/header-user.js"></script>

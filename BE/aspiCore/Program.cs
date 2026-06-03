@@ -22,6 +22,7 @@ builder.Services.AddScoped<ISuKienService, SuKienService>();
 builder.Services.AddScoped<INguoiDungService, NguoiDungService>();
 builder.Services.AddScoped<IDangKyService, DangKyService>();
 builder.Services.AddScoped<IDiaDiemService, DiaDiemService>();
+<<<<<<< HEAD
 builder.Services.AddScoped<IDanhMucService, DanhMucService>();       // ← từ HEAD
 builder.Services.AddScoped<ICongViecService, CongViecService>();
 builder.Services.AddScoped<IThongBaoService, ThongBaoService>();
@@ -50,6 +51,10 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+=======
+builder.Services.AddScoped<IDanhMucService, DanhMucService>();
+builder.Services.AddScoped<IBaoCaoService, BaoCaoService>();
+>>>>>>> origin/Nguyen
 
 // Add CORS
 builder.Services.AddCors(options =>

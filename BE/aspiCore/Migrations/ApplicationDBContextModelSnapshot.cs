@@ -157,6 +157,7 @@ namespace aspiCore.Migrations
                     b.ToTable("DiaDiem");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("aspiCore.Model.HoSoSuKien", b =>
                 {
                     b.Property<int>("IdHoSo")
@@ -291,6 +292,8 @@ namespace aspiCore.Migrations
                     b.ToTable("NganSachDuKien");
                 });
 
+=======
+>>>>>>> origin/Nguyen
             modelBuilder.Entity("aspiCore.Model.NguoiDung", b =>
                 {
                     b.Property<string>("IdNguoiDung")
@@ -324,6 +327,7 @@ namespace aspiCore.Migrations
                         .HasMaxLength(11)
                         .HasColumnType("nvarchar(11)");
 
+<<<<<<< HEAD
                     b.HasKey("IdNguoiDung");
 
                     b.HasIndex("Email")
@@ -332,6 +336,19 @@ namespace aspiCore.Migrations
                     b.HasIndex("MaSoSSO")
                         .IsUnique();
 
+=======
+                    b.Property<bool>("TrangThai")
+                        .HasColumnType("bit");
+
+                    b.HasKey("IdNguoiDung");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("MaSoSSO")
+                        .IsUnique();
+
+>>>>>>> origin/Nguyen
                     b.ToTable("NguoiDung");
                 });
 
@@ -396,6 +413,7 @@ namespace aspiCore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSuKien"));
 
+<<<<<<< HEAD
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
@@ -405,6 +423,11 @@ namespace aspiCore.Migrations
 
                     b.Property<string>("HinhAnh")
                         .HasColumnType("nvarchar(max)");
+=======
+                    b.Property<string>("CapPheDuyet")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+>>>>>>> origin/Nguyen
 
                     b.Property<int?>("IdDiaDiem")
                         .HasColumnType("int");
@@ -417,6 +440,7 @@ namespace aspiCore.Migrations
                     b.Property<string>("MoTa")
                         .HasColumnType("nvarchar(max)");
 
+<<<<<<< HEAD
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("datetime2");
 
@@ -429,6 +453,11 @@ namespace aspiCore.Migrations
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("datetime2");
 
+=======
+                    b.Property<int?>("SoLuongToiDa")
+                        .HasColumnType("int");
+
+>>>>>>> origin/Nguyen
                     b.Property<string>("TenSuKien")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -445,8 +474,13 @@ namespace aspiCore.Migrations
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
+<<<<<<< HEAD
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+=======
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+>>>>>>> origin/Nguyen
 
                     b.HasKey("IdSuKien");
 
@@ -590,6 +624,7 @@ namespace aspiCore.Migrations
                     b.Navigation("SuKien");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("aspiCore.Model.HoSoSuKien", b =>
                 {
                     b.HasOne("aspiCore.Model.SuKien", "SuKien")
@@ -693,6 +728,66 @@ namespace aspiCore.Migrations
 
             modelBuilder.Entity("aspiCore.Model.SuKien_DanhMuc", b =>
                 {
+=======
+            modelBuilder.Entity("aspiCore.Model.NguoiDung_SuKien", b =>
+                {
+                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
+                        .WithMany("NguoiDung_SuKiens")
+                        .HasForeignKey("IdNguoiDung")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                        .WithMany("NguoiDung_SuKiens")
+                        .HasForeignKey("IdSuKien")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NguoiDung");
+
+                    b.Navigation("SuKien");
+                });
+
+            modelBuilder.Entity("aspiCore.Model.PhanCong", b =>
+                {
+                    b.HasOne("aspiCore.Model.CongViec", "CongViec")
+                        .WithMany("PhanCongs")
+                        .HasForeignKey("IdCongViec")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
+                        .WithMany()
+                        .HasForeignKey("IdNguoiDung")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CongViec");
+
+                    b.Navigation("NguoiDung");
+                });
+
+            modelBuilder.Entity("aspiCore.Model.SuKien", b =>
+                {
+                    b.HasOne("aspiCore.Model.DiaDiem", "DiaDiem")
+                        .WithMany("SuKiens")
+                        .HasForeignKey("IdDiaDiem")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiTao")
+                        .WithMany("SuKiensTao")
+                        .HasForeignKey("IdNguoiTao")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DiaDiem");
+
+                    b.Navigation("NguoiTao");
+                });
+
+            modelBuilder.Entity("aspiCore.Model.SuKien_DanhMuc", b =>
+                {
+>>>>>>> origin/Nguyen
                     b.HasOne("aspiCore.Model.DanhMucSuKien", "DanhMuc")
                         .WithMany("SuKien_DanhMucs")
                         .HasForeignKey("IdDanhMuc")
@@ -761,11 +856,14 @@ namespace aspiCore.Migrations
                     b.Navigation("SuKiens");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("aspiCore.Model.HoSoSuKien", b =>
                 {
                     b.Navigation("LichSuPheDuyets");
                 });
 
+=======
+>>>>>>> origin/Nguyen
             modelBuilder.Entity("aspiCore.Model.NguoiDung", b =>
                 {
                     b.Navigation("DangKySuKiens");
@@ -785,8 +883,11 @@ namespace aspiCore.Migrations
 
                     b.Navigation("DangKySuKiens");
 
+<<<<<<< HEAD
                     b.Navigation("LichSuPheDuyets");
 
+=======
+>>>>>>> origin/Nguyen
                     b.Navigation("NguoiDung_SuKiens");
 
                     b.Navigation("SuKien_DanhMucs");

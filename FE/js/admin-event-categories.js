@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const API_URL = "https://localhost:7160/api/DanhMucSuKien";
 
 let categories = [];
@@ -20,10 +21,69 @@ async function loadCategories() {
         const response = await fetch(API_URL);
         categories = await response.json();
 
+=======
+// Admin Event Categories Page - API Integration
+let categories = [];
+let allCategories = []; // cache gốc không thay đổi
+let editingCategoryId = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadCategories();
+    initSearch();
+    initializeEventHandlers();
+});
+
+// ── Tìm kiếm realtime ──────────────────────────────────────────────────────
+function initSearch() {
+    const input = document.querySelector('.search-bar input');
+    if (!input) return;
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => applySearch(input.value.trim()), 300);
+    });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { clearTimeout(timer); applySearch(input.value.trim()); }
+    });
+}
+
+function applySearch(keyword) {
+    const kw = keyword.toLowerCase();
+    const filtered = kw
+        ? allCategories.filter(c =>
+            (c.tenDanhMuc || '').toLowerCase().includes(kw) ||
+            (c.moTa || '').toLowerCase().includes(kw))
+        : allCategories;
+
+    renderCategoryCards(filtered);
+    renderCategoryTable(filtered);
+
+    // Hiện số kết quả
+    let counter = document.getElementById('catResultCount');
+    if (!counter) {
+        counter = document.createElement('p');
+        counter.id = 'catResultCount';
+        counter.style.cssText = 'font-size:13px;color:#6B7280;margin:0 0 16px;';
+        document.querySelector('.categories-grid')?.before(counter);
+    }
+    counter.textContent = keyword
+        ? `Tìm thấy ${filtered.length} / ${allCategories.length} danh mục cho "${keyword}"`
+        : '';
+}
+
+// Load all categories from API
+async function loadCategories() {
+    try {
+        categories = await API.get(API_CONFIG.ENDPOINTS.DANHMUC) || [];
+        allCategories = [...categories]; // lưu cache gốc
+>>>>>>> origin/Nguyen
         renderCategoryCards(categories);
         renderCategories(categories);
         updateStats(categories);
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/Nguyen
     } catch (error) {
         console.error("Lỗi load danh mục:", error);
         showError('Không tải được danh mục. Vui lòng kiểm tra Backend đã chạy chưa.');

@@ -725,3 +725,67 @@
         overflow-x: auto;
     }
 }
+
+/* ===== Bổ sung: Tìm kiếm BTC ===== */
+.search-bar {
+    position: relative;
+}
+.btn-clear-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+}
+.btn-clear-search:hover {
+    color: #374151;
+    background: #F3F4F6;
+}
+
+/* Số kết quả hiển thị */
+.btc-result-count {
+    font-size: 13px;
+    color: #6B7280;
+    margin-bottom: 12px;
+}
+
+/* Nút xóa trong thanh tìm kiếm header */
+.search-bar {
+    position: relative;
+}
+.btn-clear-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+}
+.btn-clear-search:hover {
+    color: #374151;
+    background: #F3F4F6;
+}
+
+/* Số kết quả hiển thị */
+.btc-result-count {
+    font-size: 13px;
+    color: #6B7280;
+    margin-bottom: 12px;
+}

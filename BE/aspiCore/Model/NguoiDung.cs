@@ -31,10 +31,15 @@ namespace aspiCore.Model
         [MaxLength(30)]
         public string MatKhauSSO { get; set; } = string.Empty;
 
+<<<<<<< HEAD
         [NotMapped]
         public int SoVangMatLienTiep { get; set; } = 0;
         [NotMapped]
         public DateTime? KhoaDangKyDen { get; set; }
+=======
+        /// <summary>Trạng thái tài khoản: true = Hoạt động, false = Tạm khóa</summary>
+        public bool TrangThai { get; set; } = true;
+>>>>>>> origin/Nguyen
 
         public ICollection<VaiTro_NguoiDung> VaiTro_NguoiDungs { get; set; } = new List<VaiTro_NguoiDung>();
         public ICollection<SuKien> SuKiensTao { get; set; } = new List<SuKien>();

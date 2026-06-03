@@ -601,3 +601,204 @@
         flex-direction: row;
     }
 }
+
+/* ===== Admin Event Search & Table ===== */
+.admin-event-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 16px 0 12px;
+    border-bottom: 1px solid #F3F4F6;
+    margin-bottom: 12px;
+}
+
+.admin-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+}
+
+.admin-search-wrap i.fa-search {
+    position: absolute;
+    left: 11px;
+    color: #9CA3AF;
+    font-size: 13px;
+    pointer-events: none;
+}
+
+.admin-search-wrap input {
+    width: 100%;
+    padding: 9px 32px 9px 32px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.admin-search-wrap input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+
+.admin-search-wrap #adminClearSearch {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+}
+
+.admin-search-wrap #adminClearSearch:hover {
+    color: #374151;
+    background: #F3F4F6;
+}
+
+.admin-event-filters select,
+.admin-event-filters input[type="date"] {
+    padding: 9px 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    color: #374151;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 140px;
+}
+
+.admin-event-filters select:focus,
+.admin-event-filters input[type="date"]:focus {
+    border-color: #6366f1;
+}
+
+.admin-btn-reset {
+    padding: 9px 14px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6B7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.admin-btn-reset:hover {
+    background: #F3F4F6;
+    color: #374151;
+}
+
+.admin-result-count {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-bottom: 8px;
+}
+
+/* Bảng sự kiện */
+.admin-event-table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #F3F4F6;
+}
+
+.admin-event-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.admin-event-table thead th {
+    background: #F9FAFB;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #E5E7EB;
+    white-space: nowrap;
+}
+
+.admin-event-table tbody tr {
+    border-bottom: 1px solid #F3F4F6;
+    transition: background 0.15s;
+}
+
+.admin-event-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.admin-event-table tbody td {
+    padding: 12px 14px;
+    vertical-align: middle;
+}
+
+/* Badge trạng thái */
+.admin-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-draft     { background: #F3F4F6; color: #6B7280; }
+.badge-pending   { background: #FEF3C7; color: #D97706; }
+.badge-approved  { background: #D1FAE5; color: #065F46; }
+.badge-ongoing   { background: #DBEAFE; color: #1E40AF; }
+.badge-completed { background: #E0E7FF; color: #3730A3; }
+.badge-cancelled { background: #FEE2E2; color: #991B1B; }
+
+/* Nút thao tác */
+.admin-btn-action {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    background: white;
+    color: #6B7280;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.admin-btn-action:hover {
+    background: #6366f1;
+    color: white;
+    border-color: #6366f1;
+}
+
+.admin-btn-action.admin-btn-danger:hover {
+    background: #EF4444;
+    border-color: #EF4444;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .admin-event-filters { flex-direction: column; }
+    .admin-search-wrap { width: 100%; }
+    .admin-event-filters select,
+    .admin-event-filters input[type="date"] { width: 100%; }
+    .admin-btn-reset { width: 100%; justify-content: center; }
+}

@@ -40,9 +40,34 @@ namespace aspiCore.Dtos.SuKien
         public bool YeuCauKhaoSatCheckout { get; set; } = true;
         public DateTime ThoiGianTao { get; set; }
         public int SoDaDangKy { get; set; }
+<<<<<<< HEAD
         public List<DanhMucInfo> DanhMucs { get; set; } = new List<DanhMucInfo>();
         public List<ThanhVienBtcDto> ThanhVienBTCs { get; set; } = new List<ThanhVienBtcDto>();
         public List<NganSachDto> NganSachs { get; set; } = new List<NganSachDto>();
+=======
+        // Danh mục liên kết
+        public List<int> DanhMucIds { get; set; } = new();
+        public List<string> TenDanhMucs { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Tham số truy vấn tìm kiếm / lọc sự kiện
+    /// </summary>
+    public class SuKienQueryDto
+    {
+        /// Từ khóa tìm kiếm (tên sự kiện, mô tả, địa điểm)
+        public string? Keyword { get; set; }
+        /// Lọc theo danh mục
+        public int? IdDanhMuc { get; set; }
+        /// Lọc theo địa điểm
+        public int? IdDiaDiem { get; set; }
+        /// Lọc từ ngày bắt đầu
+        public DateTime? TuNgay { get; set; }
+        /// Lọc đến ngày bắt đầu
+        public DateTime? DenNgay { get; set; }
+        /// Lọc theo trạng thái
+        public string? TrangThai { get; set; }
+>>>>>>> origin/Nguyen
     }
 
     public class CreateSuKienDto
