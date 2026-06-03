@@ -234,10 +234,12 @@ function renderEvents() {
         }
         if (event.trangThai === 'Nháp') {
             actionsHtml += `<button class="btn-action btn-submit-approval" style="color: #0056b3; border-color: #0056b3; background: #e6f0fa;" onclick="submitApproval(${event.idSuKien})"><i class="fas fa-paper-plane"></i> Gửi phê duyệt</button>`;
+            actionsHtml += `<button class="btn-action btn-cancel" onclick="deleteEvent(${event.idSuKien})"><i class="fas fa-trash"></i> Xóa</button>`;
         }
-        const cancelAllowedStatuses = ['Nháp', 'Chờ duyệt', 'Từ chối', 'Đã duyệt'];
+        const cancelAllowedStatuses = ['Chờ duyệt', 'Từ chối', 'Đã duyệt'];
         const isFutureEvent = new Date(event.thoiGianBatDau) > new Date();
-        if (cancelAllowedStatuses.includes(event.trangThai) && isFutureEvent) {
+        const canCancel = (cancelAllowedStatuses.includes(event.trangThai) && isFutureEvent) || event.trangThai === 'Từ chối';
+        if (canCancel) {
             actionsHtml += `<button class="btn-action btn-cancel" onclick="confirmCancelEvent(${event.idSuKien})"><i class="fas fa-times-circle"></i> Hủy</button>`;
         }
         actionsHtml += `<button class="btn-action btn-view" onclick="openViewEventModal(${event.idSuKien})"><i class="fas fa-eye"></i> Chi tiết</button>`;
@@ -277,6 +279,8 @@ function setFormReadOnly(isReadOnly) {
     const form = document.getElementById('eventForm');
     const elements = form.querySelectorAll('input, select, textarea');
     elements.forEach(el => el.disabled = isReadOnly);
+    const buttons = form.querySelectorAll('button:not(.btn-cancel-modal)');
+    buttons.forEach(el => el.disabled = isReadOnly);
     
     if (isReadOnly) {
         form.classList.add('readonly');
@@ -306,10 +310,13 @@ function openCreateEventModal() {
     // Clear tags
     document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('selected'));
     
-    // Clear budget
+    // Clear lists
     const tbody = document.getElementById('budgetTableBody');
     if(tbody) tbody.innerHTML = '';
     calculateBudgetTotal();
+    
+    const list = document.getElementById('organizersList');
+    if(list) list.innerHTML = '';
     
     document.getElementById('statusGroup').style.display = 'none';
     setFormReadOnly(false);
@@ -361,6 +368,52 @@ function openEditEventModal(id) {
             if (tag) tag.classList.add('selected');
         });
     }
+
+    // Budget
+    const tbody = document.getElementById('budgetTableBody');
+    if(tbody) tbody.innerHTML = '';
+    if (event.nganSachs && event.nganSachs.length > 0) {
+        event.nganSachs.forEach(ns => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="${escapeHtml(ns.tenHangMuc)}" style="width: 100%;"></td>
+                <td><input type="number" value="${ns.soLuong}" min="1" class="budget-qty" oninput="calculateBudgetTotal()" style="width: 100%;"></td>
+                <td><input type="number" value="${ns.donGia}" min="0" class="budget-price" oninput="calculateBudgetTotal()" style="width: 100%;"></td>
+                <td class="total-cell" style="font-weight: 500; color: #0f172a;">${new Intl.NumberFormat('vi-VN').format(ns.thanhTien)}</td>
+                <td><button type="button" class="btn-remove" onclick="this.closest('tr').remove(); calculateBudgetTotal();" style="color: #ef4444; background: none; border: none; cursor: pointer;"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+    calculateBudgetTotal();
+
+    // Organizers
+    const list = document.getElementById('organizersList');
+    if(list) list.innerHTML = '';
+    if (event.thanhVienBTCs && event.thanhVienBTCs.length > 0) {
+        event.thanhVienBTCs.forEach(tv => {
+            const div = document.createElement('div');
+            div.className = 'organizer-item new-organizer';
+            div.dataset.userId = tv.idNguoiDung;
+            div.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; background: #f8fafc; margin-top: 10px; border-radius: 8px;';
+            const userName = tv.hoTen || 'Chưa cập nhật';
+            const avatarInitial = userName ? userName.charAt(0).toUpperCase() : 'U';
+            
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                    <div style="width: 32px; height: 32px; background: #64748b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${avatarInitial}</div>
+                    <div class="organizer-info" style="flex: 1;">
+                        <div class="organizer-name" style="font-weight: 600; font-size: 14px;">${escapeHtml(userName)}</div>
+                        <input type="text" placeholder="Phân công nhiệm vụ..." value="${escapeHtml(tv.vaiTro || '')}" class="role-input" style="width: 100%; padding: 4px 8px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                    </div>
+                </div>
+                <div style="margin-left: 10px;">
+                    <button type="button" onclick="removeOrganizer('${tv.idNguoiDung}')" style="color: #ef4444; background: none; border: none; cursor: pointer; padding: 4px;"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
     
     // Status badge
     const statusInfo = getEventStatusInfo(event);
@@ -403,6 +456,34 @@ async function saveEvent(forceStatus = null) {
         return;
     }
     
+    const thanhVienBTCs = [];
+    document.querySelectorAll('.organizer-item').forEach(item => {
+        const roleInput = item.querySelector('.role-input');
+        thanhVienBTCs.push({
+            idNguoiDung: item.dataset.userId,
+            vaiTro: roleInput ? roleInput.value : ''
+        });
+    });
+
+    const nganSachs = [];
+    document.querySelectorAll('#budgetTableBody tr').forEach(row => {
+        const nameInput = row.querySelector('td:nth-child(1) input');
+        const qtyInput = row.querySelector('.budget-qty');
+        const priceInput = row.querySelector('.budget-price');
+        
+        if (nameInput && qtyInput && priceInput && nameInput.value.trim() !== '') {
+            const qty = parseInt(qtyInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            nganSachs.push({
+                tenHangMuc: nameInput.value.trim(),
+                loai: "other",
+                soLuong: qty,
+                donGia: price,
+                thanhTien: qty * price
+            });
+        }
+    });
+
     const formData = {
         tenSuKien: document.getElementById('eventName').value,
         idDiaDiem: parseInt(document.getElementById('eventLocation').value) || null,
@@ -412,7 +493,9 @@ async function saveEvent(forceStatus = null) {
         moTa: document.getElementById('eventDescription').value,
         danhMucIds: selectedCategories,
         idNguoiTao: userData.idNguoiDung,
-        hinhAnh: currentBase64Image
+        hinhAnh: currentBase64Image,
+        thanhVienBTCs: thanhVienBTCs,
+        nganSachs: nganSachs
     };
     
     if (forceStatus) formData.trangThai = forceStatus;
@@ -473,6 +556,27 @@ async function cancelEvent() {
         }
     } catch (error) {
         console.error("Cancel error:", error);
+        showToast("Lỗi hệ thống", "error");
+    }
+}
+
+async function deleteEvent(id) {
+    if(!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn sự kiện nháp này không? Thao tác này không thể hoàn tác.")) return;
+    
+    try {
+        const res = await authFetch(`${window.API_BASE}/SuKien/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (res.ok || res.status === 204) {
+            showToast("Đã xóa sự kiện thành công", "success");
+            loadEvents();
+        } else {
+            const err = await res.json();
+            showToast(err.message || "Không thể xóa sự kiện", "error");
+        }
+    } catch (error) {
+        console.error("Delete error:", error);
         showToast("Lỗi hệ thống", "error");
     }
 }

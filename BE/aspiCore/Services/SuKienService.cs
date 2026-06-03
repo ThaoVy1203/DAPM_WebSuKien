@@ -17,31 +17,15 @@ namespace aspiCore.Services
 
         public async Task<IEnumerable<SuKienDto>> GetAllAsync()
         {
-            return await _context.SuKiens
+            var suKiens = await _context.SuKiens
                 .Include(s => s.DiaDiem)
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
-                .Include(s => s.SuKien_DanhMucs)
-                .ThenInclude(sd => sd.DanhMuc)
-                .Select(s => new SuKienDto
-                {
-                    IdSuKien = s.IdSuKien,
-                    TenSuKien = s.TenSuKien,
-                    MoTa = s.MoTa,
-                    ThoiGianBatDau = s.ThoiGianBatDau,
-                    ThoiGianKetThuc = s.ThoiGianKetThuc,
-                    IdDiaDiem = s.IdDiaDiem,
-                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
-                    IdNguoiTao = s.IdNguoiTao,
-                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
-                    SoLuongToiDa = s.SoLuongToiDa,
-                    HinhAnh = s.HinhAnh,
-                    TrangThai = s.TrangThai,
-                    ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                    DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
-                })
+                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
+                .Include(s => s.NganSachDuKiens)
                 .ToListAsync();
+            return suKiens.Select(MapToDto);
         }
 
         public async Task<SuKienDto?> GetByIdAsync(int id)
@@ -50,91 +34,81 @@ namespace aspiCore.Services
                 .Include(s => s.DiaDiem)
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
-                .Include(s => s.SuKien_DanhMucs)
-                .ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
+                .Include(s => s.NganSachDuKiens)
                 .FirstOrDefaultAsync(s => s.IdSuKien == id);
 
             if (suKien == null) return null;
-
-            return new SuKienDto
-            {
-                IdSuKien = suKien.IdSuKien,
-                TenSuKien = suKien.TenSuKien,
-                MoTa = suKien.MoTa,
-                ThoiGianBatDau = suKien.ThoiGianBatDau,
-                ThoiGianKetThuc = suKien.ThoiGianKetThuc,
-                IdDiaDiem = suKien.IdDiaDiem,
-                TenDiaDiem = suKien.DiaDiem?.TenDiaDiem,
-                IdNguoiTao = suKien.IdNguoiTao,
-                TenNguoiTao = suKien.NguoiTao?.HoTen,
-                SoLuongToiDa = suKien.SoLuongToiDa,
-                HinhAnh = suKien.HinhAnh,
-                TrangThai = suKien.TrangThai,
-                ThoiGianTao = suKien.ThoiGianTao,
-                SoDaDangKy = suKien.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                DanhMucs = suKien.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
-            };
+            return MapToDto(suKien);
         }
 
         public async Task<IEnumerable<SuKienDto>> GetByTrangThaiAsync(string trangThai)
         {
-            return await _context.SuKiens
+            var suKiens = await _context.SuKiens
                 .Include(s => s.DiaDiem)
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
-                .Include(s => s.SuKien_DanhMucs)
-                .ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
+                .Include(s => s.NganSachDuKiens)
                 .Where(s => s.TrangThai == trangThai)
-                .Select(s => new SuKienDto
-                {
-                    IdSuKien = s.IdSuKien,
-                    TenSuKien = s.TenSuKien,
-                    MoTa = s.MoTa,
-                    ThoiGianBatDau = s.ThoiGianBatDau,
-                    ThoiGianKetThuc = s.ThoiGianKetThuc,
-                    IdDiaDiem = s.IdDiaDiem,
-                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
-                    IdNguoiTao = s.IdNguoiTao,
-                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
-                    SoLuongToiDa = s.SoLuongToiDa,
-                    HinhAnh = s.HinhAnh,
-                    TrangThai = s.TrangThai,
-                    ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                    DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
-                })
                 .ToListAsync();
+            return suKiens.Select(MapToDto);
         }
 
         public async Task<IEnumerable<SuKienDto>> GetByNguoiTaoAsync(string idNguoiTao)
         {
-            return await _context.SuKiens
+            var suKiens = await _context.SuKiens
                 .Include(s => s.DiaDiem)
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
-                .Include(s => s.SuKien_DanhMucs)
-                .ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
+                .Include(s => s.NganSachDuKiens)
                 .Where(s => s.IdNguoiTao == idNguoiTao)
-                .Select(s => new SuKienDto
-                {
-                    IdSuKien = s.IdSuKien,
-                    TenSuKien = s.TenSuKien,
-                    MoTa = s.MoTa,
-                    ThoiGianBatDau = s.ThoiGianBatDau,
-                    ThoiGianKetThuc = s.ThoiGianKetThuc,
-                    IdDiaDiem = s.IdDiaDiem,
-                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
-                    IdNguoiTao = s.IdNguoiTao,
-                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
-                    SoLuongToiDa = s.SoLuongToiDa,
-                    HinhAnh = s.HinhAnh,
-                    TrangThai = s.TrangThai,
-                    ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                    DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList()
-                })
                 .OrderByDescending(s => s.ThoiGianTao)
                 .ToListAsync();
+            return suKiens.Select(MapToDto);
+        }
+
+        private SuKienDto MapToDto(SuKien s)
+        {
+            return new SuKienDto
+            {
+                IdSuKien = s.IdSuKien,
+                TenSuKien = s.TenSuKien,
+                MoTa = s.MoTa,
+                ThoiGianBatDau = s.ThoiGianBatDau,
+                ThoiGianKetThuc = s.ThoiGianKetThuc,
+                IdDiaDiem = s.IdDiaDiem,
+                TenDiaDiem = s.DiaDiem?.TenDiaDiem,
+                IdNguoiTao = s.IdNguoiTao,
+                TenNguoiTao = s.NguoiTao?.HoTen,
+                SoLuongToiDa = s.SoLuongToiDa,
+                HinhAnh = s.HinhAnh,
+                TrangThai = s.TrangThai,
+                ThoiGianTao = s.ThoiGianTao,
+                SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
+                DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList(),
+                ThanhVienBTCs = s.NguoiDung_SuKiens.Select(ns => new ThanhVienBtcDto
+                {
+                    IdNguoiDung = ns.IdNguoiDung,
+                    HoTen = ns.NguoiDung?.HoTen,
+                    VaiTro = ns.VaiTroTrongSuKien
+                }).ToList(),
+                NganSachs = ParseNganSachJson(s.NganSachDuKiens.FirstOrDefault()?.GhiChu)
+            };
+        }
+
+        private List<NganSachDto> ParseNganSachJson(string? json)
+        {
+            if (string.IsNullOrEmpty(json)) return new List<NganSachDto>();
+            try
+            {
+                return JsonSerializer.Deserialize<List<NganSachDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<NganSachDto>();
+            }
+            catch { return new List<NganSachDto>(); }
         }
 
         public async Task<SuKienDto> CreateAsync(CreateSuKienDto dto)
@@ -175,9 +149,11 @@ namespace aspiCore.Services
             }
 
             // ══════════════════════════════════════════════
-            // TỰ ĐỘNG KHỞI TẠO DỮ LIỆU LIÊN QUAN
+            // LƯU DỮ LIỆU BAN TỔ CHỨC, CÔNG VIỆC, NGÂN SÁCH
             // ══════════════════════════════════════════════
-            await InitializeRelatedDataAsync(suKien.IdSuKien, suKien.TenSuKien, dto.IdNguoiTao, suKien.ThoiGianKetThuc);
+            await SaveOrganizersAndTasksAsync(suKien.IdSuKien, dto.IdNguoiTao, suKien.ThoiGianKetThuc, dto.ThanhVienBTCs);
+            await SaveBudgetAsync(suKien.IdSuKien, dto.NganSachs);
+            await InitializeMockApprovalAsync(suKien.IdSuKien, suKien.TenSuKien);
 
             return (await GetByIdAsync(suKien.IdSuKien))!;
         }
@@ -233,91 +209,91 @@ namespace aspiCore.Services
             await _context.SaveChangesAsync();
 
             // ══════════════════════════════════════════════
-            // ĐẢM BẢO DỮ LIỆU LIÊN QUAN TỒN TẠI
-            // (chỉ thêm nếu chưa có, không ghi đè dữ liệu đã tồn tại)
+            // CẬP NHẬT DỮ LIỆU LIÊN QUAN (NẾU CÓ TRUYỀN LÊN)
             // ══════════════════════════════════════════════
-            await InitializeRelatedDataAsync(suKien.IdSuKien, suKien.TenSuKien, suKien.IdNguoiTao, suKien.ThoiGianKetThuc);
+            if (dto.ThanhVienBTCs != null)
+            {
+                await SaveOrganizersAndTasksAsync(suKien.IdSuKien, suKien.IdNguoiTao, suKien.ThoiGianKetThuc, dto.ThanhVienBTCs);
+            }
+            if (dto.NganSachs != null)
+            {
+                await SaveBudgetAsync(suKien.IdSuKien, dto.NganSachs);
+            }
 
             return await GetByIdAsync(id);
         }
 
-        // ══════════════════════════════════════════════════════════════
-        // PRIVATE: Khởi tạo dữ liệu đồng bộ cho sự kiện
-        // Tạo: Thành viên BTC, Công việc + Phân công, Ngân sách, Hồ sơ phê duyệt
-        // An toàn: Chỉ thêm nếu chưa tồn tại (idempotent)
-        // ══════════════════════════════════════════════════════════════
-        private async Task InitializeRelatedDataAsync(int idSuKien, string tenSuKien, string idNguoiTao, DateTime thoiGianKetThuc)
+        private async Task SaveOrganizersAndTasksAsync(int idSuKien, string idNguoiTao, DateTime hanChot, List<ThanhVienBtcDto>? thanhVienBTCs)
         {
-            // ── 1. Thêm người tạo vào Ban Tổ Chức của sự kiện ──
-            bool alreadyMember = await _context.NguoiDung_SuKiens
-                .AnyAsync(ns => ns.IdSuKien == idSuKien && ns.IdNguoiDung == idNguoiTao);
+            var oldBTC = await _context.NguoiDung_SuKiens.Where(x => x.IdSuKien == idSuKien).ToListAsync();
+            _context.NguoiDung_SuKiens.RemoveRange(oldBTC);
 
-            if (!alreadyMember)
+            var oldCongViecs = await _context.CongViecs.Where(x => x.IdSuKien == idSuKien).ToListAsync();
+            foreach (var cv in oldCongViecs)
             {
+                var oldPhanCongs = await _context.PhanCongs.Where(x => x.IdCongViec == cv.IdCongViec).ToListAsync();
+                _context.PhanCongs.RemoveRange(oldPhanCongs);
+            }
+            _context.CongViecs.RemoveRange(oldCongViecs);
+            await _context.SaveChangesAsync();
+
+            if (thanhVienBTCs != null && thanhVienBTCs.Any())
+            {
+                foreach (var tv in thanhVienBTCs)
+                {
+                    _context.NguoiDung_SuKiens.Add(new NguoiDung_SuKien
+                    {
+                        IdSuKien = idSuKien,
+                        IdNguoiDung = tv.IdNguoiDung,
+                        VaiTroTrongSuKien = "Thành viên BTC"
+                    });
+
+                    if (!string.IsNullOrEmpty(tv.VaiTro))
+                    {
+                        var cv = new CongViec
+                        {
+                            IdSuKien = idSuKien,
+                            TenCongViec = tv.VaiTro,
+                            TieuDe = tv.VaiTro,
+                            MoTa = $"Nhiệm vụ phân công: {tv.VaiTro}",
+                            HanChot = hanChot,
+                            TrangThai = "Chưa bắt đầu"
+                        };
+                        _context.CongViecs.Add(cv);
+                        await _context.SaveChangesAsync();
+
+                        _context.PhanCongs.Add(new PhanCong
+                        {
+                            IdCongViec = cv.IdCongViec,
+                            IdNguoiDung = tv.IdNguoiDung,
+                            VaiTroTrongBTC = "Thành viên BTC",
+                            ThoiGianPhanCong = DateTime.Now
+                        });
+                    }
+                }
+            }
+            else
+            {
+                // Fallback: chỉ thêm người tạo
                 _context.NguoiDung_SuKiens.Add(new NguoiDung_SuKien
                 {
                     IdNguoiDung = idNguoiTao,
                     IdSuKien = idSuKien,
                     VaiTroTrongSuKien = "Trưởng Ban Tổ chức"
                 });
-                await _context.SaveChangesAsync();
             }
+            await _context.SaveChangesAsync();
+        }
 
-            // ── 2. Tạo 6 công việc mẫu + phân công cho người tạo ──
-            bool hasTasks = await _context.CongViecs.AnyAsync(c => c.IdSuKien == idSuKien);
+        private async Task SaveBudgetAsync(int idSuKien, List<NganSachDto>? nganSachs)
+        {
+            var oldNganSachs = await _context.NganSachDuKiens.Where(x => x.IdSuKien == idSuKien).ToListAsync();
+            _context.NganSachDuKiens.RemoveRange(oldNganSachs);
+            await _context.SaveChangesAsync();
 
-            if (!hasTasks)
+            if (nganSachs != null && nganSachs.Any())
             {
-                var defaultTasks = new[]
-                {
-                    new { Ten = "Lên kế hoạch chi tiết", MoTa = "Xây dựng kế hoạch tổ chức sự kiện chi tiết, bao gồm chương trình, nội dung và lịch trình." },
-                    new { Ten = "Dự trù kinh phí", MoTa = "Lập bảng dự trù kinh phí cho từng hạng mục: hội trường, teabreak, in ấn, quà tặng." },
-                    new { Ten = "Truyền thông & quảng bá", MoTa = "Thiết kế banner, poster, đăng bài trên các kênh truyền thông nội bộ và mạng xã hội." },
-                    new { Ten = "Tổng duyệt chương trình", MoTa = "Chạy thử chương trình, kiểm tra âm thanh, ánh sáng, sân khấu và các thiết bị kỹ thuật." },
-                    new { Ten = "Vận hành sự kiện", MoTa = "Điều phối check-in, hướng dẫn khách mời, phân công nhân sự vận hành tại chỗ." },
-                    new { Ten = "Báo cáo tổng kết", MoTa = "Tổng hợp số liệu tham gia, quyết toán kinh phí, viết báo cáo kết quả sự kiện." }
-                };
-
-                foreach (var t in defaultTasks)
-                {
-                    var cv = new CongViec
-                    {
-                        TenCongViec = t.Ten,
-                        IdSuKien = idSuKien,
-                        TieuDe = t.Ten,
-                        MoTa = t.MoTa,
-                        HanChot = thoiGianKetThuc,
-                        TrangThai = "Chưa bắt đầu"
-                    };
-                    _context.CongViecs.Add(cv);
-                    await _context.SaveChangesAsync();
-
-                    // Phân công cho người tạo sự kiện
-                    _context.PhanCongs.Add(new PhanCong
-                    {
-                        IdCongViec = cv.IdCongViec,
-                        IdNguoiDung = idNguoiTao,
-                        VaiTroTrongBTC = "Trưởng Ban Tổ chức",
-                        ThoiGianPhanCong = DateTime.Now
-                    });
-                }
-                await _context.SaveChangesAsync();
-            }
-
-            // ── 3. Tạo kế hoạch ngân sách mẫu ──
-            bool hasBudget = await _context.NganSachDuKiens.AnyAsync(n => n.IdSuKien == idSuKien);
-
-            if (!hasBudget)
-            {
-                var budgetItems = new[]
-                {
-                    new { TenHangMuc = "Thuê địa điểm tổ chức", Loai = "venue", SoLuong = 1, DonGia = 40000000m, ThanhTien = 40000000m },
-                    new { TenHangMuc = "Tiệc trà nhẹ (teabreak)", Loai = "food", SoLuong = 100, DonGia = 150000m, ThanhTien = 15000000m },
-                    new { TenHangMuc = "In ấn banner, hashtag", Loai = "marketing", SoLuong = 10, DonGia = 500000m, ThanhTien = 5000000m },
-                    new { TenHangMuc = "Quà tặng cho đại biểu", Loai = "other", SoLuong = 10, DonGia = 500000m, ThanhTien = 5000000m }
-                };
-
-                var itemsJson = JsonSerializer.Serialize(budgetItems.Select(b => new
+                var itemsJson = JsonSerializer.Serialize(nganSachs.Select(b => new
                 {
                     tenHangMuc = b.TenHangMuc,
                     loai = b.Loai,
@@ -325,17 +301,21 @@ namespace aspiCore.Services
                     donGia = b.DonGia,
                     thanhTien = b.ThanhTien
                 }));
+                var tong = nganSachs.Sum(x => x.ThanhTien);
 
                 _context.NganSachDuKiens.Add(new NganSachDuKien
                 {
                     IdSuKien = idSuKien,
-                    TongChiPhiDuKien = 65000000,
-                    ChiTietNganSach = 0, // Chưa chi gì
+                    TongChiPhiDuKien = tong,
+                    ChiTietNganSach = 0,
                     GhiChu = itemsJson
                 });
-                await _context.SaveChangesAsync();
             }
+            await _context.SaveChangesAsync();
+        }
 
+        private async Task InitializeMockApprovalAsync(int idSuKien, string tenSuKien)
+        {
             // ── 4. Tạo 2 hồ sơ phê duyệt mẫu ──
             bool hasApprovals = await _context.HoSoSuKiens.AnyAsync(h => h.IdSuKien == idSuKien);
 
@@ -406,6 +386,39 @@ namespace aspiCore.Services
             var suKien = await _context.SuKiens.FindAsync(id);
             if (suKien == null) return false;
 
+            // Xóa các dữ liệu liên quan để tránh lỗi Foreign Key
+            var danhMucs = await _context.SuKien_DanhMucs.Where(x => x.IdSuKien == id).ToListAsync();
+            _context.SuKien_DanhMucs.RemoveRange(danhMucs);
+
+            var nguoiDungs = await _context.NguoiDung_SuKiens.Where(x => x.IdSuKien == id).ToListAsync();
+            _context.NguoiDung_SuKiens.RemoveRange(nguoiDungs);
+
+            var nganSachs = await _context.NganSachDuKiens.Where(x => x.IdSuKien == id).ToListAsync();
+            _context.NganSachDuKiens.RemoveRange(nganSachs);
+
+            var hoSos = await _context.HoSoSuKiens.Where(x => x.IdSuKien == id).ToListAsync();
+            foreach (var hs in hoSos)
+            {
+                var lichSu = await _context.LichSuPheDuyets.Where(x => x.IdHoSo == hs.IdHoSo).ToListAsync();
+                _context.LichSuPheDuyets.RemoveRange(lichSu);
+            }
+            _context.HoSoSuKiens.RemoveRange(hoSos);
+
+            var congViecs = await _context.CongViecs.Where(x => x.IdSuKien == id).ToListAsync();
+            foreach (var cv in congViecs)
+            {
+                var phanCongs = await _context.PhanCongs.Where(x => x.IdCongViec == cv.IdCongViec).ToListAsync();
+                _context.PhanCongs.RemoveRange(phanCongs);
+            }
+            _context.CongViecs.RemoveRange(congViecs);
+
+            var dangKys = await _context.DangKySuKiens.Where(x => x.IdSuKien == id).ToListAsync();
+            _context.DangKySuKiens.RemoveRange(dangKys);
+
+            var thongBaos = await _context.ThongBaos.Where(x => x.IdSuKien == id).ToListAsync();
+            _context.ThongBaos.RemoveRange(thongBaos);
+
+            // Cuối cùng xóa sự kiện
             _context.SuKiens.Remove(suKien);
             await _context.SaveChangesAsync();
             return true;

@@ -61,5 +61,7 @@ namespace aspiCore.Model
         public ICollection<NguoiDung_SuKien> NguoiDung_SuKiens { get; set; } = new List<NguoiDung_SuKien>();
         public ICollection<ThongBao> ThongBaos { get; set; } = new List<ThongBao>();
         public ICollection<CongViec> CongViecs { get; set; } = new List<CongViec>();
+        public ICollection<NganSachDuKien> NganSachDuKiens { get; set; } = new List<NganSachDuKien>();
+        public ICollection<HoSoSuKien> HoSoSuKiens { get; set; } = new List<HoSoSuKien>();
     }
 }

@@ -6,6 +6,22 @@ namespace aspiCore.Dtos.SuKien
         public string TenDanhMuc { get; set; } = string.Empty;
     }
 
+    public class ThanhVienBtcDto
+    {
+        public string IdNguoiDung { get; set; } = string.Empty;
+        public string? HoTen { get; set; }
+        public string? VaiTro { get; set; }
+    }
+
+    public class NganSachDto
+    {
+        public string TenHangMuc { get; set; } = string.Empty;
+        public string? Loai { get; set; }
+        public int SoLuong { get; set; }
+        public decimal DonGia { get; set; }
+        public decimal ThanhTien { get; set; }
+    }
+
     public class SuKienDto
     {
         public int IdSuKien { get; set; }
@@ -23,6 +39,8 @@ namespace aspiCore.Dtos.SuKien
         public DateTime ThoiGianTao { get; set; }
         public int SoDaDangKy { get; set; }
         public List<DanhMucInfo> DanhMucs { get; set; } = new List<DanhMucInfo>();
+        public List<ThanhVienBtcDto> ThanhVienBTCs { get; set; } = new List<ThanhVienBtcDto>();
+        public List<NganSachDto> NganSachs { get; set; } = new List<NganSachDto>();
     }
 
     public class CreateSuKienDto
@@ -37,6 +55,8 @@ namespace aspiCore.Dtos.SuKien
         public string? HinhAnh { get; set; }
         public string? TrangThai { get; set; }
         public List<int>? DanhMucIds { get; set; }
+        public List<ThanhVienBtcDto>? ThanhVienBTCs { get; set; }
+        public List<NganSachDto>? NganSachs { get; set; }
     }
 
     public class UpdateSuKienDto
@@ -50,6 +70,8 @@ namespace aspiCore.Dtos.SuKien
         public string? HinhAnh { get; set; }
         public string? TrangThai { get; set; }
         public List<int>? DanhMucIds { get; set; }
+        public List<ThanhVienBtcDto>? ThanhVienBTCs { get; set; }
+        public List<NganSachDto>? NganSachs { get; set; }
     }
 
     public class CancelSuKienDto
