@@ -21,8 +21,7 @@ namespace aspiCore.Model
         [Column("chiTietNganSach", TypeName = "decimal(18,2)")]
         public decimal? ChiTietNganSach { get; set; }
 
-        [MaxLength(100)]
-        [Column("ghiChu")]
+        [Column("ghiChu", TypeName = "nvarchar(max)")]
         public string? GhiChu { get; set; }
 
         [ForeignKey("IdSuKien")]

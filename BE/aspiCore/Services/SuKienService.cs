@@ -217,7 +217,7 @@ namespace aspiCore.Services
             // Lưu dữ liệu Ban Tổ Chức, Công việc, Ngân sách
             await SaveOrganizersAndTasksAsync(suKien.IdSuKien, dto.IdNguoiTao, suKien.ThoiGianKetThuc, dto.ThanhVienBTCs);
             await SaveBudgetAsync(suKien.IdSuKien, dto.NganSachs);
-            await InitializeMockApprovalAsync(suKien.IdSuKien, suKien.TenSuKien);
+            await InitializeEventApprovalAsync(suKien.IdSuKien, suKien.TenSuKien, suKien.MoTa, dto.NganSachs);
 
             return (await GetByIdAsync(suKien.IdSuKien))!;
         }
@@ -380,14 +380,17 @@ namespace aspiCore.Services
             await _context.SaveChangesAsync();
         }
 
-        private async Task InitializeMockApprovalAsync(int idSuKien, string tenSuKien)
+        private async Task InitializeEventApprovalAsync(int idSuKien, string tenSuKien, string? moTa, List<NganSachDto>? nganSachs)
         {
-            // Tạo 2 hồ sơ phê duyệt mẫu
+            // Tạo 1 hồ sơ phê duyệt với ngân sách từ form
             bool hasApprovals = await _context.HoSoSuKiens.AnyAsync(h => h.IdSuKien == idSuKien);
 
             if (!hasApprovals)
             {
-                var sample1Json = JsonSerializer.Serialize(new
+                decimal tongNganSach = nganSachs?.Sum(x => x.ThanhTien) ?? 0;
+                string duTruNganSachStr = $"{tongNganSach:N0} VNĐ";
+
+                var noiDungJson = JsonSerializer.Serialize(new
                 {
                     TieuDe = $"Phê duyệt kế hoạch tổ chức {tenSuKien}",
                     Loai = "event",
@@ -395,38 +398,17 @@ namespace aspiCore.Services
                     NguoiGui = "Trưởng Ban Tổ chức",
                     NgayGui = DateTime.Now.ToString("dd/MM/yyyy"),
                     NguoiDuyet = "Ban Giám hiệu",
-                    MoTa = $"Kế hoạch chi tiết tổ chức {tenSuKien} với đầy đủ các nội dung về chương trình, nhân sự, dự trù kinh phí. Kính trình cấp trên xem xét phê duyệt để triển khai."
+                    MoTa = moTa ?? $"Kế hoạch chi tiết tổ chức {tenSuKien} với đầy đủ các nội dung về chương trình, nhân sự, dự trù kinh phí. Kính trình cấp trên xem xét phê duyệt để triển khai."
                 });
 
-                var sample2Json = JsonSerializer.Serialize(new
+                _context.HoSoSuKiens.Add(new HoSoSuKien
                 {
-                    TieuDe = $"Phê duyệt ngân sách dự phòng {tenSuKien}",
-                    Loai = "budget",
-                    TrangThai = "pending",
-                    NguoiGui = "Trưởng Ban Tổ chức",
-                    NgayGui = DateTime.Now.ToString("dd/MM/yyyy"),
-                    NguoiDuyet = "Đoàn Trường",
-                    MoTa = $"Kế hoạch kinh phí chi tiết cho các hạng mục trang thiết bị, văn phòng phẩm, và chi phí dự trù phát sinh của {tenSuKien}."
+                    IdSuKien = idSuKien,
+                    TrangThaiDuyet = "Chờ duyệt",
+                    ThoiGianGui = DateTime.Now,
+                    DuTruNganSach = duTruNganSachStr,
+                    NoiDungKeHoach = noiDungJson
                 });
-
-                _context.HoSoSuKiens.AddRange(
-                    new HoSoSuKien
-                    {
-                        IdSuKien = idSuKien,
-                        TrangThaiDuyet = "Chờ duyệt",
-                        ThoiGianGui = DateTime.Now,
-                        DuTruNganSach = "65,000,000 VNĐ",
-                        NoiDungKeHoach = sample1Json
-                    },
-                    new HoSoSuKien
-                    {
-                        IdSuKien = idSuKien,
-                        TrangThaiDuyet = "Chờ duyệt",
-                        ThoiGianGui = DateTime.Now,
-                        DuTruNganSach = "8,000,000 VNĐ",
-                        NoiDungKeHoach = sample2Json
-                    }
-                );
                 await _context.SaveChangesAsync();
             }
         }
