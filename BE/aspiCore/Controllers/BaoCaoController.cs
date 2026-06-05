@@ -17,11 +17,7 @@ namespace aspiCore.Controllers
         }
 
         /// <summary>
-<<<<<<< HEAD
-        /// Xuất Excel báo cáo sự kiện.
-=======
         /// Xuất Excel báo cáo sự kiện (cho BTC).
->>>>>>> origin/VanHuy
         /// File được lưu vào thư mục Reports/ trong dự án và trả về cho trình duyệt tải xuống.
         /// </summary>
         [HttpGet("xuat-excel/{idSuKien}")]
@@ -29,10 +25,6 @@ namespace aspiCore.Controllers
         {
             try
             {
-<<<<<<< HEAD
-                // Đường dẫn thư mục Reports nằm cùng cấp với BE/
-=======
->>>>>>> origin/VanHuy
                 string reportsDir = Path.Combine(_env.ContentRootPath, "..", "..", "Reports");
                 reportsDir = Path.GetFullPath(reportsDir);
 
@@ -44,8 +36,6 @@ namespace aspiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-<<<<<<< HEAD
-=======
 
         /// <summary>
         /// Xuất Excel báo cáo tổng hợp toàn trường (cho CTSV).
@@ -68,6 +58,7 @@ namespace aspiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
         /// <summary>
         /// Xuất Excel báo cáo tổng thể (cho BGH - cấp 2).
         /// Sheet 1: Danh sách tất cả sự kiện.
@@ -89,6 +80,5 @@ namespace aspiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
->>>>>>> origin/VanHuy
     }
 }

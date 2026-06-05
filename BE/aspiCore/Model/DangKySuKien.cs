@@ -29,7 +29,6 @@ namespace aspiCore.Model
         public DateTime? ThoiGianCheckin { get; set; }
 
         public DateTime? ThoiGianCheckout { get; set; }
-        [NotMapped]
         public bool CheckoutTuDong { get; set; } = false;
 
         [ForeignKey("IdSuKien")]

@@ -1,5 +1,5 @@
 // js/event-detail.js
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 
 let currentEventId     = null;
 let currentEvent       = null;

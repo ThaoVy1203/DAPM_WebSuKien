@@ -230,8 +230,6 @@ namespace aspiCore.Services
             };
         }
 
-<<<<<<< HEAD
-=======
         public async Task<FileResult> XuatExcelCtsvAsync(string outputDir)
         {
             // Lấy tất cả sự kiện kèm thông tin
@@ -476,7 +474,7 @@ namespace aspiCore.Services
                     .Border.SetInsideBorder(XLBorderStyleValues.Thin);
             }
 
-            ws1.Column(1).Width = 6;  ws1.Column(2).Width = 40;
+            ws1.Column(1).Width = 6; ws1.Column(2).Width = 40;
             ws1.Column(3).Width = 22; ws1.Column(4).Width = 22;
             ws1.Column(5).Width = 16; ws1.Column(6).Width = 12;
             ws1.Column(7).Width = 16; ws1.Column(8).Width = 14;
@@ -589,7 +587,6 @@ namespace aspiCore.Services
             };
         }
 
->>>>>>> origin/VanHuy
         private static string SanitizeFileName(string name)
         {
             foreach (char c in Path.GetInvalidFileNameChars())

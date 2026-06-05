@@ -1,13 +1,5 @@
-<<<<<<< HEAD
 // js/login.js
-const API_BASE = "https://localhost:7160/api";
-=======
-// API Configuration
-const API_BASE_URL = 'http://localhost:5103/api';
-<<<<<<< HEAD
->>>>>>> origin/Nguyen
-=======
->>>>>>> origin/VanHuy
+const API_BASE = "http://localhost:5103/api";
 
 document.addEventListener("DOMContentLoaded", function () {
     // 1. Kiểm tra nếu đã có token hợp lệ thì chuyển thẳng
@@ -50,7 +42,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // 6. UX: Tự động ẩn thông báo lỗi khi người dùng bắt đầu nhập lại
     const hideAlerts = () => {
         const errorAlert = document.getElementById("errorAlert");
+        const successAlert = document.getElementById("successAlert");
         if (errorAlert) errorAlert.style.display = "none";
+        if (successAlert) successAlert.style.display = "none";
     };
     if (emailInput) emailInput.addEventListener('input', hideAlerts);
     if (passwordInput) passwordInput.addEventListener('input', hideAlerts);
@@ -70,25 +64,12 @@ async function checkAndRedirectIfLoggedIn() {
     if (!token) return;
     
     try {
-        const response = await fetch(`${API_BASE}/Auth/verify`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        
-        if (response.ok) {
-            // Lấy userdata hỗ trợ cả 2 key do có sự thay đổi giữa các phiên bản
-            const userData = localStorage.getItem("userData") || localStorage.getItem("user");
-            if (userData) {
-                const user = JSON.parse(userData);
-                // Backend có thể trả về array role ở nhiều format tùy config, map chuẩn về mảng.
-                const vaiTros = user.vaiTros || user.VaiTros || [];
-                redirectBasedOnRole(vaiTros);
-            }
-        } else {
-            localStorage.removeItem("token");
-            localStorage.removeItem("userData");
-            localStorage.removeItem("user");
+        // Kiểm tra giải mã token cục bộ hoặc gọi API xác thực nếu có
+        const userData = localStorage.getItem("userData") || localStorage.getItem("user");
+        if (userData) {
+            const user = JSON.parse(userData);
+            const vaiTros = user.vaiTros || user.VaiTros || [];
+            redirectBasedOnRole(vaiTros);
         }
     } catch (error) {
         console.log("Lỗi kiểm tra đăng nhập:", error);
@@ -151,9 +132,12 @@ async function handleLogin(e) {
     
     const errorAlert = document.getElementById("errorAlert");
     const errorMessage = document.getElementById("errorMessage");
+    const successAlert = document.getElementById("successAlert");
+    const successMessage = document.getElementById("successMessage");
     const submitBtn = document.querySelector(".btn-login");
     
     if (errorAlert) errorAlert.style.display = "none";
+    if (successAlert) successAlert.style.display = "none";
     
     if (!username || !password) {
         if (errorMessage) errorMessage.textContent = "Vui lòng nhập đầy đủ tài khoản và mật khẩu";
@@ -184,9 +168,14 @@ async function handleLogin(e) {
         console.log("Login response:", data);
         
         if (data.success && data.token) {
+            // Hiển thị thông báo thành công
+            if (successMessage) successMessage.textContent = "Đăng nhập thành công! Đang chuyển hướng...";
+            if (successAlert) successAlert.style.display = "flex";
+
             // Lưu token và user data
             localStorage.setItem("token", data.token);
             localStorage.setItem("userData", JSON.stringify(data.nguoiDung));
+            localStorage.setItem("user", JSON.stringify(data.nguoiDung));
             
             // Cập nhật tính năng Remember Me
             if (rememberCheckbox && rememberCheckbox.checked) {
@@ -197,33 +186,13 @@ async function handleLogin(e) {
                 localStorage.removeItem('savedEmail');
             }
             
-<<<<<<< HEAD
             const vaiTros = data.nguoiDung?.vaiTros || data.nguoiDung?.VaiTros || [];
             console.log("Vai trò người dùng:", vaiTros);
             
-            // Chuyển hướng theo vai trò (Role-based Routing)
-            redirectBasedOnRole(vaiTros);
-=======
-            // Redirect to home-user page after 1.5 seconds
+            // Chuyển hướng theo vai trò (Role-based Routing) sau 1 giây
             setTimeout(() => {
-                const user = data.nguoiDung;
-                const vaiTros = user.vaiTros || [];
-
-                if (vaiTros.includes('TruongBanToChuc')) {
-                    window.location.href = 'btc-dashboard.html';
-                } else if (vaiTros.includes('ThanhVienBanToChuc')) {
-                    window.location.href = 'btc-dashboard.html';
-                } else if (vaiTros.includes('CanBoPheDuyetCap1')) {
-                    window.location.href = 'ctsv-pending-approval.html';
-                } else if (vaiTros.includes('CanBoPheDuyetCap2')) {
-                    window.location.href = 'bgh-pending-approval.html';
-                } else if (vaiTros.includes('Admin')) {
-                    window.location.href = 'admin-dashboard.html';
-                } else {
-                    window.location.href = 'home-user.html';
-                }
-            }, 1500);
->>>>>>> origin/Nguyen
+                redirectBasedOnRole(vaiTros);
+            }, 1000);
             
         } else {
             if (errorMessage) errorMessage.textContent = data.message || "Sai tài khoản hoặc mật khẩu";
@@ -240,60 +209,4 @@ async function handleLogin(e) {
             submitBtn.innerHTML = '<span>Đăng nhập</span><i class="fas fa-arrow-right"></i>';
         }
     }
-<<<<<<< HEAD
 }
-=======
-});
-
-// Load saved email if "Remember Me" was checked
-window.addEventListener('DOMContentLoaded', function() {
-    const rememberMe = localStorage.getItem('rememberMe');
-    const savedEmail = localStorage.getItem('savedEmail');
-    
-    if (rememberMe === 'true' && savedEmail) {
-        document.getElementById('email').value = savedEmail;
-        document.getElementById('remember').checked = true;
-    }
-    
-<<<<<<< HEAD
-    // Không tự redirect khi đã đăng nhập — để người dùng đăng nhập lại nếu muốn
-=======
-    // Check if user is already logged in
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    if (user) {
-        const vaiTros = user.vaiTros || [];
-        if (vaiTros.includes('TruongBanToChuc') || vaiTros.includes('ThanhVienBanToChuc')) {
-            window.location.href = 'btc-dashboard.html';
-        } else if (vaiTros.includes('CanBoPheDuyetCap1')) {
-            window.location.href = 'ctsv-pending-approval.html';
-        } else if (vaiTros.includes('CanBoPheDuyetCap2')) {
-            window.location.href = 'bgh-pending-approval.html';
-        } else if (vaiTros.includes('Admin')) {
-            window.location.href = 'admin-dashboard.html';
-        } else {
-            window.location.href = 'home-user.html';
-        }
-    }
->>>>>>> origin/VanHuy
-});
-
-// Handle Enter key press
-document.getElementById('email').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        document.getElementById('password').focus();
-    }
-});
-
-// Clear error on input
-document.getElementById('email').addEventListener('input', hideAlerts);
-document.getElementById('password').addEventListener('input', hideAlerts);
-
-// Forgot Password (Placeholder)
-const forgotPasswordLink = document.querySelector('.forgot-password');
-if (forgotPasswordLink) {
-    forgotPasswordLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        showAlert('error', 'Vui lòng liên hệ Phòng Đào tạo để được hỗ trợ khôi phục mật khẩu');
-    });
-}
->>>>>>> origin/Nguyen

@@ -22,31 +22,8 @@ namespace aspiCore.Services
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
                 .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
-<<<<<<< HEAD
                 .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
                 .Include(s => s.NganSachDuKiens)
-=======
-                .Select(s => new SuKienDto
-                {
-                    IdSuKien = s.IdSuKien,
-                    TenSuKien = s.TenSuKien,
-                    MoTa = s.MoTa,
-                    ThoiGianBatDau = s.ThoiGianBatDau,
-                    ThoiGianKetThuc = s.ThoiGianKetThuc,
-                    IdDiaDiem = s.IdDiaDiem,
-                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
-                    IdNguoiTao = s.IdNguoiTao,
-                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
-                    SoLuongToiDa = s.SoLuongToiDa,
-                    TrangThai = s.TrangThai,
-                    ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                    DanhMucIds = s.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
-                    TenDanhMucs = s.SuKien_DanhMucs
-                        .Where(sd => sd.DanhMuc != null)
-                        .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
-                })
->>>>>>> origin/Nguyen
                 .ToListAsync();
             return suKiens.Select(MapToDto);
         }
@@ -58,39 +35,13 @@ namespace aspiCore.Services
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
                 .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
-<<<<<<< HEAD
                 .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
                 .Include(s => s.NganSachDuKiens)
-=======
->>>>>>> origin/Nguyen
                 .FirstOrDefaultAsync(s => s.IdSuKien == id);
 
             if (suKien == null) return null;
 
-<<<<<<< HEAD
             return MapToDto(suKien);
-=======
-            return new SuKienDto
-            {
-                IdSuKien = suKien.IdSuKien,
-                TenSuKien = suKien.TenSuKien,
-                MoTa = suKien.MoTa,
-                ThoiGianBatDau = suKien.ThoiGianBatDau,
-                ThoiGianKetThuc = suKien.ThoiGianKetThuc,
-                IdDiaDiem = suKien.IdDiaDiem,
-                TenDiaDiem = suKien.DiaDiem?.TenDiaDiem,
-                IdNguoiTao = suKien.IdNguoiTao,
-                TenNguoiTao = suKien.NguoiTao?.HoTen,
-                SoLuongToiDa = suKien.SoLuongToiDa,
-                TrangThai = suKien.TrangThai,
-                ThoiGianTao = suKien.ThoiGianTao,
-                SoDaDangKy = suKien.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                DanhMucIds = suKien.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
-                TenDanhMucs = suKien.SuKien_DanhMucs
-                    .Where(sd => sd.DanhMuc != null)
-                    .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
-            };
->>>>>>> origin/Nguyen
         }
 
         public async Task<IEnumerable<SuKienDto>> GetByTrangThaiAsync(string trangThai)
@@ -100,33 +51,26 @@ namespace aspiCore.Services
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
                 .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
-<<<<<<< HEAD
                 .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
                 .Include(s => s.NganSachDuKiens)
                 .Where(s => s.TrangThai == trangThai)
-=======
-                .Where(s => s.TrangThai == trangThai)
-                .Select(s => new SuKienDto
-                {
-                    IdSuKien = s.IdSuKien,
-                    TenSuKien = s.TenSuKien,
-                    MoTa = s.MoTa,
-                    ThoiGianBatDau = s.ThoiGianBatDau,
-                    ThoiGianKetThuc = s.ThoiGianKetThuc,
-                    IdDiaDiem = s.IdDiaDiem,
-                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
-                    IdNguoiTao = s.IdNguoiTao,
-                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
-                    SoLuongToiDa = s.SoLuongToiDa,
-                    TrangThai = s.TrangThai,
-                    ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                    DanhMucIds = s.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
-                    TenDanhMucs = s.SuKien_DanhMucs
-                        .Where(sd => sd.DanhMuc != null)
-                        .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
-                })
                 .ToListAsync();
+            return suKiens.Select(MapToDto);
+        }
+
+        public async Task<IEnumerable<SuKienDto>> GetByNguoiTaoAsync(string idNguoiTao)
+        {
+            var suKiens = await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .Include(s => s.DangKySuKiens)
+                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
+                .Include(s => s.NganSachDuKiens)
+                .Where(s => s.IdNguoiTao == idNguoiTao)
+                .OrderByDescending(s => s.ThoiGianTao)
+                .ToListAsync();
+            return suKiens.Select(MapToDto);
         }
 
         public async Task<IEnumerable<SuKienDto>> SearchAsync(SuKienQueryDto query)
@@ -136,6 +80,8 @@ namespace aspiCore.Services
                 .Include(s => s.NguoiTao)
                 .Include(s => s.DangKySuKiens)
                 .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
+                .Include(s => s.NganSachDuKiens)
                 .AsQueryable();
 
             // Lọc theo từ khóa (tên, mô tả, địa điểm)
@@ -178,46 +124,11 @@ namespace aspiCore.Services
                 q = q.Where(s => s.ThoiGianBatDau <= denNgayCuoi);
             }
 
-            return await q
+            var result = await q
                 .OrderBy(s => s.ThoiGianBatDau)
-                .Select(s => new SuKienDto
-                {
-                    IdSuKien = s.IdSuKien,
-                    TenSuKien = s.TenSuKien,
-                    MoTa = s.MoTa,
-                    ThoiGianBatDau = s.ThoiGianBatDau,
-                    ThoiGianKetThuc = s.ThoiGianKetThuc,
-                    IdDiaDiem = s.IdDiaDiem,
-                    TenDiaDiem = s.DiaDiem != null ? s.DiaDiem.TenDiaDiem : null,
-                    IdNguoiTao = s.IdNguoiTao,
-                    TenNguoiTao = s.NguoiTao != null ? s.NguoiTao.HoTen : null,
-                    SoLuongToiDa = s.SoLuongToiDa,
-                    TrangThai = s.TrangThai,
-                    ThoiGianTao = s.ThoiGianTao,
-                    SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy"),
-                    DanhMucIds = s.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
-                    TenDanhMucs = s.SuKien_DanhMucs
-                        .Where(sd => sd.DanhMuc != null)
-                        .Select(sd => sd.DanhMuc!.TenDanhMuc).ToList()
-                })
->>>>>>> origin/Nguyen
                 .ToListAsync();
-            return suKiens.Select(MapToDto);
-        }
 
-        public async Task<IEnumerable<SuKienDto>> GetByNguoiTaoAsync(string idNguoiTao)
-        {
-            var suKiens = await _context.SuKiens
-                .Include(s => s.DiaDiem)
-                .Include(s => s.NguoiTao)
-                .Include(s => s.DangKySuKiens)
-                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
-                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
-                .Include(s => s.NganSachDuKiens)
-                .Where(s => s.IdNguoiTao == idNguoiTao)
-                .OrderByDescending(s => s.ThoiGianTao)
-                .ToListAsync();
-            return suKiens.Select(MapToDto);
+            return result.Select(MapToDto);
         }
 
         private SuKienDto MapToDto(SuKien s)
@@ -242,6 +153,8 @@ namespace aspiCore.Services
                 // Không tính "Chờ chỗ" vào giới hạn số lượng.
                 SoDaDangKy = s.DangKySuKiens.Count(dk => dk.TrangThai != "Đã hủy" && dk.TrangThai != "Chờ chỗ"),
                 DanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => new DanhMucInfo { IdDanhMuc = sd.IdDanhMuc, TenDanhMuc = sd.DanhMuc!.TenDanhMuc }).ToList(),
+                DanhMucIds = s.SuKien_DanhMucs.Select(sd => sd.IdDanhMuc).ToList(),
+                TenDanhMucs = s.SuKien_DanhMucs.Where(sd => sd.DanhMuc != null).Select(sd => sd.DanhMuc!.TenDanhMuc).ToList(),
                 ThanhVienBTCs = s.NguoiDung_SuKiens.Select(ns => new ThanhVienBtcDto
                 {
                     IdNguoiDung = ns.IdNguoiDung,
@@ -301,9 +214,7 @@ namespace aspiCore.Services
                 await _context.SaveChangesAsync();
             }
 
-            // ══════════════════════════════════════════════
-            // LƯU DỮ LIỆU BAN TỔ CHỨC, CÔNG VIỆC, NGÂN SÁCH
-            // ══════════════════════════════════════════════
+            // Lưu dữ liệu Ban Tổ Chức, Công việc, Ngân sách
             await SaveOrganizersAndTasksAsync(suKien.IdSuKien, dto.IdNguoiTao, suKien.ThoiGianKetThuc, dto.ThanhVienBTCs);
             await SaveBudgetAsync(suKien.IdSuKien, dto.NganSachs);
             await InitializeMockApprovalAsync(suKien.IdSuKien, suKien.TenSuKien);
@@ -316,7 +227,7 @@ namespace aspiCore.Services
             var suKien = await _context.SuKiens
                 .Include(s => s.SuKien_DanhMucs)
                 .FirstOrDefaultAsync(s => s.IdSuKien == id);
-                
+
             if (suKien == null) return null;
 
             if (!string.IsNullOrEmpty(dto.TenSuKien))
@@ -365,9 +276,7 @@ namespace aspiCore.Services
 
             await _context.SaveChangesAsync();
 
-            // ══════════════════════════════════════════════
-            // CẬP NHẬT DỮ LIỆU LIÊN QUAN (NẾU CÓ TRUYỀN LÊN)
-            // ══════════════════════════════════════════════
+            // Cập nhật dữ liệu liên quan (nếu có truyền lên)
             if (dto.ThanhVienBTCs != null)
             {
                 await SaveOrganizersAndTasksAsync(suKien.IdSuKien, suKien.IdNguoiTao, suKien.ThoiGianKetThuc, dto.ThanhVienBTCs);
@@ -473,7 +382,7 @@ namespace aspiCore.Services
 
         private async Task InitializeMockApprovalAsync(int idSuKien, string tenSuKien)
         {
-            // ── 4. Tạo 2 hồ sơ phê duyệt mẫu ──
+            // Tạo 2 hồ sơ phê duyệt mẫu
             bool hasApprovals = await _context.HoSoSuKiens.AnyAsync(h => h.IdSuKien == idSuKien);
 
             if (!hasApprovals)
@@ -533,7 +442,8 @@ namespace aspiCore.Services
             }
 
             suKien.TrangThai = "Hủy";
-            
+            suKien.CancelReason = lyDoHuy;
+
             await _context.SaveChangesAsync();
             return await GetByIdAsync(id);
         }

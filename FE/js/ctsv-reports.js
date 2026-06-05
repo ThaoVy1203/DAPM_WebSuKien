@@ -1,6 +1,6 @@
 // bgh-reports.js - Báo cáo tổng thể BGH
 
-const API_BASE_URL = 'https://localhost:7160/api';
+const API_BASE_URL = 'http://localhost:5103/api';
 let allEvents = [];
 
 // ==================== KHỞI TẠO ====================

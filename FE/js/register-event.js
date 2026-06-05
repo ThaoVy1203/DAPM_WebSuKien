@@ -16,7 +16,7 @@
 
 "use strict";
 
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let currentEventId   = null;   // id sự kiện từ query string

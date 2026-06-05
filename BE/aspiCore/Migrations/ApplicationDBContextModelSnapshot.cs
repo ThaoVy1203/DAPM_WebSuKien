@@ -23,882 +23,788 @@ namespace aspiCore.Migrations
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("aspiCore.Model.CongViec", b =>
-                {
-                    b.Property<int>("IdCongViec")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdCongViec")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCongViec"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCongViec"));
 
-                    b.Property<DateTime?>("HanChot")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("HanChot")
+                    .HasColumnType("datetime2");
 
-                    b.Property<int>("IdSuKien")
-                        .HasColumnType("int");
+                b.Property<int>("IdSuKien")
+                    .HasColumnType("int");
 
-                    b.Property<string>("MoTa")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                b.Property<string>("MoTa")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("TenCongViec")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TenCongViec")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("TieuDe")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                b.Property<string>("TieuDe")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TrangThai")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdCongViec");
+                b.HasKey("IdCongViec");
 
-                    b.HasIndex("IdSuKien");
+                b.HasIndex("IdSuKien");
 
-                    b.ToTable("CongViec");
-                });
+                b.ToTable("CongViec");
+            });
 
             modelBuilder.Entity("aspiCore.Model.DangKySuKien", b =>
-                {
-                    b.Property<int>("IdDangKy")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdDangKy")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDangKy"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDangKy"));
 
-                    b.Property<string>("IdNguoiDung")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                b.Property<string>("IdNguoiDung")
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-                    b.Property<int>("IdSuKien")
-                        .HasColumnType("int");
+                b.Property<int>("IdSuKien")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime?>("ThoiGianCheckin")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("ThoiGianCheckin")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("ThoiGianCheckout")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("ThoiGianCheckout")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("ThoiGianDangKy")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ThoiGianDangKy")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("ThoiGianHuy")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("ThoiGianHuy")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TrangThai")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdDangKy");
+                b.HasKey("IdDangKy");
 
-                    b.HasIndex("IdNguoiDung");
+                b.HasIndex("IdNguoiDung");
 
-                    b.HasIndex("TrangThai");
+                b.HasIndex("TrangThai");
 
-                    b.HasIndex("IdSuKien", "IdNguoiDung")
-                        .IsUnique();
+                b.HasIndex("IdSuKien", "IdNguoiDung")
+                    .IsUnique();
 
-                    b.ToTable("DangKySuKien");
-                });
+                b.ToTable("DangKySuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.DanhMucSuKien", b =>
-                {
-                    b.Property<int>("IdDanhMuc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdDanhMuc")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDanhMuc"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDanhMuc"));
 
-                    b.Property<string>("MoTa")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("MoTa")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TenDanhMuc")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TenDanhMuc")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdDanhMuc");
+                b.HasKey("IdDanhMuc");
 
-                    b.ToTable("DanhMucSuKien");
-                });
+                b.ToTable("DanhMucSuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.DiaDiem", b =>
-                {
-                    b.Property<int>("IdDiaDiem")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdDiaDiem")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDiaDiem"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDiaDiem"));
 
-                    b.Property<int?>("SucChua")
-                        .HasColumnType("int");
+                b.Property<int?>("SucChua")
+                    .HasColumnType("int");
 
-                    b.Property<string>("TenDiaDiem")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TenDiaDiem")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("TrangThaiSuDung")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TrangThaiSuDung")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("ViTri")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("ViTri")
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdDiaDiem");
+                b.HasKey("IdDiaDiem");
 
-                    b.ToTable("DiaDiem");
-                });
+                b.ToTable("DiaDiem");
+            });
 
-<<<<<<< HEAD
             modelBuilder.Entity("aspiCore.Model.HoSoSuKien", b =>
-                {
-                    b.Property<int>("IdHoSo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idHoSo");
+            {
+                b.Property<int>("IdHoSo")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int")
+                    .HasColumnName("idHoSo");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdHoSo"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdHoSo"));
 
-                    b.Property<string>("DuTruNganSach")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("duTruNganSach");
+                b.Property<string>("DuTruNganSach")
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)")
+                    .HasColumnName("duTruNganSach");
 
-                    b.Property<int>("IdSuKien")
-                        .HasColumnType("int")
-                        .HasColumnName("idSuKien");
+                b.Property<int>("IdSuKien")
+                    .HasColumnType("int")
+                    .HasColumnName("idSuKien");
 
-                    b.Property<string>("NoiDungKeHoach")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("noiDungKeHoach");
+                b.Property<string>("NoiDungKeHoach")
+                    .HasColumnType("nvarchar(max)")
+                    .HasColumnName("noiDungKeHoach");
 
-                    b.Property<DateTime>("ThoiGianGui")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("thoiGianGui");
+                b.Property<DateTime>("ThoiGianGui")
+                    .HasColumnType("datetime2")
+                    .HasColumnName("thoiGianGui");
 
-                    b.Property<string>("TrangThaiDuyet")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("trangThaiDuyet");
+                b.Property<string>("TrangThaiDuyet")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)")
+                    .HasColumnName("trangThaiDuyet");
 
-                    b.HasKey("IdHoSo");
+                b.HasKey("IdHoSo");
 
-                    b.HasIndex("IdSuKien");
+                b.HasIndex("IdSuKien");
 
-                    b.ToTable("HoSoSuKien");
-                });
+                b.ToTable("HoSoSuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.LichSuPheDuyet", b =>
-                {
-                    b.Property<int>("IdPheDuyet")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idPheDuyet");
+            {
+                b.Property<int>("IdPheDuyet")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int")
+                    .HasColumnName("idPheDuyet");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdPheDuyet"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdPheDuyet"));
 
-                    b.Property<string>("ApproveStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("approveStatus");
+                b.Property<string>("ApproveStatus")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)")
+                    .HasColumnName("approveStatus");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("approvedAt");
+                b.Property<DateTime?>("ApprovedAt")
+                    .HasColumnType("datetime2")
+                    .HasColumnName("approvedAt");
 
-                    b.Property<string>("ApproverRole")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("approverRole");
+                b.Property<string>("ApproverRole")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)")
+                    .HasColumnName("approverRole");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("createdAt");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime2")
+                    .HasColumnName("createdAt");
 
-                    b.Property<string>("Feedback")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasColumnName("feedback");
+                b.Property<string>("Feedback")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)")
+                    .HasColumnName("feedback");
 
-                    b.Property<int?>("HoSoSuKienIdHoSo")
-                        .HasColumnType("int");
+                b.Property<int?>("HoSoSuKienIdHoSo")
+                    .HasColumnType("int");
 
-                    b.Property<string>("IdNguoiDuyet")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)")
-                        .HasColumnName("idNguoiDuyet");
+                b.Property<string>("IdNguoiDuyet")
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)")
+                    .HasColumnName("idNguoiDuyet");
 
-                    b.Property<int>("IdSuKien")
-                        .HasColumnType("int")
-                        .HasColumnName("idSuKien");
+                b.Property<int>("IdSuKien")
+                    .HasColumnType("int")
+                    .HasColumnName("idSuKien");
 
-                    b.Property<int>("Level")
-                        .HasColumnType("int")
-                        .HasColumnName("level");
+                b.Property<int>("Level")
+                    .HasColumnType("int")
+                    .HasColumnName("level");
 
-                    b.HasKey("IdPheDuyet");
+                b.HasKey("IdPheDuyet");
 
-                    b.HasIndex("HoSoSuKienIdHoSo");
+                b.HasIndex("HoSoSuKienIdHoSo");
 
-                    b.HasIndex("IdNguoiDuyet");
+                b.HasIndex("IdNguoiDuyet");
 
-                    b.HasIndex("IdSuKien");
+                b.HasIndex("IdSuKien");
 
-                    b.ToTable("LichSuPheDuyet");
-                });
+                b.ToTable("LichSuPheDuyet");
+            });
 
             modelBuilder.Entity("aspiCore.Model.NganSachDuKien", b =>
-                {
-                    b.Property<int>("IdNganSach")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idNganSach");
+            {
+                b.Property<int>("IdNganSach")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int")
+                    .HasColumnName("idNganSach");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdNganSach"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdNganSach"));
 
-                    b.Property<decimal?>("ChiTietNganSach")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("chiTietNganSach");
+                b.Property<decimal?>("ChiTietNganSach")
+                    .HasColumnType("decimal(18,2)")
+                    .HasColumnName("chiTietNganSach");
 
-                    b.Property<string>("GhiChu")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("ghiChu");
+                b.Property<string>("GhiChu")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)")
+                    .HasColumnName("ghiChu");
 
-                    b.Property<int>("IdSuKien")
-                        .HasColumnType("int")
-                        .HasColumnName("idSuKien");
+                b.Property<int>("IdSuKien")
+                    .HasColumnType("int")
+                    .HasColumnName("idSuKien");
 
-                    b.Property<decimal?>("TongChiPhiDuKien")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("tongChiPhiDuKien");
+                b.Property<decimal?>("TongChiPhiDuKien")
+                    .HasColumnType("decimal(18,2)")
+                    .HasColumnName("tongChiPhiDuKien");
 
-                    b.HasKey("IdNganSach");
+                b.HasKey("IdNganSach");
 
-                    b.HasIndex("IdSuKien");
+                b.HasIndex("IdSuKien");
 
-                    b.ToTable("NganSachDuKien");
-                });
+                b.ToTable("NganSachDuKien");
+            });
 
-=======
->>>>>>> origin/Nguyen
             modelBuilder.Entity("aspiCore.Model.NguoiDung", b =>
-                {
-                    b.Property<string>("IdNguoiDung")
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+            {
+                b.Property<string>("IdNguoiDung")
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-                    b.Property<string>("AnhDaiDien")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("AnhDaiDien")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("Email")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("HoTen")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("HoTen")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("MaSoSSO")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                b.Property<string>("MaSoSSO")
+                    .IsRequired()
+                    .HasMaxLength(15)
+                    .HasColumnType("nvarchar(15)");
 
-                    b.Property<string>("MatKhauSSO")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                b.Property<string>("MatKhauSSO")
+                    .IsRequired()
+                    .HasMaxLength(30)
+                    .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("SDT")
-                        .HasMaxLength(11)
-                        .HasColumnType("nvarchar(11)");
+                b.Property<string>("SDT")
+                    .HasMaxLength(11)
+                    .HasColumnType("nvarchar(11)");
 
-<<<<<<< HEAD
-                    b.HasKey("IdNguoiDung");
+                b.Property<bool>("TrangThai")
+                    .HasColumnType("bit");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                b.HasKey("IdNguoiDung");
 
-                    b.HasIndex("MaSoSSO")
-                        .IsUnique();
+                b.HasIndex("Email")
+                    .IsUnique();
 
-=======
-                    b.Property<bool>("TrangThai")
-                        .HasColumnType("bit");
+                b.HasIndex("MaSoSSO")
+                    .IsUnique();
 
-                    b.HasKey("IdNguoiDung");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("MaSoSSO")
-                        .IsUnique();
-
->>>>>>> origin/Nguyen
-                    b.ToTable("NguoiDung");
-                });
+                b.ToTable("NguoiDung");
+            });
 
             modelBuilder.Entity("aspiCore.Model.NguoiDung_SuKien", b =>
-                {
-                    b.Property<string>("IdNguoiDung")
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+            {
+                b.Property<string>("IdNguoiDung")
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-                    b.Property<int>("IdSuKien")
-                        .HasColumnType("int");
+                b.Property<int>("IdSuKien")
+                    .HasColumnType("int");
 
-                    b.Property<string>("VaiTroTrongSuKien")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("VaiTroTrongSuKien")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdNguoiDung", "IdSuKien");
+                b.HasKey("IdNguoiDung", "IdSuKien");
 
-                    b.HasIndex("IdSuKien");
+                b.HasIndex("IdSuKien");
 
-                    b.ToTable("NguoiDung_SuKien");
-                });
+                b.ToTable("NguoiDung_SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.PhanCong", b =>
-                {
-                    b.Property<int>("IdPhanCong")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdPhanCong")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdPhanCong"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdPhanCong"));
 
-                    b.Property<int>("IdCongViec")
-                        .HasColumnType("int");
+                b.Property<int>("IdCongViec")
+                    .HasColumnType("int");
 
-                    b.Property<string>("IdNguoiDung")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                b.Property<string>("IdNguoiDung")
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-                    b.Property<DateTime>("ThoiGianPhanCong")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ThoiGianPhanCong")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("VaiTroTrongBTC")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("VaiTroTrongBTC")
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdPhanCong");
+                b.HasKey("IdPhanCong");
 
-                    b.HasIndex("IdCongViec");
+                b.HasIndex("IdCongViec");
 
-                    b.HasIndex("IdNguoiDung");
+                b.HasIndex("IdNguoiDung");
 
-                    b.ToTable("PhanCong");
-                });
+                b.ToTable("PhanCong");
+            });
 
             modelBuilder.Entity("aspiCore.Model.SuKien", b =>
-                {
-                    b.Property<int>("IdSuKien")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdSuKien")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSuKien"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSuKien"));
 
-<<<<<<< HEAD
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("ApprovedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("CancelReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                b.Property<string>("CancelReason")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("HinhAnh")
-                        .HasColumnType("nvarchar(max)");
-=======
-                    b.Property<string>("CapPheDuyet")
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
->>>>>>> origin/Nguyen
+                b.Property<string>("CapPheDuyet")
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-                    b.Property<int?>("IdDiaDiem")
-                        .HasColumnType("int");
+                b.Property<string>("HinhAnh")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("IdNguoiTao")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                b.Property<int?>("IdDiaDiem")
+                    .HasColumnType("int");
 
-                    b.Property<string>("MoTa")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("IdNguoiTao")
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-<<<<<<< HEAD
-                    b.Property<DateTime?>("PublishedAt")
-                        .HasColumnType("datetime2");
+                b.Property<string>("MoTa")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("PublishedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<int?>("SoLuongToiDa")
-                        .HasColumnType("int");
+                b.Property<DateTime?>("RejectedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("datetime2");
+                b.Property<int?>("SoLuongToiDa")
+                    .HasColumnType("int");
 
-=======
-                    b.Property<int?>("SoLuongToiDa")
-                        .HasColumnType("int");
+                b.Property<DateTime?>("SubmittedAt")
+                    .HasColumnType("datetime2");
 
->>>>>>> origin/Nguyen
-                    b.Property<string>("TenSuKien")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TenSuKien")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime>("ThoiGianBatDau")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ThoiGianBatDau")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("ThoiGianKetThuc")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ThoiGianKetThuc")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("ThoiGianTao")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ThoiGianTao")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-<<<<<<< HEAD
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-=======
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
->>>>>>> origin/Nguyen
+                b.Property<string>("TrangThai")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdSuKien");
+                b.HasKey("IdSuKien");
 
-                    b.HasIndex("IdDiaDiem");
+                b.HasIndex("IdDiaDiem");
 
-                    b.HasIndex("IdNguoiTao");
+                b.HasIndex("IdNguoiTao");
 
-                    b.HasIndex("TrangThai");
+                b.HasIndex("TrangThai");
 
-                    b.HasIndex("ThoiGianBatDau", "ThoiGianKetThuc");
+                b.HasIndex("ThoiGianBatDau", "ThoiGianKetThuc");
 
-                    b.ToTable("SuKien");
-                });
+                b.ToTable("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.SuKien_DanhMuc", b =>
-                {
-                    b.Property<int>("IdSuKien")
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdSuKien")
+                    .HasColumnType("int");
 
-                    b.Property<int>("IdDanhMuc")
-                        .HasColumnType("int");
+                b.Property<int>("IdDanhMuc")
+                    .HasColumnType("int");
 
-                    b.HasKey("IdSuKien", "IdDanhMuc");
+                b.HasKey("IdSuKien", "IdDanhMuc");
 
-                    b.HasIndex("IdDanhMuc");
+                b.HasIndex("IdDanhMuc");
 
-                    b.ToTable("SuKien_DanhMuc");
-                });
+                b.ToTable("SuKien_DanhMuc");
+            });
 
             modelBuilder.Entity("aspiCore.Model.ThongBao", b =>
-                {
-                    b.Property<int>("IdThongBao")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdThongBao")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdThongBao"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdThongBao"));
 
-                    b.Property<bool>("DaDoc")
-                        .HasColumnType("bit");
+                b.Property<bool>("DaDoc")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("IdNguoiDung")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                b.Property<string>("IdNguoiDung")
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-                    b.Property<int?>("IdSuKien")
-                        .HasColumnType("int");
+                b.Property<int?>("IdSuKien")
+                    .HasColumnType("int");
 
-                    b.Property<string>("NoiDung")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("NoiDung")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ThoiGianGui")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ThoiGianGui")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("TieuDe")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                b.Property<string>("TieuDe")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("IdThongBao");
+                b.HasKey("IdThongBao");
 
-                    b.HasIndex("DaDoc");
+                b.HasIndex("DaDoc");
 
-                    b.HasIndex("IdNguoiDung");
+                b.HasIndex("IdNguoiDung");
 
-                    b.HasIndex("IdSuKien");
+                b.HasIndex("IdSuKien");
 
-                    b.ToTable("ThongBao");
-                });
+                b.ToTable("ThongBao");
+            });
 
             modelBuilder.Entity("aspiCore.Model.VaiTro", b =>
-                {
-                    b.Property<int>("IdVaiTro")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdVaiTro")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdVaiTro"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdVaiTro"));
 
-                    b.Property<string>("MoTa")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("MoTa")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TenVaiTro")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("TenVaiTro")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("IdVaiTro");
+                b.HasKey("IdVaiTro");
 
-                    b.ToTable("VaiTro");
-                });
+                b.ToTable("VaiTro");
+            });
 
             modelBuilder.Entity("aspiCore.Model.VaiTro_NguoiDung", b =>
-                {
-                    b.Property<int>("IdVaiTro")
-                        .HasColumnType("int");
+            {
+                b.Property<int>("IdVaiTro")
+                    .HasColumnType("int");
 
-                    b.Property<string>("IdNguoiDung")
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                b.Property<string>("IdNguoiDung")
+                    .HasMaxLength(5)
+                    .HasColumnType("nvarchar(5)");
 
-                    b.Property<DateTime>("ThoiGianCapQuan")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ThoiGianCapQuan")
+                    .HasColumnType("datetime2");
 
-                    b.Property<bool>("TrangThai")
-                        .HasColumnType("bit");
+                b.Property<bool>("TrangThai")
+                    .HasColumnType("bit");
 
-                    b.HasKey("IdVaiTro", "IdNguoiDung");
+                b.HasKey("IdVaiTro", "IdNguoiDung");
 
-                    b.HasIndex("IdNguoiDung");
+                b.HasIndex("IdNguoiDung");
 
-                    b.ToTable("VaiTro_NguoiDung");
-                });
+                b.ToTable("VaiTro_NguoiDung");
+            });
 
             modelBuilder.Entity("aspiCore.Model.CongViec", b =>
-                {
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany("CongViecs")
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany("CongViecs")
+                    .HasForeignKey("IdSuKien")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.DangKySuKien", b =>
-                {
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
-                        .WithMany("DangKySuKiens")
-                        .HasForeignKey("IdNguoiDung")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
+                    .WithMany("DangKySuKiens")
+                    .HasForeignKey("IdNguoiDung")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany("DangKySuKiens")
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany("DangKySuKiens")
+                    .HasForeignKey("IdSuKien")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("NguoiDung");
+                b.Navigation("NguoiDung");
 
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
-<<<<<<< HEAD
             modelBuilder.Entity("aspiCore.Model.HoSoSuKien", b =>
-                {
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany()
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany()
+                    .HasForeignKey("IdSuKien")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.LichSuPheDuyet", b =>
-                {
-                    b.HasOne("aspiCore.Model.HoSoSuKien", null)
-                        .WithMany("LichSuPheDuyets")
-                        .HasForeignKey("HoSoSuKienIdHoSo");
+            {
+                b.HasOne("aspiCore.Model.HoSoSuKien", null)
+                    .WithMany("LichSuPheDuyets")
+                    .HasForeignKey("HoSoSuKienIdHoSo");
 
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDuyet")
-                        .WithMany()
-                        .HasForeignKey("IdNguoiDuyet")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.NguoiDung", "NguoiDuyet")
+                    .WithMany()
+                    .HasForeignKey("IdNguoiDuyet")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany("LichSuPheDuyets")
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany("LichSuPheDuyets")
+                    .HasForeignKey("IdSuKien")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("NguoiDuyet");
+                b.Navigation("NguoiDuyet");
 
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.NganSachDuKien", b =>
-                {
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany()
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany()
+                    .HasForeignKey("IdSuKien")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.NguoiDung_SuKien", b =>
-                {
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
-                        .WithMany("NguoiDung_SuKiens")
-                        .HasForeignKey("IdNguoiDung")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
+                    .WithMany("NguoiDung_SuKiens")
+                    .HasForeignKey("IdNguoiDung")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany("NguoiDung_SuKiens")
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany("NguoiDung_SuKiens")
+                    .HasForeignKey("IdSuKien")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("NguoiDung");
+                b.Navigation("NguoiDung");
 
-                    b.Navigation("SuKien");
-                });
-
-            modelBuilder.Entity("aspiCore.Model.PhanCong", b =>
-                {
-                    b.HasOne("aspiCore.Model.CongViec", "CongViec")
-                        .WithMany("PhanCongs")
-                        .HasForeignKey("IdCongViec")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
-                        .WithMany()
-                        .HasForeignKey("IdNguoiDung")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CongViec");
-
-                    b.Navigation("NguoiDung");
-                });
-
-            modelBuilder.Entity("aspiCore.Model.SuKien", b =>
-                {
-                    b.HasOne("aspiCore.Model.DiaDiem", "DiaDiem")
-                        .WithMany("SuKiens")
-                        .HasForeignKey("IdDiaDiem")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiTao")
-                        .WithMany("SuKiensTao")
-                        .HasForeignKey("IdNguoiTao")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("DiaDiem");
-
-                    b.Navigation("NguoiTao");
-                });
-
-            modelBuilder.Entity("aspiCore.Model.SuKien_DanhMuc", b =>
-                {
-=======
-            modelBuilder.Entity("aspiCore.Model.NguoiDung_SuKien", b =>
-                {
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
-                        .WithMany("NguoiDung_SuKiens")
-                        .HasForeignKey("IdNguoiDung")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany("NguoiDung_SuKiens")
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("NguoiDung");
-
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.PhanCong", b =>
-                {
-                    b.HasOne("aspiCore.Model.CongViec", "CongViec")
-                        .WithMany("PhanCongs")
-                        .HasForeignKey("IdCongViec")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.CongViec", "CongViec")
+                    .WithMany("PhanCongs")
+                    .HasForeignKey("IdCongViec")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
-                        .WithMany()
-                        .HasForeignKey("IdNguoiDung")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
+                    .WithMany()
+                    .HasForeignKey("IdNguoiDung")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("CongViec");
+                b.Navigation("CongViec");
 
-                    b.Navigation("NguoiDung");
-                });
+                b.Navigation("NguoiDung");
+            });
 
             modelBuilder.Entity("aspiCore.Model.SuKien", b =>
-                {
-                    b.HasOne("aspiCore.Model.DiaDiem", "DiaDiem")
-                        .WithMany("SuKiens")
-                        .HasForeignKey("IdDiaDiem")
-                        .OnDelete(DeleteBehavior.SetNull);
+            {
+                b.HasOne("aspiCore.Model.DiaDiem", "DiaDiem")
+                    .WithMany("SuKiens")
+                    .HasForeignKey("IdDiaDiem")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiTao")
-                        .WithMany("SuKiensTao")
-                        .HasForeignKey("IdNguoiTao")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.NguoiDung", "NguoiTao")
+                    .WithMany("SuKiensTao")
+                    .HasForeignKey("IdNguoiTao")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.Navigation("DiaDiem");
+                b.Navigation("DiaDiem");
 
-                    b.Navigation("NguoiTao");
-                });
+                b.Navigation("NguoiTao");
+            });
 
             modelBuilder.Entity("aspiCore.Model.SuKien_DanhMuc", b =>
-                {
->>>>>>> origin/Nguyen
-                    b.HasOne("aspiCore.Model.DanhMucSuKien", "DanhMuc")
-                        .WithMany("SuKien_DanhMucs")
-                        .HasForeignKey("IdDanhMuc")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.DanhMucSuKien", "DanhMuc")
+                    .WithMany("SuKien_DanhMucs")
+                    .HasForeignKey("IdDanhMuc")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany("SuKien_DanhMucs")
-                        .HasForeignKey("IdSuKien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany("SuKien_DanhMucs")
+                    .HasForeignKey("IdSuKien")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("DanhMuc");
+                b.Navigation("DanhMuc");
 
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.ThongBao", b =>
-                {
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
-                        .WithMany("ThongBaos")
-                        .HasForeignKey("IdNguoiDung")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
+                    .WithMany("ThongBaos")
+                    .HasForeignKey("IdNguoiDung")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("aspiCore.Model.SuKien", "SuKien")
-                        .WithMany("ThongBaos")
-                        .HasForeignKey("IdSuKien");
+                b.HasOne("aspiCore.Model.SuKien", "SuKien")
+                    .WithMany("ThongBaos")
+                    .HasForeignKey("IdSuKien");
 
-                    b.Navigation("NguoiDung");
+                b.Navigation("NguoiDung");
 
-                    b.Navigation("SuKien");
-                });
+                b.Navigation("SuKien");
+            });
 
             modelBuilder.Entity("aspiCore.Model.VaiTro_NguoiDung", b =>
-                {
-                    b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
-                        .WithMany("VaiTro_NguoiDungs")
-                        .HasForeignKey("IdNguoiDung")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("aspiCore.Model.NguoiDung", "NguoiDung")
+                    .WithMany("VaiTro_NguoiDungs")
+                    .HasForeignKey("IdNguoiDung")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("aspiCore.Model.VaiTro", "VaiTro")
-                        .WithMany("VaiTro_NguoiDungs")
-                        .HasForeignKey("IdVaiTro")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("aspiCore.Model.VaiTro", "VaiTro")
+                    .WithMany("VaiTro_NguoiDungs")
+                    .HasForeignKey("IdVaiTro")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("NguoiDung");
+                b.Navigation("NguoiDung");
 
-                    b.Navigation("VaiTro");
-                });
+                b.Navigation("VaiTro");
+            });
 
             modelBuilder.Entity("aspiCore.Model.CongViec", b =>
-                {
-                    b.Navigation("PhanCongs");
-                });
+            {
+                b.Navigation("PhanCongs");
+            });
 
             modelBuilder.Entity("aspiCore.Model.DanhMucSuKien", b =>
-                {
-                    b.Navigation("SuKien_DanhMucs");
-                });
+            {
+                b.Navigation("SuKien_DanhMucs");
+            });
 
             modelBuilder.Entity("aspiCore.Model.DiaDiem", b =>
-                {
-                    b.Navigation("SuKiens");
-                });
+            {
+                b.Navigation("SuKiens");
+            });
 
-<<<<<<< HEAD
             modelBuilder.Entity("aspiCore.Model.HoSoSuKien", b =>
-                {
-                    b.Navigation("LichSuPheDuyets");
-                });
+            {
+                b.Navigation("LichSuPheDuyets");
+            });
 
-=======
->>>>>>> origin/Nguyen
             modelBuilder.Entity("aspiCore.Model.NguoiDung", b =>
-                {
-                    b.Navigation("DangKySuKiens");
+            {
+                b.Navigation("DangKySuKiens");
 
-                    b.Navigation("NguoiDung_SuKiens");
+                b.Navigation("NguoiDung_SuKiens");
 
-                    b.Navigation("SuKiensTao");
+                b.Navigation("SuKiensTao");
 
-                    b.Navigation("ThongBaos");
+                b.Navigation("ThongBaos");
 
-                    b.Navigation("VaiTro_NguoiDungs");
-                });
+                b.Navigation("VaiTro_NguoiDungs");
+            });
 
             modelBuilder.Entity("aspiCore.Model.SuKien", b =>
-                {
-                    b.Navigation("CongViecs");
+            {
+                b.Navigation("CongViecs");
 
-                    b.Navigation("DangKySuKiens");
+                b.Navigation("DangKySuKiens");
 
-<<<<<<< HEAD
-                    b.Navigation("LichSuPheDuyets");
+                b.Navigation("LichSuPheDuyets");
 
-=======
->>>>>>> origin/Nguyen
-                    b.Navigation("NguoiDung_SuKiens");
+                b.Navigation("NguoiDung_SuKiens");
 
-                    b.Navigation("SuKien_DanhMucs");
+                b.Navigation("SuKien_DanhMucs");
 
-                    b.Navigation("ThongBaos");
-                });
+                b.Navigation("ThongBaos");
+            });
 
             modelBuilder.Entity("aspiCore.Model.VaiTro", b =>
-                {
-                    b.Navigation("VaiTro_NguoiDungs");
-                });
+            {
+                b.Navigation("VaiTro_NguoiDungs");
+            });
 #pragma warning restore 612, 618
         }
     }

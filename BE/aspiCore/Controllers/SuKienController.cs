@@ -48,12 +48,13 @@ namespace aspiCore.Controllers
             return Ok(result);
         }
 
-<<<<<<< HEAD
         [HttpGet("nguoi-tao/{idNguoiTao}")]
         public async Task<ActionResult<IEnumerable<SuKienDto>>> GetByNguoiTao(string idNguoiTao)
         {
             var result = await _suKienService.GetByNguoiTaoAsync(idNguoiTao);
-=======
+            return Ok(result);
+        }
+
         /// <summary>
         /// Tìm kiếm và lọc sự kiện theo nhiều tiêu chí.
         /// GET /api/SuKien/search?keyword=...&idDanhMuc=...&idDiaDiem=...&trangThai=...&tuNgay=...&denNgay=...
@@ -62,7 +63,6 @@ namespace aspiCore.Controllers
         public async Task<ActionResult<IEnumerable<SuKienDto>>> Search([FromQuery] SuKienQueryDto query)
         {
             var result = await _suKienService.SearchAsync(query);
->>>>>>> origin/Nguyen
             return Ok(result);
         }
 
@@ -134,7 +134,8 @@ namespace aspiCore.Controllers
                     IdSuKien = id,
                     TrangThaiDuyet = "Chờ duyệt",
                     ThoiGianGui = DateTime.Now,
-                    NoiDungKeHoach = JsonSerializer.Serialize(new {
+                    NoiDungKeHoach = JsonSerializer.Serialize(new
+                    {
                         TieuDe = $"Phê duyệt kế hoạch tổ chức {ev.TenSuKien}",
                         Loai = "event",
                         TrangThai = "pending",
@@ -153,8 +154,8 @@ namespace aspiCore.Controllers
 
             if (dto.KetQua == "Đồng ý")
             {
-                newStatusDuyet = dto.CapDuyet.Contains("Cấp 2") || dto.CapDuyet.Contains("CTSV") || dto.CapDuyet.Contains("BGH") 
-                    ? "Đã duyệt cấp 2" 
+                newStatusDuyet = dto.CapDuyet.Contains("Cấp 2") || dto.CapDuyet.Contains("CTSV") || dto.CapDuyet.Contains("BGH")
+                    ? "Đã duyệt cấp 2"
                     : "Đã duyệt cấp 1";
                 newEventStatus = "Đã duyệt";
             }
@@ -176,7 +177,7 @@ namespace aspiCore.Controllers
                     dict["NguoiDuyet"] = dto.CapDuyet;
                     hoSo.NoiDungKeHoach = JsonSerializer.Serialize(dict);
                 }
-                catch {}
+                catch { }
             }
 
             ev.TrangThai = newEventStatus;
@@ -194,7 +195,7 @@ namespace aspiCore.Controllers
             _context.LichSuPheDuyets.Add(history);
             _context.SuKiens.Update(ev);
             _context.HoSoSuKiens.Update(hoSo);
-            
+
             await _context.SaveChangesAsync();
 
             return Ok(new ApiResponse { Success = true, Message = "Phê duyệt sự kiện thành công" });

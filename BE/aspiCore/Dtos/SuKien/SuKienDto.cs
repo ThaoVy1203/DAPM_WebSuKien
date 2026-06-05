@@ -40,14 +40,15 @@ namespace aspiCore.Dtos.SuKien
         public bool YeuCauKhaoSatCheckout { get; set; } = true;
         public DateTime ThoiGianTao { get; set; }
         public int SoDaDangKy { get; set; }
-<<<<<<< HEAD
+
+        // Kết hợp cả hai cách thể hiện danh mục
         public List<DanhMucInfo> DanhMucs { get; set; } = new List<DanhMucInfo>();
-        public List<ThanhVienBtcDto> ThanhVienBTCs { get; set; } = new List<ThanhVienBtcDto>();
-        public List<NganSachDto> NganSachs { get; set; } = new List<NganSachDto>();
-=======
-        // Danh mục liên kết
         public List<int> DanhMucIds { get; set; } = new();
         public List<string> TenDanhMucs { get; set; } = new();
+
+        // Các danh sách khác
+        public List<ThanhVienBtcDto> ThanhVienBTCs { get; set; } = new List<ThanhVienBtcDto>();
+        public List<NganSachDto> NganSachs { get; set; } = new List<NganSachDto>();
     }
 
     /// <summary>
@@ -67,7 +68,10 @@ namespace aspiCore.Dtos.SuKien
         public DateTime? DenNgay { get; set; }
         /// Lọc theo trạng thái
         public string? TrangThai { get; set; }
->>>>>>> origin/Nguyen
+        /// Số trang (cho phân trang)
+        public int? PageNumber { get; set; } = 1;
+        /// Kích thước trang (cho phân trang)
+        public int? PageSize { get; set; } = 10;
     }
 
     public class CreateSuKienDto

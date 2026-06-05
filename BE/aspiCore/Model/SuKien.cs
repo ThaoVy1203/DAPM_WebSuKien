@@ -36,16 +36,17 @@ namespace aspiCore.Model
         [MaxLength(20)]
         public string TrangThai { get; set; } = "Nháp";
 
+        /// <summary>Lý do hủy sự kiện</summary>
+        [MaxLength(500)]
+        public string? CancelReason { get; set; }
+
         /// <summary>Deadline hủy vé: số phút trước giờ bắt đầu sự kiện.</summary>
-        [NotMapped]
         public int GioHuyTruocBatDauPhut { get; set; } = 120;
 
         /// <summary>Yêu cầu gửi khảo sát khi check-out.</summary>
-        [NotMapped]
         public bool YeuCauKhaoSatCheckout { get; set; } = true;
 
         /// <summary>Đã được batch lifecycle xử lý sau khi sự kiện kết thúc.</summary>
-        [NotMapped]
         public bool DaXuLyKetThuc { get; set; } = false;
 
         /// <summary>
@@ -53,7 +54,6 @@ namespace aspiCore.Model
         /// false (mặc định) = tự động xác nhận ngay khi đăng ký
         /// Cần chạy DAPM_AlterTable.sql để thêm cột này vào DB trước khi bỏ [NotMapped]
         /// </summary>
-        [NotMapped]
         public bool YeuCauXacNhan { get; set; } = false;
 
         [MaxLength(5)]

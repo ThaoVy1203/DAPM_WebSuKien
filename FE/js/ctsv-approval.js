@@ -1,6 +1,6 @@
 // CTSV Approval Management JavaScript
 
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 let currentApprovalId = null;
 
 // Initialize

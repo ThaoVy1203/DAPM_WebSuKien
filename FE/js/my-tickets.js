@@ -12,7 +12,7 @@
 
 "use strict";
 
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 
 const EVENT_IMAGES = [
     "../images/event1.png",

@@ -4,7 +4,7 @@
 "use strict";
 
 if (typeof window.API_BASE === 'undefined') {
-    window.API_BASE = "https://localhost:7160/api";
+    window.API_BASE = "http://localhost:5103/api";
 }
 
 let attendancePageData = {

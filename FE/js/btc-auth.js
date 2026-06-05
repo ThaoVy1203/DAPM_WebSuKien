@@ -2,7 +2,7 @@
 // Sửa: đọc đúng field vaiTros từ API và localStorage
 
 if (typeof window.API_BASE === 'undefined') {
-    window.API_BASE = "https://localhost:7160/api";
+    window.API_BASE = "http://localhost:5103/api";
 }
 
 // User roles — khớp với tenVaiTro trong DB
@@ -45,20 +45,7 @@ const PERMISSIONS = {
     }
 };
 
-<<<<<<< HEAD
 let currentUser = null;
-=======
-// Get current user role from localStorage or session
-function getCurrentUserRole() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const vaiTros = user.vaiTros || [];
-    
-    if (vaiTros.includes('TruongBanToChuc')) return BTC_ROLES.LEADER;
-    if (vaiTros.includes('ThanhVienBanToChuc')) return BTC_ROLES.MEMBER;
-    
-    return BTC_ROLES.MEMBER;
-}
->>>>>>> origin/Nguyen
 
 // ==========================
 // LOAD USER — ưu tiên localStorage, fallback API

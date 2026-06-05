@@ -1,6 +1,6 @@
 "use strict";
 // ticket-detail.js — Chi tiết vé điện tử
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 let ticket = null, qrTimer = null, qrSecs = 45, ciTimer = null;
 let qrMode = "dynamic"; // dynamic | static
 

@@ -1,63 +1,48 @@
 // js/home-user.js
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 
-<<<<<<< HEAD
-// ==========================
-// INIT
-// ==========================
-document.addEventListener("DOMContentLoaded", async function () {
-    // Kiểm tra đăng nhập - nếu chưa đăng nhập thì về trang login
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "login.html";
-=======
 // ===== State sự kiện =====
 let huAllEvents = [];
 let huAllDanhMucs = [];
 
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuthentication();
-    loadUserInfo();
-    initializeUserMenu();
-    initializeNotifications();
-    initializeScrollAnimations();
-
-    // Load sự kiện từ API
-    loadHuDanhMucs().then(() => loadHuEvents());
-    initHuSearch();
-});
-
-// Check if user is logged in
-function checkAuthentication() {
-    const user = localStorage.getItem('user');
-    if (!user) {
-        // Redirect to login if not authenticated
-        window.location.href = 'login.html';
->>>>>>> origin/Nguyen
+document.addEventListener("DOMContentLoaded", async function () {
+    // 1. Kiểm tra đăng nhập
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user") || localStorage.getItem("userData");
+    if (!token && !user) {
+        window.location.href = "login.html";
         return;
     }
 
+    // 2. Load các cấu phần UI
     loadUserInfo();
     initUserMenu();
-    await loadFeaturedEvents();
     await loadNotificationCount();
+    
+    // 3. Tải dữ liệu danh mục & sự kiện qua API
+    try {
+        await loadHuDanhMucs();
+        await loadHuEvents();
+        initHuSearch();
+    } catch (e) {
+        console.error("Lỗi khi load dữ liệu trang chủ:", e);
+    }
+    
+    // 4. Khởi tạo hiệu ứng UI
     initScrollAnimations();
-    initUIEnhancements(); // Khởi tạo các hiệu ứng UI từ nhánh cũ
+    initUIEnhancements();
 });
 
 // ==========================
 // USER INFO
 // ==========================
 function loadUserInfo() {
-    // Hỗ trợ cả 2 key lưu trữ
     const raw = localStorage.getItem("userData") || localStorage.getItem("user");
     if (!raw) return;
 
     try {
         const user = JSON.parse(raw);
-
-        // Hỗ trợ cả PascalCase (BE trả) và camelCase
-        const hoTen = user.HoTen || user.hoTen || "Người dùng";
+        const hoTen = user.hoTen || user.HoTen || "Người dùng";
 
         const nameEl = document.getElementById("userName");
         if (nameEl) nameEl.textContent = hoTen;
@@ -65,7 +50,7 @@ function loadUserInfo() {
         const avatarEl = document.getElementById("userAvatar") || document.querySelector(".user-avatar");
         if (avatarEl) {
             const name = encodeURIComponent(hoTen);
-            avatarEl.src = user.AnhDaiDien || user.anhDaiDien
+            avatarEl.src = user.anhDaiDien || user.AnhDaiDien
                 || `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff`;
             avatarEl.onerror = function () {
                 this.src = `https://ui-avatars.com/api/?name=${name}&background=0D5A9C&color=fff`;
@@ -87,19 +72,16 @@ function initUserMenu() {
 
     if (!wrapper || !dropdown) return;
 
-    // Toggle dropdown khi click vào user menu
     wrapper.addEventListener("click", function (e) {
         e.stopPropagation();
         const isVisible = dropdown.style.display === "block";
         dropdown.style.display = isVisible ? "none" : "block";
     });
 
-    // Đóng dropdown khi click ra ngoài
     document.addEventListener("click", function () {
         if (dropdown) dropdown.style.display = "none";
     });
 
-    // Đăng xuất
     if (logoutBtn) {
         logoutBtn.addEventListener("click", function (e) {
             e.preventDefault();
@@ -114,15 +96,12 @@ function initUserMenu() {
 // ==========================
 function handleLogout() {
     if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-        // Clear toàn bộ user session 
         localStorage.removeItem("token");
         localStorage.removeItem("userData");
         localStorage.removeItem("user");
         localStorage.removeItem("rememberMe");
         localStorage.removeItem("savedEmail");
         sessionStorage.clear();
-        
-        // Redirect to login page
         window.location.href = "login.html";
     }
 }
@@ -156,116 +135,23 @@ async function loadNotificationCount() {
 }
 
 // ==========================
-// FEATURED EVENTS
+// CATEGORIES (DANH MỤC)
 // ==========================
-async function loadFeaturedEvents() {
-    const token = localStorage.getItem("token");
-    const container = document.querySelector(".events-grid");
-    if (!container) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/SuKien`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error("Không lấy được sự kiện");
-
-        const data = await res.json();
-        // API có thể trả về mảng trực tiếp hoặc { data: [...] }
-        const events = Array.isArray(data) ? data : (data.data || data.items || []);
-
-        renderFeaturedEvents(events, container);
-
-    } catch (e) {
-        console.error("Lỗi load sự kiện:", e);
-        container.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">
-                <i class="fas fa-exclamation-circle" style="font-size:32px; margin-bottom:12px; display:block;"></i>
-                Không thể tải sự kiện. Vui lòng thử lại sau.
-            </div>`;
-    }
-}
-
-<<<<<<< HEAD
-function renderFeaturedEvents(events, container) {
-    if (!events || events.length === 0) {
-        container.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">
-                Hiện chưa có sự kiện nào.
-            </div>`;
-        return;
-    }
-
-    // Chỉ hiển thị tối đa 3 sự kiện nổi bật
-    container.innerHTML = "";
-    events.slice(0, 3).forEach(event => {
-        const idSuKien = event.IdSuKien ?? event.idSuKien;
-        const tenSuKien = event.TenSuKien ?? event.tenSuKien ?? "Chưa có tên";
-        const batDau = event.ThoiGianBatDau ?? event.thoiGianBatDau;
-        const ketThuc = event.ThoiGianKetThuc ?? event.thoiGianKetThuc;
-        const startDate = batDau ? new Date(batDau).toLocaleDateString("vi-VN") : "Chưa có";
-        const endDate = ketThuc ? new Date(ketThuc).toLocaleDateString("vi-VN") : "";
-        const dateStr = endDate ? `${startDate} - ${endDate}` : startDate;
-
-        const diaDiem = event.TenDiaDiem ?? event.tenDiaDiem ?? event.DiaDiem?.TenDiaDiem ?? "Đang cập nhật";
-        const trangThai = event.TrangThai ?? event.trangThai ?? "";
-        const badgeClass = getBadgeClass(trangThai);
-        const badgeText = trangThai || "Sự kiện";
-        const isFeatured = events.indexOf(event) === 0 ? "featured" : "";
-
-        container.innerHTML += `
-            <div class="event-card ${isFeatured}">
-                <div class="event-badge ${badgeClass}">${escapeHtml(badgeText)}</div>
-                <div class="event-card-content">
-                    <h3>${escapeHtml(tenSuKien)}</h3>
-                    <div class="event-meta">
-                        <span><i class="far fa-calendar"></i> ${dateStr}</span>
-                        <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</span>
-                    </div>
-                    <a href="event-detail.html?id=${idSuKien}" class="btn-view-detail">Xem chi tiết</a>
-                </div>
-            </div>`;
-    });
-}
-
-function getBadgeClass(trangThai) {
-    switch (trangThai) {
-        case "Đang diễn ra": return "blue";
-        case "Đã duyệt":
-        case "Kết thúc":    return "green";
-        case "Hủy":         return "red";
-        default:            return "";
-    }
-}
-
-// ==========================
-// SCROLL ANIMATIONS & UI ENHANCEMENTS
-// ==========================
-function initScrollAnimations() {
-    const observer = new IntersectionObserver(entries => {
-=======
-// Event Cards Functionality (legacy — giữ cho các card tĩnh nếu còn)
-function initializeEventCards() {
-    const eventCards = document.querySelectorAll('.event-card');
-    eventCards.forEach(card => {
-        const detailBtn = card.querySelector('.btn-view-detail');
-        if (detailBtn) {
-            detailBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const eventId = card.dataset.eventId || '1';
-                window.location.href = `event-detail.html?id=${eventId}`;
-            });
-        }
-    });
-}
-
-// ===== Load danh mục =====
 async function loadHuDanhMucs() {
     try {
-        const data = await API.get(API_CONFIG.ENDPOINTS.DANHMUC);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/DanhMuc`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
         huAllDanhMucs = data || [];
+        
         const sel = document.getElementById('huFilterDanhMuc');
         if (!sel) return;
+        
+        // Clear options except first
+        sel.innerHTML = '<option value="">Tất cả danh mục</option>';
         huAllDanhMucs.forEach(dm => {
             const opt = document.createElement('option');
             opt.value = dm.idDanhMuc;
@@ -277,12 +163,19 @@ async function loadHuDanhMucs() {
     }
 }
 
-// ===== Load sự kiện từ API =====
+// ==========================
+// EVENTS (SỰ KIỆN)
+// ==========================
 async function loadHuEvents() {
     showHuLoading(true);
     try {
-        const events = await API.get(API_CONFIG.ENDPOINTS.SUKIEN);
-        huAllEvents = events || [];
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/SuKien`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Không lấy được sự kiện");
+        const data = await res.json();
+        huAllEvents = Array.isArray(data) ? data : (data.data || data.items || []);
         renderHuEvents(huAllEvents);
     } catch (e) {
         console.error('Lỗi tải sự kiện:', e);
@@ -292,7 +185,6 @@ async function loadHuEvents() {
     }
 }
 
-// ===== Render card sự kiện =====
 function renderHuEvents(events) {
     const grid = document.getElementById('huEventsGrid');
     if (!grid) return;
@@ -308,7 +200,6 @@ function renderHuEvents(events) {
         `;
         grid.appendChild(empty);
     } else {
-        // Hiển thị tối đa 6 sự kiện nổi bật ở trang chủ
         events.slice(0, 6).forEach(event => {
             grid.appendChild(createHuEventCard(event));
         });
@@ -326,34 +217,50 @@ function createHuEventCard(event) {
     const card = document.createElement('div');
     card.className = 'event-card';
 
-    const startDate = new Date(event.thoiGianBatDau);
-    const dateStr = `${String(startDate.getDate()).padStart(2,'0')}/${String(startDate.getMonth()+1).padStart(2,'0')}/${startDate.getFullYear()}`;
-    const endDate = new Date(event.thoiGianKetThuc);
-    const endDateStr = `${String(endDate.getDate()).padStart(2,'0')}/${String(endDate.getMonth()+1).padStart(2,'0')}`;
+    const idSuKien = event.idSuKien || event.IdSuKien;
+    const tenSuKien = event.tenSuKien || event.TenSuKien || "Chưa có tên";
+    const batDau = event.thoiGianBatDau || event.ThoiGianBatDau;
+    const ketThuc = event.thoiGianKetThuc || event.ThoiGianKetThuc;
+
+    const startDate = batDau ? new Date(batDau) : null;
+    const dateStr = startDate 
+        ? `${String(startDate.getDate()).padStart(2,'0')}/${String(startDate.getMonth()+1).padStart(2,'0')}/${startDate.getFullYear()}`
+        : "Chưa có";
+    
+    const endDate = ketThuc ? new Date(ketThuc) : null;
+    const endDateStr = endDate 
+        ? `${String(endDate.getDate()).padStart(2,'0')}/${String(endDate.getMonth()+1).padStart(2,'0')}`
+        : "";
+
+    const fullDateStr = endDateStr ? `${dateStr} - ${endDateStr}` : dateStr;
+    const diaDiem = event.tenDiaDiem || event.TenDiaDiem || event.diaDiem?.tenDiaDiem || "Đang cập nhật";
 
     let badgeClass = '';
-    let badgeText = event.trangThai || 'Nháp';
-    if (event.trangThai === 'Đã duyệt') { badgeClass = ''; badgeText = 'Sắp diễn ra'; }
-    else if (event.trangThai === 'Đang diễn ra') { badgeClass = 'blue'; badgeText = 'Đang diễn ra'; }
-    else if (event.trangThai === 'Đã kết thúc') { badgeClass = 'green'; badgeText = 'Đã kết thúc'; }
+    let badgeText = event.trangThai || event.TrangThai || 'Nháp';
+    if (badgeText === 'Đã duyệt') { badgeClass = ''; badgeText = 'Sắp diễn ra'; }
+    else if (badgeText === 'Đang diễn ra') { badgeClass = 'blue'; badgeText = 'Đang diễn ra'; }
+    else if (badgeText === 'Đã kết thúc' || badgeText === 'Kết thúc') { badgeClass = 'green'; badgeText = 'Đã kết thúc'; }
+    else if (badgeText === 'Hủy') { badgeClass = 'red'; badgeText = 'Đã hủy'; }
 
     card.innerHTML = `
         <div class="event-badge ${badgeClass}">${badgeText}</div>
-        <img src="../images/event${event.idSuKien}.png" alt="${event.tenSuKien}"
+        <img src="../images/event${idSuKien}.png" alt="${escapeHtml(tenSuKien)}"
              onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=Su+Kien'">
         <div class="event-card-content">
-            <h3>${event.tenSuKien}</h3>
+            <h3>${escapeHtml(tenSuKien)}</h3>
             <div class="event-meta">
-                <span><i class="far fa-calendar"></i> ${dateStr} - ${endDateStr}</span>
-                <span><i class="fas fa-map-marker-alt"></i> ${event.tenDiaDiem || 'Chưa xác định'}</span>
+                <span><i class="far fa-calendar"></i> ${fullDateStr}</span>
+                <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</span>
             </div>
-            <a href="event-detail.html?id=${event.idSuKien}" class="btn-view-detail">Xem chi tiết</a>
+            <a href="event-detail.html?id=${idSuKien}" class="btn-view-detail">Xem chi tiết</a>
         </div>
     `;
     return card;
 }
 
-// ===== Tìm kiếm & lọc =====
+// ==========================
+// SEARCH & FILTERS
+// ==========================
 function initHuSearch() {
     const input = document.getElementById('huKeyword');
     const clearBtn = document.getElementById('huClearSearch');
@@ -391,14 +298,20 @@ function applyHuFilters() {
 
     const filtered = huAllEvents.filter(event => {
         if (keyword) {
-            const target = [event.tenSuKien || '', event.moTa || '', event.tenDiaDiem || ''].join(' ').toLowerCase();
+            const ten = event.tenSuKien || event.TenSuKien || '';
+            const moTa = event.moTa || event.MoTa || '';
+            const diaDiem = event.tenDiaDiem || event.TenDiaDiem || event.diaDiem?.tenDiaDiem || '';
+            const target = [ten, moTa, diaDiem].join(' ').toLowerCase();
             if (!target.includes(keyword)) return false;
         }
         if (idDanhMuc) {
-            const ids = event.danhMucIds || [];
-            if (!ids.includes(parseInt(idDanhMuc))) return false;
+            const catId = event.idDanhMuc || event.IdDanhMuc;
+            if (catId != idDanhMuc) return false;
         }
-        if (trangThai && event.trangThai !== trangThai) return false;
+        if (trangThai) {
+            const status = event.trangThai || event.TrangThai || '';
+            if (status !== trangThai) return false;
+        }
         return true;
     });
 
@@ -436,15 +349,11 @@ function showHuError(msg) {
     grid.appendChild(err);
 }
 
-// Scroll Animations
-function initializeScrollAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver(function(entries) {
->>>>>>> origin/Nguyen
+// ==========================
+// SCROLL ANIMATIONS & UI ENHANCEMENTS
+// ==========================
+function initScrollAnimations() {
+    const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = "1";
@@ -462,16 +371,14 @@ function initializeScrollAnimations() {
 }
 
 function initUIEnhancements() {
-    // Hero Section Parallax Effect
     window.addEventListener('scroll', function() {
         const heroBackground = document.querySelector('.hero-background');
         if (heroBackground) {
-            const scrolled = window.pageYOffset;
+            const scrolled = window.scrollY;
             heroBackground.style.transform = `translateY(${scrolled * 0.5}px)`;
         }
     });
 
-    // Trigger counter animation when stats section is visible
     const statsObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -485,12 +392,11 @@ function initUIEnhancements() {
         });
     });
 
-    const statsSection = document.querySelector('.stats-section, .stat-item');
+    const statsSection = document.querySelector('.stats-section');
     if (statsSection) {
         statsObserver.observe(statsSection);
     }
 
-    // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
@@ -507,7 +413,6 @@ function initUIEnhancements() {
     });
 }
 
-// Stats Counter Animation
 function animateCounter(element, target, duration = 2000) {
     let start = 0;
     const increment = target / (duration / 16);
@@ -530,9 +435,6 @@ function formatNumber(num) {
     return num + '+';
 }
 
-// ==========================
-// HELPERS
-// ==========================
 function escapeHtml(str) {
     if (!str) return "";
     return String(str).replace(/[&<>"']/g, function (m) {

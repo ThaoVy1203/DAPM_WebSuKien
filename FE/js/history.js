@@ -1,5 +1,5 @@
 // js/history.js
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 
 let historyData = [];
 let currentPage = 1;

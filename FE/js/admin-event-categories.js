@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-const API_URL = "https://localhost:7160/api/DanhMucSuKien";
+const API_URL = "http://localhost:5103/api/DanhMuc";
 
 let categories = [];
 let editingId = null;
@@ -21,69 +20,10 @@ async function loadCategories() {
         const response = await fetch(API_URL);
         categories = await response.json();
 
-=======
-// Admin Event Categories Page - API Integration
-let categories = [];
-let allCategories = []; // cache gốc không thay đổi
-let editingCategoryId = null;
-
-document.addEventListener('DOMContentLoaded', async function() {
-    await loadCategories();
-    initSearch();
-    initializeEventHandlers();
-});
-
-// ── Tìm kiếm realtime ──────────────────────────────────────────────────────
-function initSearch() {
-    const input = document.querySelector('.search-bar input');
-    if (!input) return;
-    let timer;
-    input.addEventListener('input', () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => applySearch(input.value.trim()), 300);
-    });
-    input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { clearTimeout(timer); applySearch(input.value.trim()); }
-    });
-}
-
-function applySearch(keyword) {
-    const kw = keyword.toLowerCase();
-    const filtered = kw
-        ? allCategories.filter(c =>
-            (c.tenDanhMuc || '').toLowerCase().includes(kw) ||
-            (c.moTa || '').toLowerCase().includes(kw))
-        : allCategories;
-
-    renderCategoryCards(filtered);
-    renderCategoryTable(filtered);
-
-    // Hiện số kết quả
-    let counter = document.getElementById('catResultCount');
-    if (!counter) {
-        counter = document.createElement('p');
-        counter.id = 'catResultCount';
-        counter.style.cssText = 'font-size:13px;color:#6B7280;margin:0 0 16px;';
-        document.querySelector('.categories-grid')?.before(counter);
-    }
-    counter.textContent = keyword
-        ? `Tìm thấy ${filtered.length} / ${allCategories.length} danh mục cho "${keyword}"`
-        : '';
-}
-
-// Load all categories from API
-async function loadCategories() {
-    try {
-        categories = await API.get(API_CONFIG.ENDPOINTS.DANHMUC) || [];
-        allCategories = [...categories]; // lưu cache gốc
->>>>>>> origin/Nguyen
         renderCategoryCards(categories);
         renderCategories(categories);
         updateStats(categories);
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/Nguyen
     } catch (error) {
         console.error("Lỗi load danh mục:", error);
         showError('Không tải được danh mục. Vui lòng kiểm tra Backend đã chạy chưa.');
@@ -124,10 +64,10 @@ function renderCategoryCards(categories) {
                 </div>
             </div>
             <div class="category-actions">
-                <button class="btn-action edit" onclick="editCategory(${category.id})">
+                <button class="btn-action edit" onclick="editCategory(${category.idDanhMuc})">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn-action delete" onclick="deleteCategory(${category.id})">
+                <button class="btn-action delete" onclick="deleteCategory(${category.idDanhMuc})">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -165,15 +105,14 @@ function renderCategories(categories) {
                 </td>
                 <td>${category.moTa || ""}</td>
                 <td>${category.soSuKien || 0}</td>
-                <td><span class="status-badge ${category.trangThai ? 'active' : 'inactive'}">
-                    ${category.trangThai ? "Hoạt động" : "Tạm khóa"}
-                </span></td>
+                <td><span class="status-badge active">Đang sử dụng</span></td>
+                <td>01/01/2024</td>
                 <td>
                     <div class="action-buttons">
-                        <button class="btn-action edit" onclick="editCategory(${category.id})">
+                        <button class="btn-action edit" onclick="editCategory(${category.idDanhMuc})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-action delete" onclick="deleteCategory(${category.id})">
+                        <button class="btn-action delete" onclick="deleteCategory(${category.idDanhMuc})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -188,7 +127,7 @@ function updateStats(categories) {
     if (totalElement) totalElement.textContent = categories.length;
 
     const activeElement = document.querySelector('.stat-card:nth-child(2) .stat-number');
-    if (activeElement) activeElement.textContent = categories.filter(c => c.trangThai).length;
+    if (activeElement) activeElement.textContent = categories.length;
 
     const totalEvents = categories.reduce((sum, c) => sum + (c.soSuKien || 0), 0);
     const eventsElement = document.querySelector('.stat-card:nth-child(3) .stat-number');
@@ -215,6 +154,7 @@ function openAddCategoryModal() {
     if (modal) modal.style.display = 'flex';
 }
 
+// Ensure the cancel button or clicking outside close correctly
 function closeCategoryModal() {
     const modal = document.getElementById('categoryModal');
     if (modal) modal.style.display = 'none';
@@ -234,7 +174,6 @@ async function editCategory(id) {
         document.getElementById('modalTitle').textContent = 'Chỉnh sửa danh mục';
         document.getElementById('categoryName').value = category.tenDanhMuc || '';
         document.getElementById('categoryDescription').value = category.moTa || '';
-        document.getElementById('categoryStatus').value = category.trangThai;
 
         document.getElementById('categoryModal').style.display = 'flex';
 
@@ -251,7 +190,10 @@ async function deleteCategory(id) {
     if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) return;
 
     try {
-        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        if (!response.ok) {
+            throw new Error("Xóa thất bại");
+        }
         alert("Xóa thành công");
         loadCategories();
 
@@ -273,8 +215,7 @@ async function saveCategory() {
 
     const data = {
         tenDanhMuc: document.getElementById('categoryName').value.trim(),
-        moTa: document.getElementById('categoryDescription').value.trim(),
-        trangThai: document.getElementById('categoryStatus')?.value === "true"
+        moTa: document.getElementById('categoryDescription').value.trim()
     };
 
     if (!data.tenDanhMuc) {
@@ -290,18 +231,20 @@ async function saveCategory() {
         }
 
         if (editingId) {
-            await fetch(`${API_URL}/${editingId}`, {
+            const response = await fetch(`${API_URL}/${editingId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
+            if (!response.ok) throw new Error("Cập nhật thất bại");
             alert('Cập nhật danh mục thành công!');
         } else {
-            await fetch(API_URL, {
+            const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
+            if (!response.ok) throw new Error("Thêm thất bại");
             alert('Thêm danh mục mới thành công!');
         }
 
@@ -336,7 +279,12 @@ function handleSearch(e) {
 function showError(message) {
     const container = document.querySelector('.main-content');
     if (container) {
+        // Clear any existing error div to avoid duplicate alerts
+        const existingError = container.querySelector('.error-alert-container');
+        if (existingError) existingError.remove();
+
         const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-alert-container';
         errorDiv.style.cssText = 'text-align: center; padding: 40px; color: #dc2626; background: #fee2e2; border-radius: 8px; margin: 20px 0;';
         errorDiv.innerHTML = `
             <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
@@ -366,3 +314,4 @@ window.editCategory = editCategory;
 window.closeCategoryModal = closeCategoryModal;
 window.saveCategory = saveCategory;
 window.deleteCategory = deleteCategory;
+window.closeCategoryModal = closeCategoryModal;

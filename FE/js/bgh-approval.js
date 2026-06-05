@@ -1,7 +1,7 @@
 // bgh-approval.js — Phê duyệt Cấp 2 (Ban Giám Hiệu / P.CTSV)
 // Logic: Cấp 2 xem TẤT CẢ hồ sơ, nhưng chỉ duyệt được hồ sơ đã qua Cấp 1
 
-const API_BASE = "https://localhost:7160/api";
+const API_BASE = "http://localhost:5103/api";
 
 let allEvents = [];       // Tất cả sự kiện từ API
 let currentId = null;     // ID sự kiện đang xử lý
