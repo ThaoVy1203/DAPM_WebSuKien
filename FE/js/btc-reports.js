@@ -435,7 +435,6 @@ window.deleteReport = deleteReport;
     document.getElementById('uploadFileInput')?.addEventListener('change', function (e) {
         handleSingleFileSelection(e.target.files[0], 'uploadFileDisplay');
     });
-}
 
 function handleFileSelection(files, listId) {
     const fileList = document.getElementById(listId);
@@ -535,3 +534,81 @@ document.addEventListener('keydown', function (e) {
         closeViewReportModal();
     }
 });
+
+// ==================== THÊM VÀO CUỐI FILE btc-reports.js ====================
+// Hàm showAlert giữa màn hình
+function showAlert(message, type = 'success') {
+    const existing = document.getElementById('custom-alert');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'custom-alert';
+    overlay.style.cssText = `
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+    `;
+
+    const color = type === 'success' ? '#0D5A9C' : '#DC2626';
+    const icon  = type === 'success' ? 'check-circle' : 'times-circle';
+    const title = type === 'success' ? 'Thành công!' : 'Có lỗi xảy ra!';
+
+    overlay.innerHTML = `
+        <style>
+            @keyframes popIn { from { transform:scale(0.85); opacity:0; } to { transform:scale(1); opacity:1; } }
+        </style>
+        <div style="background:white; border-radius:16px; padding:36px 40px;
+                    text-align:center; max-width:380px; width:90%;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+                    animation:popIn 0.25s ease;">
+            <i class="fas fa-${icon}" style="font-size:52px; color:${color}; margin-bottom:16px; display:block;"></i>
+            <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:700; color:#111827;">${title}</h3>
+            <p style="margin:0 0 24px 0; font-size:15px; color:#6B7280; line-height:1.5;">${message}</p>
+            <button onclick="document.getElementById('custom-alert').remove()" style="
+                background:${color}; color:white; border:none;
+                padding:10px 32px; border-radius:8px;
+                font-size:15px; font-weight:600; cursor:pointer;">OK</button>
+        </div>`;
+
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.remove();
+    });
+}
+
+// Ghi đè hàm downloadReport để gọi API thật
+window.downloadReport = async function(id, format) {
+    if (format !== 'excel') {
+        showAlert('Xuất PDF đang được phát triển. Vui lòng dùng xuất Excel.', 'error');
+        return;
+    }
+
+    try {
+        const API_BASE = window.API_BASE || 'http://localhost:5103/api';
+        const response = await fetch(`${API_BASE}/BaoCao/xuat-excel/${id}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+        });
+
+        if (!response.ok) throw new Error(`Lỗi server (${response.status})`);
+
+        const blob = await response.blob();
+        if (blob.size === 0) throw new Error('File trả về rỗng');
+
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `BaoCao_SuKien_${id}_${new Date().toISOString().slice(0,10)}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+        showAlert('File Excel đã được tải về máy thành công!');
+
+    } catch (err) {
+        console.error('Export error:', err);
+        showAlert('Không thể xuất Excel: ' + err.message, 'error');
+    }
+};
