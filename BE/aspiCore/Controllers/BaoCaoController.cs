@@ -80,5 +80,26 @@ namespace aspiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Xuất Excel báo cáo tài chính (cho BTC).
+        /// Sheet 1: Chi tiết ngân sách. Sheet 2: Tổng hợp tài chính.
+        /// </summary>
+        [HttpGet("xuat-excel-tai-chinh/{idSuKien}")]
+        public async Task<IActionResult> XuatExcelTaiChinh(int idSuKien)
+        {
+            try
+            {
+                string reportsDir = Path.Combine(_env.ContentRootPath, "..", "..", "Reports");
+                reportsDir = Path.GetFullPath(reportsDir);
+
+                var fileResult = await _baoCaoService.XuatExcelTaiChinhAsync(idSuKien, reportsDir);
+                return fileResult;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
