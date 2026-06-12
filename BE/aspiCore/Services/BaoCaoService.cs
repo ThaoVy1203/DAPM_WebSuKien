@@ -587,6 +587,187 @@ namespace aspiCore.Services
             };
         }
 
+        public async Task<FileResult> XuatExcelTaiChinhAsync(int idSuKien, string outputDir)
+        {
+            var suKien = await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .FirstOrDefaultAsync(s => s.IdSuKien == idSuKien);
+
+            if (suKien == null)
+                throw new Exception("Không tìm thấy sự kiện.");
+
+            var nganSachList = await _context.NganSachDuKiens
+                .Where(ns => ns.IdSuKien == idSuKien)
+                .ToListAsync();
+
+            decimal tongDuToan  = nganSachList.Sum(ns => ns.TongChiPhiDuKien ?? 0);
+            decimal tongThucChi = nganSachList.Sum(ns => ns.ChiTietNganSach ?? 0);
+            decimal conLai      = tongDuToan - tongThucChi;
+            string tiLeSD = tongDuToan > 0
+                ? Math.Round((double)(tongThucChi / tongDuToan) * 100, 1) + "%" : "0%";
+
+            using var wb = new XLWorkbook();
+
+            // --- Sheet 1: Chi tiết ngân sách ---
+            var ws1 = wb.Worksheets.Add("Chi tiết ngân sách");
+            ws1.Cell("A1").Value = "BÁO CÁO TÀI CHÍNH SỰ KIỆN";
+            ws1.Range("A1:E1").Merge();
+            ws1.Cell("A1").Style.Font.SetBold(true).Font.SetFontSize(14)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#D97706"))
+                .Font.SetFontColor(XLColor.White);
+
+            ws1.Cell("A2").Value = "Sự kiện:";       ws1.Cell("B2").Value = suKien.TenSuKien;
+            ws1.Cell("A3").Value = "Địa điểm:";      ws1.Cell("B3").Value = suKien.DiaDiem?.TenDiaDiem ?? "Chưa xác định";
+            ws1.Cell("A4").Value = "Ngày tổ chức:";  ws1.Cell("B4").Value = suKien.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm");
+            ws1.Cell("A5").Value = "Người tổ chức:"; ws1.Cell("B5").Value = suKien.NguoiTao?.HoTen ?? "";
+            ws1.Cell("A6").Value = "Ngày xuất:";     ws1.Cell("B6").Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            foreach (var row in new[] { 2, 3, 4, 5, 6 })
+                ws1.Cell($"A{row}").Style.Font.SetBold(true);
+
+            int hr = 8;
+            string[] headers = { "STT", "Dự toán (VNĐ)", "Thực chi (VNĐ)", "Còn lại (VNĐ)", "Ghi chú" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws1.Cell(hr, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.SetBold(true)
+                    .Fill.SetBackgroundColor(XLColor.FromHtml("#D97706"))
+                    .Font.SetFontColor(XLColor.White)
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+            }
+
+            if (nganSachList.Count > 0)
+            {
+                for (int i = 0; i < nganSachList.Count; i++)
+                {
+                    var ns = nganSachList[i];
+                    int r = hr + 1 + i;
+                    decimal duToan  = ns.TongChiPhiDuKien ?? 0;
+                    decimal thucChi = ns.ChiTietNganSach ?? 0;
+                    decimal cl      = duToan - thucChi;
+
+                    ws1.Cell(r, 1).Value = i + 1;
+                    ws1.Cell(r, 2).Value = (double)duToan;
+                    ws1.Cell(r, 2).Style.NumberFormat.Format = "#,##0";
+                    ws1.Cell(r, 3).Value = (double)thucChi;
+                    ws1.Cell(r, 3).Style.NumberFormat.Format = "#,##0";
+                    ws1.Cell(r, 4).Value = (double)cl;
+                    ws1.Cell(r, 4).Style.NumberFormat.Format = "#,##0";
+                    ws1.Cell(r, 4).Style.Font.SetFontColor(cl >= 0 ? XLColor.FromHtml("#059669") : XLColor.FromHtml("#EF4444"));
+                    ws1.Cell(r, 5).Value = ns.GhiChu ?? "";
+                    if (i % 2 == 1)
+                        ws1.Range(r, 1, r, 5).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#FEF3C7"));
+                    ws1.Range(r, 1, r, 5).Style
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                        .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                }
+
+                int rowTotal = hr + 1 + nganSachList.Count;
+                ws1.Cell(rowTotal, 1).Value = "TỔNG CỘNG";
+                ws1.Cell(rowTotal, 2).Value = (double)tongDuToan;
+                ws1.Cell(rowTotal, 2).Style.NumberFormat.Format = "#,##0";
+                ws1.Cell(rowTotal, 3).Value = (double)tongThucChi;
+                ws1.Cell(rowTotal, 3).Style.NumberFormat.Format = "#,##0";
+                ws1.Cell(rowTotal, 4).Value = (double)conLai;
+                ws1.Cell(rowTotal, 4).Style.NumberFormat.Format = "#,##0";
+                ws1.Cell(rowTotal, 4).Style.Font.SetFontColor(conLai >= 0 ? XLColor.FromHtml("#059669") : XLColor.FromHtml("#EF4444"));
+                ws1.Range(rowTotal, 1, rowTotal, 5).Style
+                    .Font.SetBold(true)
+                    .Fill.SetBackgroundColor(XLColor.FromHtml("#FDE68A"))
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+            }
+            else
+            {
+                ws1.Cell(hr + 1, 1).Value = "Chưa có dữ liệu ngân sách";
+                ws1.Range(hr + 1, 1, hr + 1, 5).Merge();
+                ws1.Cell(hr + 1, 1).Style.Font.SetItalic(true)
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            }
+
+            ws1.Column(1).Width = 6;  ws1.Column(2).Width = 22;
+            ws1.Column(3).Width = 22; ws1.Column(4).Width = 22; ws1.Column(5).Width = 40;
+
+            // --- Sheet 2: Tổng hợp tài chính ---
+            var ws2 = wb.Worksheets.Add("Tổng hợp tài chính");
+            ws2.Cell("A1").Value = "TỔNG HỢP TÀI CHÍNH SỰ KIỆN";
+            ws2.Range("A1:B1").Merge();
+            ws2.Cell("A1").Style.Font.SetBold(true).Font.SetFontSize(14)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#D97706"))
+                .Font.SetFontColor(XLColor.White);
+
+            int r2 = 3;
+            foreach (var (label, value) in new[] {
+                ("Tên sự kiện", suKien.TenSuKien),
+                ("Ngày tổ chức", suKien.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")),
+                ("Trạng thái sự kiện", suKien.TrangThai),
+            })
+            {
+                ws2.Cell(r2, 1).Value = label;
+                ws2.Cell(r2, 2).Value = value;
+                ws2.Cell(r2, 1).Style.Font.SetBold(true);
+                r2++;
+            }
+
+            r2++;
+            ws2.Cell(r2, 1).Value = "THỐNG KÊ NGÂN SÁCH";
+            ws2.Range(r2, 1, r2, 2).Merge();
+            ws2.Cell(r2, 1).Style.Font.SetBold(true)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#D97706"))
+                .Font.SetFontColor(XLColor.White)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            r2++;
+
+            ws2.Cell(r2, 1).Value = "Tổng dự toán ngân sách";
+            ws2.Cell(r2, 2).Value = $"{tongDuToan:N0} đ";
+            ws2.Cell(r2, 1).Style.Font.SetBold(true);
+            ws2.Range(r2, 1, r2, 2).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin).Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            r2++;
+
+            ws2.Cell(r2, 1).Value = "Tổng thực chi";
+            ws2.Cell(r2, 2).Value = $"{tongThucChi:N0} đ";
+            ws2.Cell(r2, 1).Style.Font.SetBold(true);
+            ws2.Range(r2, 1, r2, 2).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin).Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            r2++;
+
+            ws2.Cell(r2, 1).Value = "Ngân sách còn lại";
+            ws2.Cell(r2, 2).Value = $"{conLai:N0} đ";
+            ws2.Cell(r2, 1).Style.Font.SetBold(true);
+            ws2.Cell(r2, 2).Style.Font.SetFontColor(conLai >= 0 ? XLColor.FromHtml("#059669") : XLColor.FromHtml("#EF4444"));
+            ws2.Range(r2, 1, r2, 2).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin).Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            r2++;
+
+            ws2.Cell(r2, 1).Value = "Tỷ lệ sử dụng ngân sách";
+            ws2.Cell(r2, 2).Value = tiLeSD;
+            ws2.Cell(r2, 1).Style.Font.SetBold(true);
+            ws2.Range(r2, 1, r2, 2).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin).Border.SetInsideBorder(XLBorderStyleValues.Thin);
+            r2++;
+
+            r2++;
+            ws2.Cell(r2, 1).Value = "Ngày xuất báo cáo:";
+            ws2.Cell(r2, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            ws2.Cell(r2, 1).Style.Font.SetBold(true);
+            ws2.Column(1).Width = 35; ws2.Column(2).Width = 30;
+
+            // --- Lưu file ---
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            string tenFile = $"BaoCao_TaiChinh_{SanitizeFileName(suKien.TenSuKien)}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            string fullPath = Path.Combine(outputDir, tenFile);
+            wb.SaveAs(fullPath);
+
+            var fileBytes = await File.ReadAllBytesAsync(fullPath);
+            return new FileContentResult(fileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = tenFile
+            };
+        }
+
         private static string SanitizeFileName(string name)
         {
             foreach (char c in Path.GetInvalidFileNameChars())
