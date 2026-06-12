@@ -403,9 +403,8 @@ function openEditEventModal(id) {
             div.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                     <div style="width: 32px; height: 32px; background: #64748b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${avatarInitial}</div>
-                    <div class="organizer-info" style="flex: 1;">
+                    <div class="organizer-info" style="flex: 1; display: flex; align-items: center;">
                         <div class="organizer-name" style="font-weight: 600; font-size: 14px;">${escapeHtml(userName)}</div>
-                        <input type="text" placeholder="Phân công nhiệm vụ..." value="${escapeHtml(tv.vaiTro || '')}" class="role-input" style="width: 100%; padding: 4px 8px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
                     </div>
                 </div>
                 <div style="margin-left: 10px;">
@@ -770,9 +769,8 @@ window.handleUserSelectionChange = function(checkbox, userId, userName, maSo) {
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                 <div style="width: 32px; height: 32px; background: #64748b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${avatarInitial}</div>
-                <div class="organizer-info" style="flex: 1;">
+                <div class="organizer-info" style="flex: 1; display: flex; align-items: center;">
                     <div class="organizer-name" style="font-weight: 600; font-size: 14px;">${userName} <span style="font-weight:normal; color:#666; font-size: 12px;">(${maSo})</span></div>
-                    <input type="text" placeholder="Phân công nhiệm vụ..." class="role-input" style="width: 100%; padding: 4px 8px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
                 </div>
             </div>
             <div style="margin-left: 10px;">

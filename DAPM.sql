@@ -204,7 +204,7 @@ CREATE TABLE NganSachDuKien (
     idSuKien INTEGER NOT NULL,
     tongChiPhiDuKien DECIMAL(18,2) NULL,
     chiTietNganSach DECIMAL(18,2) NULL,
-    ghiChu NVARCHAR(100) NULL,
+    ghiChu NVARCHAR(MAX) NULL,
     CONSTRAINT PK_NganSachDuKien PRIMARY KEY (idNganSach),
     CONSTRAINT FK_NSDK_SuKien FOREIGN KEY (idSuKien) REFERENCES SuKien(idSuKien)
 );
