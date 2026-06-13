@@ -448,8 +448,10 @@ async function saveEvent(forceStatus = null) {
     const selectedTags = document.querySelectorAll('.category-tag.selected');
     const selectedCategories = Array.from(selectedTags).map(t => parseInt(t.dataset.id));
     
-    const startObj = new Date(document.getElementById('eventStartTime').value);
-    const endObj = new Date(document.getElementById('eventEndTime').value);
+    const startValue = document.getElementById('eventStartTime').value;
+    const endValue = document.getElementById('eventEndTime').value;
+    const startObj = new Date(startValue);
+    const endObj = new Date(endValue);
     
     if (endObj <= startObj) {
         showToast("Thời gian kết thúc phải lớn hơn thời gian bắt đầu", "error");
@@ -487,8 +489,8 @@ async function saveEvent(forceStatus = null) {
     const formData = {
         tenSuKien: document.getElementById('eventName').value,
         idDiaDiem: parseInt(document.getElementById('eventLocation').value) || null,
-        thoiGianBatDau: startObj.toISOString(),
-        thoiGianKetThuc: endObj.toISOString(),
+        thoiGianBatDau: startValue,
+        thoiGianKetThuc: endValue,
         soLuongToiDa: parseInt(document.getElementById('eventMaxAttendees').value) || null,
         moTa: document.getElementById('eventDescription').value,
         danhMucIds: selectedCategories,

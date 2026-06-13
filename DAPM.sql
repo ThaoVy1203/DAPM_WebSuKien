@@ -782,43 +782,43 @@ INSERT INTO SuKien (tenSuKien, moTa, thoiGianBatDau, thoiGianKetThuc, idDiaDiem,
     N'Ngày hội Khởi nghiệp UTE 2026',
     N'Sự kiện kết nối sinh viên với các nhà đầu tư và mentor khởi nghiệp.',
     '2026-06-15 08:00:00', '2026-06-15 17:00:00',
-    1, 'ND002', 200, '../images/event4.png', N'Đã duyệt', 'ND005'
+    1, 'ND002', 200, '../images/event4.jpg', N'Đã duyệt', 'ND005'
 ),
 (
     N'Festival Văn hóa Các Dân tộc 2026',
     N'Lễ hội văn hóa đặc sắc với các tiết mục nghệ thuật, ẩm thực và trò chơi dân gian.',
     '2026-06-20 14:00:00', '2026-06-20 21:00:00',
-    3, 'ND002', 1000, '../images/event5.png', N'Đã duyệt', 'ND005'
+    3, 'ND002', 1000, '../images/event5.jpg', N'Đã duyệt', 'ND005'
 ),
 (
     N'Hackathon AI 24h - UTE 2026',
     N'Cuộc thi lập trình 24 giờ liên tục với chủ đề Trí tuệ Nhân tạo.',
     '2026-05-25 08:00:00', '2026-05-26 08:00:00',
-    2, 'ND003', 120, '../images/event6.png', N'Đang diễn ra', 'ND005'
+    2, 'ND003', 120, '../images/event6.jpg', N'Đang diễn ra', 'ND005'
 ),
 (
     N'Hội thảo Blockchain & Web3 cho Sinh viên',
     N'Tìm hiểu về công nghệ Blockchain, NFT và tương lai của Web3.',
     '2026-04-10 09:00:00', '2026-04-10 12:00:00',
-    2, 'ND002', 80, '../images/event7.png', N'Kết thúc', 'ND005'
+    2, 'ND002', 80, '../images/event7.jpg', N'Kết thúc', 'ND005'
 ),
 (
     N'Workshop Thiết kế UI/UX Nâng cao',
     N'Workshop thực hành thiết kế giao diện người dùng với Figma.',
     '2026-07-01 13:30:00', '2026-07-01 17:30:00',
-    4, 'ND003', 5, '../images/event8.png', N'Đã duyệt', 'ND005'
+    4, 'ND003', 5, '../images/event8.jpg', N'Đã duyệt', 'ND005'
 ),
 (
     N'Cuộc thi Robotics UTE Cup 2026',
     N'Cuộc thi chế tạo robot tự động với các thử thách thực tế.',
     '2026-08-15 08:00:00', '2026-08-16 17:00:00',
-    3, 'ND002', 60, '../images/event9.png', N'Chờ duyệt', NULL
+    3, 'ND002', 60, '../images/event9.jpg', N'Chờ duyệt', NULL
 ),
 (
     N'Seminar Kỹ năng Phỏng vấn & Tìm việc làm',
     N'Chia sẻ kinh nghiệm phỏng vấn từ HR các công ty lớn.',
     '2026-06-28 08:30:00', '2026-06-28 11:30:00',
-    1, 'ND002', 300, '../images/event10.png', N'Đã duyệt', 'ND005'
+    1, 'ND002', 300, '../images/event10.jpg', N'Đã duyệt', 'ND005'
 );
 GO
 
