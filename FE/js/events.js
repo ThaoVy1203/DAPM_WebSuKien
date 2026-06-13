@@ -245,28 +245,21 @@ function resetFilters() {
 
 // ─── LỌC + RENDER ─────────────────────────────────────────────────────────────
 function applyFiltersAndRender() {
-    const statusBtn    = document.querySelector(".status-btn.active");
-    const statusFilter = statusBtn?.dataset.status || "all";
-    const keyword      = (document.querySelector(".search-box input")?.value || "").trim().toLowerCase();
-    const idDiaDiem    = document.getElementById('filterDiaDiem')?.value || '';
-    const facultyFilter = document.getElementById('facultyFilter')?.value || 'all';
+    const statusBtn = document.querySelector(".status-btn.active");
+    const statusFilter = statusBtn?.dataset.status || "open";
+    const keyword = (document.querySelector(".search-box input")?.value || "").trim().toLowerCase();
+    const idDiaDiem = document.getElementById('filterDiaDiem')?.value || '';
     const dateFrom = document.getElementById('dateFrom')?.value;
     const dateTo = document.getElementById('dateTo')?.value;
 
     const checkedCategories = [...document.querySelectorAll('.category-filter:checked')].map(cb => cb.value);
 
     let filtered = allEvents.filter(ev => {
-        // 1. Lọc theo trạng thái
+        // 1. Lọc trạng thái
         const ts = ev.TrangThai || ev.trangThai || "";
-        if (statusFilter === "open") {
-            if (ts !== "Đã duyệt") return false;
-        } else if (statusFilter === "ongoing") {
-            if (ts !== "Đang diễn ra") return false;
-        } else if (statusFilter === "ended") {
-            if (!["Kết thúc", "Hủy", "Đã kết thúc"].includes(ts)) return false;
-        }
+        if (ts !== "Đã duyệt") return false;
 
-        // 2. Lọc theo keyword
+        // 2. Lọc keyword
         if (keyword) {
             const name = (ev.TenSuKien || ev.tenSuKien || "").toLowerCase();
             const desc = (ev.MoTa || ev.moTa || "").toLowerCase();
@@ -274,29 +267,37 @@ function applyFiltersAndRender() {
             if (!name.includes(keyword) && !desc.includes(keyword) && !dd.includes(keyword)) return false;
         }
 
-        // 3. Lọc theo địa điểm
+        // 3. Lọc địa điểm
         if (idDiaDiem) {
             const ddId = ev.IdDiaDiem || ev.idDiaDiem;
             if (ddId != idDiaDiem) return false;
         }
 
-        // 4. Lọc theo danh mục
+        // 4. Lọc danh mục (sửa đúng cấu trúc API)
         if (checkedCategories.length > 0) {
-            const catId = ev.IdDanhMuc || ev.idDanhMuc;
-            if (!checkedCategories.includes(String(catId))) return false;
-        } else {
-            // Không tích checkbox nào → không hiển thị gì
-            return false;
+            let eventCatIds = [];
+            // API trả về danhMucs (viết thường) hoặc DanhMucs (viết hoa) – kiểm tra cả hai
+            if (ev.danhMucs && Array.isArray(ev.danhMucs)) {
+                eventCatIds = ev.danhMucs.map(c => String(c.idDanhMuc || c.IdDanhMuc));
+            } else if (ev.DanhMucs && Array.isArray(ev.DanhMucs)) {
+                eventCatIds = ev.DanhMucs.map(c => String(c.idDanhMuc || c.IdDanhMuc));
+            } else if (ev.danhMucIds && Array.isArray(ev.danhMucIds)) {
+                eventCatIds = ev.danhMucIds.map(id => String(id));
+            } else if (ev.DanhMucIds && Array.isArray(ev.DanhMucIds)) {
+                eventCatIds = ev.DanhMucIds.map(id => String(id));
+            }
+            if (eventCatIds.length === 0) return false; // không có danh mục thì không hiển thị
+            if (!eventCatIds.some(catId => checkedCategories.includes(catId))) return false;
         }
 
-        // 5. Lọc theo khoảng thời gian
+        // 5. Lọc thời gian
         if (dateFrom) {
-            const eventStart = new Date(ev.ThoiGianBatDau || ev.thoiGianBatDau);
-            if (eventStart < new Date(dateFrom)) return false;
+            const start = new Date(ev.ThoiGianBatDau || ev.thoiGianBatDau);
+            if (start < new Date(dateFrom)) return false;
         }
         if (dateTo) {
-            const eventStart = new Date(ev.ThoiGianBatDau || ev.thoiGianBatDau);
-            if (eventStart > new Date(dateTo + 'T23:59:59')) return false;
+            const start = new Date(ev.ThoiGianBatDau || ev.thoiGianBatDau);
+            if (start > new Date(dateTo + 'T23:59:59')) return false;
         }
 
         return true;

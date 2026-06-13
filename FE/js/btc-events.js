@@ -403,8 +403,9 @@ function openEditEventModal(id) {
             div.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                     <div style="width: 32px; height: 32px; background: #64748b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${avatarInitial}</div>
-                    <div class="organizer-info" style="flex: 1; display: flex; align-items: center;">
+                    <div class="organizer-info" style="flex: 1;">
                         <div class="organizer-name" style="font-weight: 600; font-size: 14px;">${escapeHtml(userName)}</div>
+                        <input type="text" placeholder="Phân công nhiệm vụ..." value="${escapeHtml(tv.vaiTro || '')}" class="role-input" style="width: 100%; padding: 4px 8px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
                     </div>
                 </div>
                 <div style="margin-left: 10px;">
@@ -448,10 +449,8 @@ async function saveEvent(forceStatus = null) {
     const selectedTags = document.querySelectorAll('.category-tag.selected');
     const selectedCategories = Array.from(selectedTags).map(t => parseInt(t.dataset.id));
     
-    const startValue = document.getElementById('eventStartTime').value;
-    const endValue = document.getElementById('eventEndTime').value;
-    const startObj = new Date(startValue);
-    const endObj = new Date(endValue);
+    const startObj = new Date(document.getElementById('eventStartTime').value);
+    const endObj = new Date(document.getElementById('eventEndTime').value);
     
     if (endObj <= startObj) {
         showToast("Thời gian kết thúc phải lớn hơn thời gian bắt đầu", "error");
@@ -489,8 +488,8 @@ async function saveEvent(forceStatus = null) {
     const formData = {
         tenSuKien: document.getElementById('eventName').value,
         idDiaDiem: parseInt(document.getElementById('eventLocation').value) || null,
-        thoiGianBatDau: startValue,
-        thoiGianKetThuc: endValue,
+        thoiGianBatDau: startObj.toISOString(),
+        thoiGianKetThuc: endObj.toISOString(),
         soLuongToiDa: parseInt(document.getElementById('eventMaxAttendees').value) || null,
         moTa: document.getElementById('eventDescription').value,
         danhMucIds: selectedCategories,
@@ -771,8 +770,9 @@ window.handleUserSelectionChange = function(checkbox, userId, userName, maSo) {
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                 <div style="width: 32px; height: 32px; background: #64748b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${avatarInitial}</div>
-                <div class="organizer-info" style="flex: 1; display: flex; align-items: center;">
+                <div class="organizer-info" style="flex: 1;">
                     <div class="organizer-name" style="font-weight: 600; font-size: 14px;">${userName} <span style="font-weight:normal; color:#666; font-size: 12px;">(${maSo})</span></div>
+                    <input type="text" placeholder="Phân công nhiệm vụ..." class="role-input" style="width: 100%; padding: 4px 8px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
                 </div>
             </div>
             <div style="margin-left: 10px;">
