@@ -31,10 +31,13 @@ function setupModals() {
     });
 
     window.addEventListener('click', function(e) {
+        // Chỉ đóng modal khi click đúng vào overlay, không phải từ nút bên trong
+        if (e.target.id === 'custom-alert') return; // Bỏ qua custom alert
+
         const reportModal = document.getElementById('reportModal');
         const uploadModal = document.getElementById('uploadReportModal');
         const viewModal = document.getElementById('viewReportModal');
-        
+
         if (e.target === reportModal) closeReportModal();
         if (e.target === uploadModal) closeUploadReportModal();
         if (e.target === viewModal) closeViewReportModal();
@@ -62,7 +65,6 @@ async function loadEventsSelector() {
             selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
         });
 
-        // Initialize relatedEvent dropdown inside forms
         const formEventSelect1 = document.getElementById("relatedEvent");
         if (formEventSelect1) {
             formEventSelect1.innerHTML = '<option value="">Chọn sự kiện</option>';
@@ -71,7 +73,6 @@ async function loadEventsSelector() {
             });
         }
 
-        // Get saved selected event
         let savedId = localStorage.getItem("btc_reports_selected_event_id");
         if (savedId && events.some(e => e.idSuKien == savedId)) {
             selector.value = savedId;
@@ -82,7 +83,6 @@ async function loadEventsSelector() {
             localStorage.setItem("btc_reports_selected_event_id", events[0].idSuKien);
         }
 
-        // Change listener
         selector.addEventListener("change", function () {
             reportPageData.selectedEventId = this.value;
             localStorage.setItem("btc_reports_selected_event_id", this.value);
@@ -108,7 +108,7 @@ async function loadReportsForSelectedEvent() {
         if (!res.ok) throw new Error("Lỗi tải báo cáo");
 
         let reports = await res.json();
-        
+
         let customRepStr = localStorage.getItem(`reports_custom_event_${eventId}`);
         if (customRepStr) {
             try {
@@ -233,7 +233,19 @@ function initializeApprovalTypeChange() {
 }
 
 function initializeFileUpload() {
-    // dummy needed for compatibility
+    const reportFileInput = document.getElementById('reportFileInput');
+    const uploadFileInput = document.getElementById('uploadFileInput');
+
+    if (reportFileInput) {
+        reportFileInput.addEventListener('change', function(e) {
+            handleFileSelection(e.target.files, 'reportFileList');
+        });
+    }
+    if (uploadFileInput) {
+        uploadFileInput.addEventListener('change', function(e) {
+            handleSingleFileSelection(e.target.files[0], 'uploadFileDisplay');
+        });
+    }
 }
 
 // ================= MODALS CONTROLS =================
@@ -243,8 +255,7 @@ function openCreateReportModal() {
 
     reportPageData.currentReportId = null;
     document.getElementById('reportForm').reset();
-    
-    // Set default related event
+
     const formEvent = document.getElementById('relatedEvent');
     if (formEvent && reportPageData.selectedEventId) {
         formEvent.value = reportPageData.selectedEventId;
@@ -282,7 +293,7 @@ async function saveReport(status = "completed") {
     const title = document.getElementById('reportTitle').value;
     const desc = document.getElementById('reportDescription').value;
     const content = document.getElementById('reportContent').value;
-    
+
     const types = document.getElementsByName('reportType');
     let selectedType = 'event';
     types.forEach(t => {
@@ -290,10 +301,10 @@ async function saveReport(status = "completed") {
     });
 
     const typeLabels = {
-        event: { label: 'Báo cáo sự kiện', icon: 'fas fa-calendar-check' },
-        budget: { label: 'Báo cáo tài chính', icon: 'fas fa-money-bill-wave' },
-        attendance: { label: 'Báo cáo tham dự', icon: 'fas fa-users' },
-        summary: { label: 'Báo cáo tổng kết', icon: 'fas fa-chart-line' }
+        event:      { label: 'Báo cáo sự kiện',  icon: 'fas fa-calendar-check' },
+        budget:     { label: 'Báo cáo tài chính', icon: 'fas fa-money-bill-wave' },
+        attendance: { label: 'Báo cáo tham dự',   icon: 'fas fa-users' },
+        summary:    { label: 'Báo cáo tổng kết',  icon: 'fas fa-chart-line' }
     };
     const details = typeLabels[selectedType];
 
@@ -335,12 +346,12 @@ async function saveReport(status = "completed") {
 document.getElementById('reportForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     await saveReport("completed");
-    alert("Đã lưu báo cáo thành công!");
+    showAlert('Đã lưu báo cáo thành công!');
 });
 
 window.saveReportDraft = async function() {
     await saveReport("draft");
-    alert("Đã lưu bản nháp báo cáo!");
+    showAlert('Đã lưu bản nháp báo cáo!');
 };
 
 // ================= VIEW REPORT =================
@@ -351,7 +362,7 @@ function viewReport(id) {
     reportPageData.currentReportId = id;
 
     document.getElementById('viewReportTitle').textContent = item.title;
-    
+
     const typeElement = document.getElementById('viewReportType');
     typeElement.className = `report-type ${item.type}`;
     typeElement.innerHTML = `<i class="${item.typeIcon}"></i><span>${item.typeLabel}</span>`;
@@ -377,7 +388,6 @@ function editReport(id) {
 
     reportPageData.currentReportId = id;
 
-    // Prepopulate inputs
     const typeRadio = document.querySelector(`input[name="reportType"][value="${item.type}"]`);
     if (typeRadio) typeRadio.checked = true;
 
@@ -396,15 +406,7 @@ function editReportFromView() {
     }
 }
 
-// ================= ACTIONS =================
-function downloadReport(id, format) {
-    alert(`Đang xuất báo cáo và tải xuống dạng ${format.toUpperCase()}...`);
-}
-
-function downloadReportFromView(format) {
-    downloadReport(reportPageData.currentReportId, format);
-}
-
+// ================= DELETE REPORT =================
 function deleteReport(id) {
     if (!confirm("Xác nhận xóa báo cáo này?")) return;
     const eventId = reportPageData.selectedEventId;
@@ -417,34 +419,15 @@ function deleteReport(id) {
     loadReportsForSelectedEvent();
 }
 
-// Export functions
-window.openCreateReportModal = openCreateReportModal;
-window.closeReportModal = closeReportModal;
-window.openUploadReportModal = openUploadReportModal;
-window.closeUploadReportModal = closeUploadReportModal;
-window.closeViewReportModal = closeViewReportModal;
-window.editReport = editReport;
-window.viewReport = viewReport;
-window.downloadReport = downloadReport;
-window.downloadReportFromView = downloadReportFromView;
-window.editReportFromView = editReportFromView;
-window.deleteReport = deleteReport;
-    document.getElementById('reportFileInput')?.addEventListener('change', function (e) {
-        handleFileSelection(e.target.files, 'reportFileList');
-    });
-    document.getElementById('uploadFileInput')?.addEventListener('change', function (e) {
-        handleSingleFileSelection(e.target.files[0], 'uploadFileDisplay');
-    });
-}
-
+// ================= FILE HELPERS =================
 function handleFileSelection(files, listId) {
     const fileList = document.getElementById(listId);
     Array.from(files).forEach(file => {
         if (file.size <= 20 * 1024 * 1024) {
-            uploadedFiles.push(file);
+            reportPageData.uploadedFiles.push(file);
             addFileToList(file, listId);
         } else {
-            alert(`File ${file.name} vượt quá 20MB`);
+            showAlert(`File ${file.name} vượt quá 20MB`, 'error');
         }
     });
 }
@@ -461,7 +444,7 @@ function handleSingleFileSelection(file, displayId) {
                 </div>
             </div>`;
     } else {
-        alert(`File ${file.name} vượt quá 20MB`);
+        showAlert(`File ${file.name} vượt quá 20MB`, 'error');
         document.getElementById('uploadFileInput').value = '';
     }
 }
@@ -482,7 +465,7 @@ function addFileToList(file, listId) {
 }
 
 function removeFile(filename, listId) {
-    uploadedFiles = uploadedFiles.filter(f => f.name !== filename);
+    reportPageData.uploadedFiles = reportPageData.uploadedFiles.filter(f => f.name !== filename);
     document.querySelectorAll(`#${listId} .file-item`).forEach(item => {
         if (item.textContent.includes(filename)) item.remove();
     });
@@ -490,48 +473,127 @@ function removeFile(filename, listId) {
 
 function getFileIcon(filename) {
     const ext = filename.split('.').pop().toLowerCase();
-    return ({ pdf: 'fas fa-file-pdf', doc: 'fas fa-file-word', docx: 'fas fa-file-word', xls: 'fas fa-file-excel', xlsx: 'fas fa-file-excel', ppt: 'fas fa-file-powerpoint', pptx: 'fas fa-file-powerpoint' })[ext] || 'fas fa-file';
+    return ({ pdf: 'fas fa-file-pdf', doc: 'fas fa-file-word', docx: 'fas fa-file-word',
+              xls: 'fas fa-file-excel', xlsx: 'fas fa-file-excel',
+              ppt: 'fas fa-file-powerpoint', pptx: 'fas fa-file-powerpoint' })[ext] || 'fas fa-file';
 }
 
-// ==================== ĐĂNG XUẤT ====================
-function setupLogout() {
-    document.querySelectorAll('.nav-item.danger').forEach(el => {
-        el.addEventListener('click', function (e) {
-            e.preventDefault();
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        });
+// ================= SHOW ALERT (thông báo giữa màn hình) =================
+function showAlert(message, type = 'success') {
+    // Xóa alert cũ nếu có
+    const existing = document.getElementById('custom-alert');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'custom-alert';
+    overlay.style.cssText = `
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+    `;
+
+    const color = type === 'success' ? '#0D5A9C' : '#DC2626';
+    const icon  = type === 'success' ? 'check-circle' : 'times-circle';
+    const title = type === 'success' ? 'Thành công!' : 'Có lỗi xảy ra!';
+
+    overlay.innerHTML = `
+        <style>
+            @keyframes popIn { from { transform:scale(0.85); opacity:0; } to { transform:scale(1); opacity:1; } }
+        </style>
+        <div id="custom-alert-box" style="background:white; border-radius:16px; padding:36px 40px;
+                    text-align:center; max-width:380px; width:90%;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+                    animation:popIn 0.25s ease;">
+            <i class="fas fa-${icon}" style="font-size:52px; color:${color}; margin-bottom:16px; display:block;"></i>
+            <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:700; color:#111827;">${title}</h3>
+            <p style="margin:0 0 24px 0; font-size:15px; color:#6B7280; line-height:1.5;">${message}</p>
+            <button id="custom-alert-ok" style="
+                background:${color}; color:white; border:none;
+                padding:10px 32px; border-radius:8px;
+                font-size:15px; font-weight:600; cursor:pointer;">OK</button>
+        </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Dùng getElementById để tránh closure bị ảnh hưởng bởi event bubble
+    document.getElementById('custom-alert-ok').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('custom-alert')?.remove();
     });
-}
 
-// ==================== HIỂN THỊ LỖI ====================
-function showError(msg) {
-    const grid = document.querySelector('.reports-grid');
-    if (grid) {
-        grid.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#EF4444;">
-                <i class="fas fa-exclamation-triangle" style="font-size:48px; margin-bottom:16px; display:block;"></i>
-                <p>${msg}</p>
-            </div>`;
-    }
-}
-
-// ==================== ĐÓNG MODAL KHI CLICK NGOÀI ====================
-window.addEventListener('click', function (e) {
-    ['reportModal', 'uploadReportModal', 'viewReportModal'].forEach(id => {
-        const modal = document.getElementById(id);
-        if (e.target === modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = 'auto';
+    // Click vào overlay (ngoài box) cũng đóng
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            e.stopPropagation();
+            overlay.remove();
         }
     });
-});
+}
 
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-        closeReportModal();
-        closeUploadReportModal();
-        closeViewReportModal();
+// ================= DOWNLOAD REPORT (gọi API thật) =================
+window.downloadReport = async function(id, format) {
+    if (format !== 'excel') {
+        showAlert('Xuất PDF đang được phát triển. Vui lòng dùng xuất Excel.', 'error');
+        return;
     }
-});
+
+    // Xác định loại báo cáo để gọi đúng API
+    const report = reportPageData.reports.find(r => r.id == id);
+    const reportType = report?.type || 'event';
+
+    const apiMap = {
+        'budget':     `${window.API_BASE}/BaoCao/xuat-excel-tai-chinh/${id}`,
+        'event':      `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
+        'attendance': `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
+        'summary':    `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
+    };
+    const apiUrl = apiMap[reportType] || `${window.API_BASE}/BaoCao/xuat-excel/${id}`;
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+        });
+
+        if (!response.ok) throw new Error(`Lỗi server (${response.status})`);
+
+        const blob = await response.blob();
+        if (blob.size === 0) throw new Error('File trả về rỗng');
+
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        const loaiBC = reportType === 'budget' ? 'TaiChinh' : 'SuKien';
+        link.download = `BaoCao_${loaiBC}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(objectUrl);
+        }, 100);
+
+        showAlert('File Excel đã được tải về máy thành công!');
+
+    } catch (err) {
+        console.error('Export error:', err);
+        showAlert('Không thể xuất Excel: ' + err.message, 'error');
+    }
+};
+
+window.downloadReportFromView = function(format) {
+    window.downloadReport(reportPageData.currentReportId, format);
+};
+
+// ================= EXPORT FUNCTIONS =================
+window.openCreateReportModal = openCreateReportModal;
+window.closeReportModal = closeReportModal;
+window.openUploadReportModal = openUploadReportModal;
+window.closeUploadReportModal = closeUploadReportModal;
+window.closeViewReportModal = closeViewReportModal;
+window.editReport = editReport;
+window.viewReport = viewReport;
+window.editReportFromView = editReportFromView;
+window.deleteReport = deleteReport;
+window.removeFile = removeFile;
