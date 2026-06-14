@@ -24,10 +24,6 @@
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-notification">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </button>
             <div class="user-profile">
                 <div class="user-info">
                     <span class="user-name">PGS.TS Trần Văn Hùng</span>
@@ -57,14 +53,6 @@
             </nav>
 
             <div class="sidebar-footer">
-                <a href="#" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Cài đặt</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Trợ giúp</span>
-                </a>
                 <a href="#" class="nav-item danger">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Đăng xuất</span>
@@ -81,10 +69,6 @@
                     <p>Danh sách hồ sơ đã qua CTSV, cần phê duyệt cấp Ban Giám Hiệu</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-secondary" onclick="exportPendingList()">
-                        <i class="fas fa-file-export"></i>
-                        Xuất danh sách
-                    </button>
                     <button class="btn-primary" onclick="openBulkApprovalModal()">
                         <i class="fas fa-check-double"></i>
                         Duyệt hàng loạt
@@ -162,293 +146,7 @@
             </div>
 
             <!-- Approval List -->
-            <div class="approval-list">
-                <!-- Approval Item 1 - Urgent, Approved by CTSV -->
-                <div class="approval-item urgent" data-priority="urgent">
-                    <div class="approval-header">
-                        <div class="approval-info">
-                            <span class="approval-badge urgent">ƯU TIÊN</span>
-                            <span class="approval-badge approved" style="background: #059669;">✓ ĐÃ QUA CTSV</span>
-                            <span class="approval-id">#HS2024-015</span>
-                            <span class="approval-date">
-                                <i class="fas fa-calendar"></i>
-                                CTSV duyệt: 28/12/2024 15:30
-                            </span>
-                        </div>
-                        <div class="approval-deadline">
-                            <i class="fas fa-clock"></i>
-                            <span class="deadline-text danger">Còn 1 ngày</span>
-                        </div>
-                    </div>
-                    <div class="approval-body">
-                        <h3>Hội thảo Khởi nghiệp và Đổi mới Sáng tạo 2025</h3>
-                        <div class="approval-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-user"></i>
-                                <span>BTC: <strong>Nguyễn Văn B</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-calendar-check"></i>
-                                <span>Ngày tổ chức: <strong>05/02/2025</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-users"></i>
-                                <span>Quy mô: <strong>300 người</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span>Ngân sách: <strong>80,000,000 đ</strong></span>
-                            </div>
-                        </div>
-                        <div class="approval-description">
-                            <p>Hội thảo về khởi nghiệp với sự tham gia của các chuyên gia hàng đầu trong lĩnh vực. Bao gồm 3 phiên thảo luận chính và workshop thực hành...</p>
-                        </div>
-                        <div class="approval-comment" style="background: #ecfdf5; border-left: 4px solid #059669; padding: 12px; margin-top: 12px; border-radius: 6px;">
-                            <div class="comment-label" style="color: #059669; font-weight: 600; margin-bottom: 6px;">
-                                <i class="fas fa-check-circle"></i>
-                                Ý kiến CTSV (Nguyễn Thị Mai):
-                            </div>
-                            <p style="margin: 0; color: #065f46;">Hồ sơ đầy đủ, kế hoạch chi tiết. Đồng ý phê duyệt theo đề xuất.</p>
-                        </div>
-                        <div class="approval-documents">
-                            <span class="doc-label">Tài liệu đính kèm:</span>
-                            <div class="doc-list">
-                                <span class="doc-item"><i class="fas fa-file-pdf"></i> Kế hoạch chi tiết.pdf</span>
-                                <span class="doc-item"><i class="fas fa-file-excel"></i> Dự toán ngân sách.xlsx</span>
-                                <span class="doc-item"><i class="fas fa-file-word"></i> Đề cương chương trình.docx</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="approval-footer">
-                        <button class="btn-view" onclick="viewApprovalDetail(1)">
-                            <i class="fas fa-eye"></i>
-                            Xem chi tiết
-                        </button>
-                        <button class="btn-reject" onclick="openRejectModal(1)">
-                            <i class="fas fa-times"></i>
-                            Từ chối
-                        </button>
-                        <button class="btn-approve" onclick="openApproveModal(1)">
-                            <i class="fas fa-check"></i>
-                            Phê duyệt cuối
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Approval Item 2 - Normal, Approved by CTSV -->
-                <div class="approval-item normal" data-priority="normal">
-                    <div class="approval-header">
-                        <div class="approval-info">
-                            <span class="approval-badge normal">BÌNH THƯỜNG</span>
-                            <span class="approval-badge approved" style="background: #059669;">✓ ĐÃ QUA CTSV</span>
-                            <span class="approval-id">#HS2024-013</span>
-                            <span class="approval-date">
-                                <i class="fas fa-calendar"></i>
-                                CTSV duyệt: 26/12/2024 11:45
-                            </span>
-                        </div>
-                        <div class="approval-deadline">
-                            <i class="fas fa-clock"></i>
-                            <span class="deadline-text">Còn 3 ngày</span>
-                        </div>
-                    </div>
-                    <div class="approval-body">
-                        <h3>Ngày hội Việc làm và Cơ hội Nghề nghiệp</h3>
-                        <div class="approval-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-user"></i>
-                                <span>BTC: <strong>Lê Thị D</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-calendar-check"></i>
-                                <span>Ngày tổ chức: <strong>20/01/2025</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-users"></i>
-                                <span>Quy mô: <strong>800 người</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span>Ngân sách: <strong>200,000,000 đ</strong></span>
-                            </div>
-                        </div>
-                        <div class="approval-description">
-                            <p>Ngày hội việc làm với sự tham gia của nhiều doanh nghiệp lớn. Tạo cơ hội kết nối sinh viên với nhà tuyển dụng...</p>
-                        </div>
-                        <div class="approval-comment" style="background: #ecfdf5; border-left: 4px solid #059669; padding: 12px; margin-top: 12px; border-radius: 6px;">
-                            <div class="comment-label" style="color: #059669; font-weight: 600; margin-bottom: 6px;">
-                                <i class="fas fa-check-circle"></i>
-                                Ý kiến CTSV (Nguyễn Thị Mai):
-                            </div>
-                            <p style="margin: 0; color: #065f46;">Sự kiện quan trọng, có sự tham gia của nhiều doanh nghiệp lớn. Phê duyệt toàn bộ kế hoạch và ngân sách.</p>
-                        </div>
-                        <div class="approval-documents">
-                            <span class="doc-label">Tài liệu đính kèm:</span>
-                            <div class="doc-list">
-                                <span class="doc-item"><i class="fas fa-file-pdf"></i> Kế hoạch tổ chức.pdf</span>
-                                <span class="doc-item"><i class="fas fa-file-excel"></i> Ngân sách chi tiết.xlsx</span>
-                                <span class="doc-item"><i class="fas fa-file-word"></i> Danh sách doanh nghiệp.docx</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="approval-footer">
-                        <button class="btn-view" onclick="viewApprovalDetail(2)">
-                            <i class="fas fa-eye"></i>
-                            Xem chi tiết
-                        </button>
-                        <button class="btn-reject" onclick="openRejectModal(2)">
-                            <i class="fas fa-times"></i>
-                            Từ chối
-                        </button>
-                        <button class="btn-approve" onclick="openApproveModal(2)">
-                            <i class="fas fa-check"></i>
-                            Phê duyệt cuối
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Approval Item 3 - Urgent, Approved by CTSV -->
-                <div class="approval-item urgent" data-priority="urgent">
-                    <div class="approval-header">
-                        <div class="approval-info">
-                            <span class="approval-badge urgent">ƯU TIÊN</span>
-                            <span class="approval-badge approved" style="background: #059669;">✓ ĐÃ QUA CTSV</span>
-                            <span class="approval-id">#HS2024-012</span>
-                            <span class="approval-date">
-                                <i class="fas fa-calendar"></i>
-                                CTSV duyệt: 25/12/2024 16:00
-                            </span>
-                        </div>
-                        <div class="approval-deadline">
-                            <i class="fas fa-clock"></i>
-                            <span class="deadline-text danger">Còn 2 ngày</span>
-                        </div>
-                    </div>
-                    <div class="approval-body">
-                        <h3>Chương trình Giao lưu Văn hóa Quốc tế</h3>
-                        <div class="approval-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-user"></i>
-                                <span>BTC: <strong>Phạm Văn E</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-calendar-check"></i>
-                                <span>Ngày tổ chức: <strong>10/02/2025</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-users"></i>
-                                <span>Quy mô: <strong>400 người</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span>Ngân sách: <strong>95,000,000 đ</strong></span>
-                            </div>
-                        </div>
-                        <div class="approval-description">
-                            <p>Chương trình giao lưu văn hóa với sinh viên quốc tế, tạo cơ hội học hỏi và chia sẻ văn hóa giữa các quốc gia...</p>
-                        </div>
-                        <div class="approval-comment" style="background: #ecfdf5; border-left: 4px solid #059669; padding: 12px; margin-top: 12px; border-radius: 6px;">
-                            <div class="comment-label" style="color: #059669; font-weight: 600; margin-bottom: 6px;">
-                                <i class="fas fa-check-circle"></i>
-                                Ý kiến CTSV (Nguyễn Thị Mai):
-                            </div>
-                            <p style="margin: 0; color: #065f46;">Chương trình ý nghĩa, tạo cơ hội giao lưu văn hóa cho sinh viên. Đồng ý phê duyệt.</p>
-                        </div>
-                        <div class="approval-documents">
-                            <span class="doc-label">Tài liệu đính kèm:</span>
-                            <div class="doc-list">
-                                <span class="doc-item"><i class="fas fa-file-pdf"></i> Kế hoạch chi tiết.pdf</span>
-                                <span class="doc-item"><i class="fas fa-file-excel"></i> Dự toán.xlsx</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="approval-footer">
-                        <button class="btn-view" onclick="viewApprovalDetail(3)">
-                            <i class="fas fa-eye"></i>
-                            Xem chi tiết
-                        </button>
-                        <button class="btn-reject" onclick="openRejectModal(3)">
-                            <i class="fas fa-times"></i>
-                            Từ chối
-                        </button>
-                        <button class="btn-approve" onclick="openApproveModal(3)">
-                            <i class="fas fa-check"></i>
-                            Phê duyệt cuối
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Approval Item 4 - Normal, Approved by CTSV -->
-                <div class="approval-item normal" data-priority="normal">
-                    <div class="approval-header">
-                        <div class="approval-info">
-                            <span class="approval-badge normal">BÌNH THƯỜNG</span>
-                            <span class="approval-badge approved" style="background: #059669;">✓ ĐÃ QUA CTSV</span>
-                            <span class="approval-id">#HS2024-010</span>
-                            <span class="approval-date">
-                                <i class="fas fa-calendar"></i>
-                                CTSV duyệt: 24/12/2024 14:20
-                            </span>
-                        </div>
-                        <div class="approval-deadline">
-                            <i class="fas fa-clock"></i>
-                            <span class="deadline-text">Còn 4 ngày</span>
-                        </div>
-                    </div>
-                    <div class="approval-body">
-                        <h3>Cuộc thi Lập trình Sáng tạo 2025</h3>
-                        <div class="approval-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-user"></i>
-                                <span>BTC: <strong>Võ Văn F</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-calendar-check"></i>
-                                <span>Ngày tổ chức: <strong>15/02/2025</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-users"></i>
-                                <span>Quy mô: <strong>200 người</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span>Ngân sách: <strong>60,000,000 đ</strong></span>
-                            </div>
-                        </div>
-                        <div class="approval-description">
-                            <p>Cuộc thi lập trình dành cho sinh viên các khoa, khuyến khích sáng tạo và phát triển kỹ năng lập trình...</p>
-                        </div>
-                        <div class="approval-comment" style="background: #ecfdf5; border-left: 4px solid #059669; padding: 12px; margin-top: 12px; border-radius: 6px;">
-                            <div class="comment-label" style="color: #059669; font-weight: 600; margin-bottom: 6px;">
-                                <i class="fas fa-check-circle"></i>
-                                Ý kiến CTSV (Nguyễn Thị Mai):
-                            </div>
-                            <p style="margin: 0; color: #065f46;">Cuộc thi bổ ích, phát triển kỹ năng cho sinh viên. Phê duyệt kế hoạch và ngân sách.</p>
-                        </div>
-                        <div class="approval-documents">
-                            <span class="doc-label">Tài liệu đính kèm:</span>
-                            <div class="doc-list">
-                                <span class="doc-item"><i class="fas fa-file-pdf"></i> Thể lệ cuộc thi.pdf</span>
-                                <span class="doc-item"><i class="fas fa-file-excel"></i> Ngân sách.xlsx</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="approval-footer">
-                        <button class="btn-view" onclick="viewApprovalDetail(4)">
-                            <i class="fas fa-eye"></i>
-                            Xem chi tiết
-                        </button>
-                        <button class="btn-reject" onclick="openRejectModal(4)">
-                            <i class="fas fa-times"></i>
-                            Từ chối
-                        </button>
-                        <button class="btn-approve" onclick="openApproveModal(4)">
-                            <i class="fas fa-check"></i>
-                            Phê duyệt cuối
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <div class="approval-list"><div id="bghPendingList"></div></div>
 
             <!-- Pagination -->
             <div class="pagination">
@@ -706,7 +404,37 @@
         </div>
     </div>
 
-    <script src="../js/bgh-approval.js"></script>
+    <div id="bghBulkModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:16px; width:92%; max-width:640px; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25); display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid #e5e7eb; position:sticky; top:0; background:#fff; z-index:1; border-radius:16px 16px 0 0;">
+            <div>
+                <h3 style="margin:0; font-size:18px; font-weight:700; color:#1a1a2e;">Duyệt hàng loạt - Cấp BGH</h3>
+                <p style="margin:4px 0 0; font-size:13px; color:#6b7280;">Chọn hồ sơ để phê duyệt cấp cuối</p>
+            </div>
+            <button onclick="closeBghBulkModal()" style="background:none; border:none; font-size:20px; color:#9ca3af; cursor:pointer; padding:4px 8px; border-radius:6px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="padding:14px 24px; background:#fff5f5; border-bottom:1px solid #fecaca; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#991b1b; cursor:pointer;">
+                <input type="checkbox" id="bghBulkSelectAll" onchange="toggleBghSelectAll(this)" style="width:16px; height:16px; accent-color:#dc2626;">
+                Chọn tất cả (<span id="bghBulkTotalCount">0</span> hồ sơ)
+            </label>
+            <span id="bghBulkSelectedCount" style="font-size:13px; font-weight:600; color:#dc2626;">Đã chọn: 0</span>
+        </div>
+        <div id="bghBulkItemList" style="padding:16px 24px; display:flex; flex-direction:column; gap:10px; flex:1; min-height:120px;"></div>
+        <div style="padding:16px 24px; border-top:1px solid #e5e7eb; background:#fafafa;">
+            <label style="font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:6px;">Ý kiến phê duyệt chung</label>
+            <textarea id="bghBulkComment" rows="3" placeholder="Nhập ý kiến phê duyệt cấp BGH..." style="width:100%; padding:10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
+        </div>
+        <div style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:10px; position:sticky; bottom:0; background:#fff; border-radius:0 0 16px 16px;">
+            <button onclick="closeBghBulkModal()" style="padding:10px 20px; background:#f3f4f6; border:none; border-radius:8px; font-size:14px; font-weight:600; color:#555; cursor:pointer;">Hủy</button>
+            <button onclick="confirmBghBulkApproval()" id="btnBghBulkConfirm" style="padding:10px 24px; background:#dc2626; border:none; border-radius:8px; font-size:14px; font-weight:700; color:#fff; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-check-double"></i> Phê duyệt tất cả đã chọn
+            </button>
+        </div>
+    </div>
+</div>
+
+    <script src="../js/bgh-pending-approval.js"></script>
     <script src="../js/btc-logout.js"></script>
 </body>
 </html>

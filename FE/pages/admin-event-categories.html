@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/btc-dashboard.css">
     <link rel="stylesheet" href="../css/ctsv-approval.css">
     <link rel="stylesheet" href="../css/admin.css">
@@ -55,11 +56,6 @@
             </div>
         </div>
         <div class="header-right">
-            <!-- FIXED: Added type="button", aria-label, title -->
-            <button type="button" class="btn-notification" aria-label="Thông báo" title="Thông báo">
-                <i class="fas fa-bell" aria-hidden="true"></i>
-                <span class="notification-badge" aria-label="5 thông báo chưa đọc">5</span>
-            </button>
             <div class="user-profile" tabindex="0" role="button" aria-label="Menu người dùng">
                 <div class="user-info">
                     <span class="user-name">Admin</span>
@@ -96,14 +92,6 @@
             </nav>
 
             <div class="sidebar-footer">
-                <a href="#" class="nav-item">
-                    <i class="fas fa-cog" aria-hidden="true"></i>
-                    <span>Cài đặt</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-question-circle" aria-hidden="true"></i>
-                    <span>Trợ giúp</span>
-                </a>
                 <a href="#" class="nav-item danger">
                     <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span>Đăng xuất</span>
@@ -126,7 +114,7 @@
                 </div>
             </div>
 
-            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+            <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
                 <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="stat-header">
                         <i class="fas fa-tags" aria-hidden="true"></i>
@@ -158,13 +146,13 @@
                     <div class="stat-header">
                         <i class="fas fa-fire" aria-hidden="true"></i>
                     </div>
-                    <div class="stat-number">Học thuật</div>
+                    <div class="stat-number" id="popularCatName">Học thuật</div>
                     <div class="stat-label">PHỔ BIẾN NHẤT</div>
-                    <div class="stat-description">2 sự kiện</div>
+                    <div class="stat-description" id="popularCatCount">2 sự kiện</div>
                 </div>
             </div>
 
-            <div class="categories-grid" style="margin-bottom: 32px;">
+            <div class="categories-grid" style="grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px;">
                 <!-- Category Card 1 -->
                 <div class="category-card">
                     <div class="category-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" aria-hidden="true">

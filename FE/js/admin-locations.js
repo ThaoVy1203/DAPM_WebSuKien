@@ -33,6 +33,56 @@ async function loadLocations() {
 }
 
 // ==========================
+// ẢNH ĐỊA ĐIỂM — map theo tên / loại
+// ==========================
+const LOCATION_IMAGES = {
+    // Theo từ khóa trong tên (lowercase)
+    keywords: [
+        { match: ['hội trường', 'hall', 'auditorium'],
+          url: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80' },
+        { match: ['sân vận động', 'sân thể thao', 'stadium', 'sport'],
+          url: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=600&q=80' },
+        { match: ['phòng họp', 'meeting', 'họp'],
+          url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80' },
+        { match: ['phòng học', 'classroom', 'giảng đường', 'room'],
+          url: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80' },
+        { match: ['sân', 'yard', 'outdoor', 'ngoài trời', 'vườn', 'garden'],
+          url: 'https://images.unsplash.com/photo-1567972526827-9e4d6c2f6dfb?w=600&q=80' },
+        { match: ['thư viện', 'library'],
+          url: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80' },
+        { match: ['nhà ăn', 'canteen', 'cafeteria', 'ăn'],
+          url: 'https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600&q=80' },
+        { match: ['phòng lab', 'laboratory', 'máy tính', 'computer'],
+          url: 'https://images.unsplash.com/photo-1517433456452-f9633a875f6f?w=600&q=80' },
+    ],
+    // Fallback theo loại địa điểm
+    types: {
+        hall:    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80',
+        room:    'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80',
+        outdoor: 'https://images.unsplash.com/photo-1567972526827-9e4d6c2f6dfb?w=600&q=80',
+    },
+    default: 'https://images.unsplash.com/photo-1562774053-701939374585?w=600&q=80'
+};
+
+function getLocationImage(location) {
+    // Ưu tiên ảnh đã có trong DB
+    if (location.hinhAnh && location.hinhAnh.startsWith('http')) return location.hinhAnh;
+
+    const name = (location.tenDiaDiem || '').toLowerCase();
+
+    // Tìm theo từ khóa trong tên
+    for (const entry of LOCATION_IMAGES.keywords) {
+        if (entry.match.some(kw => name.includes(kw))) return entry.url;
+    }
+
+    // Fallback theo loaiDiaDiem
+    const type = (location.loaiDiaDiem || '').toLowerCase();
+    if (LOCATION_IMAGES.types[type]) return LOCATION_IMAGES.types[type];
+
+    return LOCATION_IMAGES.default;
+}
+
+// ==========================
 // RENDER CARDS (grid view)
 // ==========================
 function renderLocationCards(locations) {
@@ -41,39 +91,35 @@ function renderLocationCards(locations) {
 
     container.innerHTML = '';
 
-    locations.slice(0, 6).forEach(location => {
-        const statusClass = location.trangThai ? 'available' : 'maintenance';
-        const statusText = location.trangThai ? 'Hoạt động' : 'Bảo trì';
+    locations.slice(0, 12).forEach(location => {
+        const id = location.idDiaDiem || location.id;
+        const isActive = location.trangThai === true || location.trangThai === 'true' || location.trangThai === 'HoatDong';
+        const statusClass = isActive ? 'available' : 'maintenance';
+        const statusText  = isActive ? 'Hoạt động' : 'Bảo trì';
+        const imgUrl = getLocationImage(location);
 
         const card = document.createElement('div');
         card.className = 'location-card';
         card.innerHTML = `
             <div class="location-image">
-                <img src="../images/location${location.id}.jpg" alt="${location.tenDiaDiem}"
-                     onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=${encodeURIComponent(location.tenDiaDiem)}'">
+                <img src="${imgUrl}"
+                     alt="${location.tenDiaDiem}"
+                     loading="lazy"
+                     onerror="this.src='https://images.unsplash.com/photo-1562774053-701939374585?w=600&q=80'">
                 <span class="location-status ${statusClass}">${statusText}</span>
             </div>
             <div class="location-info">
                 <h3>${location.tenDiaDiem}</h3>
-                <p><i class="fas fa-map-marker-alt"></i> ${location.viTri || 'Chưa xác định'}</p>
-                <p><i class="fas fa-tag"></i> ${location.loaiDiaDiem || ''}</p>
-                <div class="location-stats">
-                    <div class="stat">
-                        <i class="fas fa-users"></i>
-                        <span>${location.sucChua || 0} người</span>
-                    </div>
+                <div class="location-details">
+                    <span><i class="fas fa-users"></i> ${location.sucChua || 0} người</span>
+                    ${location.viTri ? `<span><i class="fas fa-map-marker-alt"></i> ${location.viTri}</span>` : ''}
                 </div>
-                <div class="location-actions">
-                    <button class="btn-action view" onclick="viewLocation(${location.id})">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn-action edit" onclick="editLocation(${location.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-action delete" onclick="deleteLocation(${location.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+                ${location.loaiDiaDiem ? `<div class="location-facilities"><span class="facility-badge"><i class="fas fa-tag"></i> ${location.loaiDiaDiem}</span></div>` : ''}
+            </div>
+            <div class="location-actions">
+                <button class="btn-action view"   onclick="viewLocation(${id})"   title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                <button class="btn-action edit"   onclick="editLocation(${id})"   title="Chỉnh sửa"><i class="fas fa-edit"></i></button>
+                <button class="btn-action delete" onclick="deleteLocation(${id})" title="Xóa"><i class="fas fa-trash"></i></button>
             </div>
         `;
         container.appendChild(card);

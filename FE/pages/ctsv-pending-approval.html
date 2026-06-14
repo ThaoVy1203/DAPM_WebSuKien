@@ -53,10 +53,6 @@
             </div>
         </div>
         <div class="header-right">
-            <button type="button" class="btn-notification" aria-label="Thông báo" title="Thông báo">
-                <i class="fas fa-bell" aria-hidden="true"></i>
-                <span class="notification-badge" aria-label="5 thông báo chưa đọc">5</span>
-            </button>
             <div class="user-profile" tabindex="0" role="button" aria-label="Menu người dùng">
                 <div class="user-info">
                     <span class="user-name">Nguyễn Thị Mai</span>
@@ -86,14 +82,6 @@
             </nav>
 
             <div class="sidebar-footer">
-                <a href="#" class="nav-item">
-                    <i class="fas fa-cog" aria-hidden="true"></i>
-                    <span>Cài đặt</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-question-circle" aria-hidden="true"></i>
-                    <span>Trợ giúp</span>
-                </a>
                 <a href="#" class="nav-item danger">
                     <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span>Đăng xuất</span>
@@ -110,10 +98,6 @@
                     <p>Danh sách hồ sơ mới cần xét duyệt từ Ban Tổ chức</p>
                 </div>
                 <div class="header-actions">
-                    <button type="button" class="btn-secondary" onclick="exportPendingList()" aria-label="Xuất danh sách hồ sơ chờ duyệt">
-                        <i class="fas fa-file-export" aria-hidden="true"></i>
-                        Xuất danh sách
-                    </button>
                     <button type="button" class="btn-primary" onclick="openBulkApprovalModal()" aria-label="Duyệt hàng loạt hồ sơ">
                         <i class="fas fa-check-double" aria-hidden="true"></i>
                         Duyệt hàng loạt
@@ -195,75 +179,7 @@
 
             <!-- Approval List -->
             <div class="approval-list">
-                <!-- Approval Item 1 - Workshop Kỹ năng thuyết trình -->
-                <div class="approval-item normal" data-priority="normal">
-                    <div class="approval-header">
-                        <div class="approval-info">
-                            <span class="approval-badge normal">BÌNH THƯỜNG</span>
-                            <span class="approval-id">#HS2024-003</span>
-                            <span class="approval-date">
-                                <i class="fas fa-calendar" aria-hidden="true"></i>
-                                Gửi: 29/11/2026 14:30
-                            </span>
-                        </div>
-                        <div class="approval-deadline">
-                            <i class="fas fa-clock" aria-hidden="true"></i>
-                            <span class="deadline-text">Còn 5 ngày</span>
-                        </div>
-                    </div>
-                    <div class="approval-body">
-                        <h3>Workshop Kỹ năng thuyết trình chuyên nghiệp</h3>
-                        <div class="approval-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-user" aria-hidden="true"></i>
-                                <span>Gửi bởi: <strong>Lê Văn Cường</strong> (Trưởng BTC)</span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-calendar-check" aria-hidden="true"></i>
-                                <span>Ngày tổ chức: <strong>05/12/2025</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-users" aria-hidden="true"></i>
-                                <span>Quy mô: <strong>80 người</strong></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                                <span>Ngân sách: <strong>2,000,000 đ</strong></span>
-                            </div>
-                        </div>
-                        <div class="approval-description">
-                            <p>Rèn luyện kỹ năng thuyết trình và giao tiếp cho sinh viên năm 2-3. Workshop bao gồm lý thuyết và thực hành...</p>
-                        </div>
-                        <div class="approval-documents">
-                            <span class="doc-label">Tài liệu đính kèm:</span>
-                            <div class="doc-list">
-                                <span class="doc-item"><i class="fas fa-file-pdf" aria-hidden="true"></i> Kế hoạch workshop.pdf</span>
-                                <span class="doc-item"><i class="fas fa-file-excel" aria-hidden="true"></i> Dự toán ngân sách.xlsx</span>
-                            </div>
-                        </div>
-                        <div class="approval-comment" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-top: 12px; border-radius: 6px;">
-                            <div class="comment-label" style="color: #f59e0b; font-weight: 600; margin-bottom: 6px;">
-                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
-                                Yêu cầu bổ sung:
-                            </div>
-                            <p style="margin: 0; color: #92400e;">Cần bổ sung danh sách giảng viên hỗ trợ</p>
-                        </div>
-                    </div>
-                    <div class="approval-footer">
-                        <button type="button" class="btn-view" onclick="viewApprovalDetail(1)" aria-label="Xem chi tiết hồ sơ Workshop Kỹ năng thuyết trình">
-                            <i class="fas fa-eye" aria-hidden="true"></i>
-                            Xem chi tiết
-                        </button>
-                        <button type="button" class="btn-reject" onclick="openRejectModal(1)" aria-label="Từ chối hồ sơ này">
-                            <i class="fas fa-times" aria-hidden="true"></i>
-                            Từ chối
-                        </button>
-                        <button type="button" class="btn-approve" onclick="openApproveModal(1)" aria-label="Phê duyệt hồ sơ này">
-                            <i class="fas fa-check" aria-hidden="true"></i>
-                            Phê duyệt
-                        </button>
-                    </div>
-                </div>
+                <div id="pendingList"></div>
             </div>
 
             <!-- Pagination -->
@@ -574,7 +490,38 @@
         </div>
     </div>
 
+    <div id="bulkApprovalModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:16px; width:92%; max-width:640px; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25); display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid #e5e7eb; position:sticky; top:0; background:#fff; z-index:1; border-radius:16px 16px 0 0;">
+            <div>
+                <h3 style="margin:0; font-size:18px; font-weight:700; color:#1a1a2e;">Duyệt hàng loạt</h3>
+                <p style="margin:4px 0 0; font-size:13px; color:#6b7280;">Chọn hồ sơ cần phê duyệt và nhập ý kiến chung</p>
+            </div>
+            <button onclick="closeBulkApprovalModal()" style="background:none; border:none; font-size:20px; color:#9ca3af; cursor:pointer; padding:4px 8px; border-radius:6px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="padding:14px 24px; background:#f0fdf4; border-bottom:1px solid #d1fae5; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#065f46; cursor:pointer;">
+                <input type="checkbox" id="bulkSelectAll" onchange="toggleSelectAll(this)" style="width:16px; height:16px; accent-color:#059669;">
+                Chọn tất cả (<span id="bulkTotalCount">0</span> hồ sơ)
+            </label>
+            <span id="bulkSelectedCount" style="font-size:13px; font-weight:600; color:#059669;">Đã chọn: 0</span>
+        </div>
+        <div id="bulkItemList" style="padding:16px 24px; display:flex; flex-direction:column; gap:10px; flex:1; min-height:120px;"></div>
+        <div style="padding:16px 24px; border-top:1px solid #e5e7eb; background:#fafafa;">
+            <label style="font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:6px;">Ý kiến phê duyệt chung</label>
+            <textarea id="bulkComment" rows="3" placeholder="Nhập ý kiến phê duyệt... (không bắt buộc)" style="width:100%; padding:10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
+        </div>
+        <div style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:10px; position:sticky; bottom:0; background:#fff; border-radius:0 0 16px 16px;">
+            <button onclick="closeBulkApprovalModal()" style="padding:10px 20px; background:#f3f4f6; border:none; border-radius:8px; font-size:14px; font-weight:600; color:#555; cursor:pointer;">Hủy</button>
+            <button onclick="confirmBulkApproval()" id="btnConfirmBulk" style="padding:10px 24px; background:#059669; border:none; border-radius:8px; font-size:14px; font-weight:700; color:#fff; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-check-double"></i> Phê duyệt tất cả đã chọn
+            </button>
+        </div>
+    </div>
+</div>
+
     <script src="../js/ctsv-approval.js"></script>
+    <script src="../js/ctsv-pending-approval.js"></script>
     <script src="../js/btc-logout.js"></script>
 </body>
 </html>
