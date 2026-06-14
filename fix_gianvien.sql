@@ -51,3 +51,21 @@ WHERE NOT EXISTS (
 PRINT N'Đã gán GiangVien cho ND006';
 */
 GO
+
+-- Đăng ký thêm người tham gia cho sự kiện 1
+INSERT INTO DangKySuKien (idSuKien, idNguoiDung, trangThai, thoiGianDangKy)
+VALUES 
+(1, 'ND006', N'Đã xác nhận', GETDATE()),
+(1, 'ND007', N'Đã xác nhận', GETDATE()),
+(1, 'ND008', N'Đã xác nhận', GETDATE()),
+(1, 'ND009', N'Đã tham gia', GETDATE()),
+(1, 'ND010', N'Đã tham gia', GETDATE()),
+(1, 'ND011', N'Đã hủy', GETDATE()),
+(1, 'ND012', N'Đã xác nhận', GETDATE());
+
+UPDATE DangKySuKien 
+SET trangThai = N'Đã tham gia',
+    thoiGianCheckin = '2025-11-15 08:05:00',
+    thoiGianCheckout = '2025-11-15 17:00:00'
+WHERE idSuKien = 1 
+AND idNguoiDung IN ('ND006', 'ND007', 'ND008', 'ND009', 'ND010', 'ND012');
