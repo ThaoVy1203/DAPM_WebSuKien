@@ -88,18 +88,23 @@
             </div>
         </div>
         <div class="header-right">
-            <!-- FIXED: Added aria-label and title for the notification button -->
-            <div class="user-profile" id="userProfile" tabindex="0" role="button" aria-expanded="false" aria-label="Menu người dùng">
-                <div class="user-info">
-                    <span class="user-name" id="userName">Đang tải...</span>
-                    <span class="user-role" id="userRole">Thành viên BTC</span>
+            <!-- User profile với badge vai trò -->
+            <div class="user-profile" id="userProfile" tabindex="0" role="button" aria-expanded="false" aria-label="Menu người dùng" style="display:flex;align-items:center;gap:10px;cursor:pointer;position:relative;padding:6px 12px;">
+                <div class="user-info" style="text-align:right;">
+                    <span class="user-name" id="userName" style="display:block;font-weight:700;font-size:14px;color:#1a1a2e;">Đang tải...</span>
+                    <span class="user-role" id="userRole" style="display:block;font-size:12px;color:#666;">Thành viên BTC</span>
                 </div>
-                <img src="" alt="Avatar người dùng" class="user-avatar" id="userAvatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
-                <div class="user-dropdown" id="userDropdown" style="display: none;">
-                    <a href="btc-dashboard.html"><i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard</a>
-                    <a href="profile.html"><i class="fas fa-user" aria-hidden="true"></i> Hồ sơ</a>
-                    <hr>
-                    <a href="#" onclick="logout(event)"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng xuất</a>
+                <div style="position:relative;">
+                    <img src="" alt="Avatar" class="user-avatar" id="userAvatar"
+                         style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:#0D5A9C;"
+                         onerror="this.src='https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff'">
+                    <span id="roleBadge" style="display:none;position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);background:#0D5A9C;color:white;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;white-space:nowrap;letter-spacing:0.5px;">TRƯỞNG BAN</span>
+                </div>
+                <div class="user-dropdown" id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:190px;z-index:1000;overflow:hidden;">
+                    <a href="btc-dashboard.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-tachometer-alt" style="color:#0D5A9C;width:16px;"></i> Dashboard</a>
+                    <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;"></i> Hồ sơ</a>
+                    <hr style="margin:0;border:none;border-top:1px solid #eee;">
+                    <a href="#" onclick="logout(event)" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="width:16px;"></i> Đăng xuất</a>
                 </div>
             </div>
         </div>
@@ -161,10 +166,6 @@
                         <i class="fas fa-file-export" aria-hidden="true"></i>
                         Gửi báo cáo
                     </button>
-                    <button class="btn-primary" onclick="submitBudgetApproval()" aria-label="Gửi phê duyệt ngân sách">
-                        <i class="fas fa-check" aria-hidden="true"></i>
-                        Gửi phê duyệt ngân sách
-                    </button>
                 </div>
             </div>
 
@@ -213,37 +214,29 @@
                     <div class="card">
                         <div class="card-header">
                             <h2>Phân công Nhiệm vụ</h2>
-                            <a href="btc-team-tasks.html" class="view-all-link">Xem tất cả</a>
+                            <a href="btc-team-tasks.html" class="view-all-link" id="viewAllTasksLink">Xem tất cả →</a>
+                        </div>
+                        <!-- Dropdown chọn sự kiện -->
+                        <div style="padding:0 0 12px 0;">
+                            <select id="dashTaskEventSelector" class="event-dropdown-select" style="width:100%;padding:9px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:14px;font-family:inherit;outline:none;background:white;">
+                                <option value="">-- Chọn sự kiện để xem nhiệm vụ --</option>
+                            </select>
+                        </div>
+                        <!-- Header cột bảng -->
+                        <div id="taskTableHeader" style="display:none;grid-template-columns:2fr 1.5fr 1fr 1fr 36px;gap:8px;padding:8px 12px;background:#F8FAFC;border-radius:6px;margin-bottom:4px;font-size:11px;font-weight:700;color:#9CA3AF;letter-spacing:0.5px;">
+                            <span>NHIỆM VỤ</span>
+                            <span>NGƯỜI PHỤ TRÁCH</span>
+                            <span>HẠN CHÓT</span>
+                            <span>TRẠNG THÁI</span>
+                            <span></span>
                         </div>
                         <div class="task-list" id="taskList">
                             <div class="loading">Đang tải nhiệm vụ...</div>
                         </div>
                     </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>Chi tiết Ngân sách</h2>
-                            <div class="card-actions">
-                                <button class="btn-icon" onclick="filterBudget()" aria-label="Lọc ngân sách"><i class="fas fa-filter" aria-hidden="true"></i></button>
-                                <button class="btn-icon" onclick="downloadBudget()" aria-label="Tải xuống ngân sách"><i class="fas fa-download" aria-hidden="true"></i></button>
-                            </div>
-                        </div>
-                        <div class="budget-list" id="budgetList">
-                            <div class="loading">Đang tải ngân sách...</div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="right-column">
-                    <div class="card approval-card">
-                        <div class="card-header">
-                            <h3>Yêu cầu cần Phê duyệt</h3>
-                        </div>
-                        <div class="approval-list" id="approvalList">
-                            <div class="loading">Đang tải yêu cầu...</div>
-                        </div>
-                    </div>
-
                     <div class="card activity-card">
                         <div class="card-header">
                             <h3>Hoạt động gần đây</h3>
@@ -301,10 +294,52 @@
         </div>
     </footer>
 
+    <!-- Task Detail Modal -->
+    <div id="dashTaskDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:white;border-radius:16px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="padding:20px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+                <h2 style="margin:0;font-size:18px;color:#1a1a2e;" id="dtdTitle">Chi tiết nhiệm vụ</h2>
+                <button onclick="closeDashTaskDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666;">&times;</button>
+            </div>
+            <div style="padding:24px;">
+                <div style="display:flex;gap:8px;margin-bottom:16px;">
+                    <span id="dtdPriority" style="padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;"></span>
+                    <span id="dtdStatus" style="padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;"></span>
+                </div>
+                <p style="color:#555;font-size:14px;line-height:1.6;margin-bottom:20px;" id="dtdDesc"></p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:12px;color:#9CA3AF;font-weight:600;margin-bottom:6px;">NGƯỜI PHỤ TRÁCH</div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <img id="dtdAvatar" src="" alt="" style="width:28px;height:28px;border-radius:50%;">
+                            <span id="dtdAssignee" style="font-size:14px;font-weight:600;"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:#9CA3AF;font-weight:600;margin-bottom:6px;">HẠN CHÓT</div>
+                        <span id="dtdDeadline" style="font-size:14px;font-weight:600;color:#374151;"></span>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#9CA3AF;font-weight:600;margin-bottom:8px;">TIẾN ĐỘ</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;">
+                            <div id="dtdProgressBar" style="height:100%;background:#0D5A9C;border-radius:4px;transition:width 0.3s;width:0%;"></div>
+                        </div>
+                        <span id="dtdProgressText" style="font-size:13px;font-weight:700;color:#0D5A9C;min-width:36px;">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:16px 24px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;">
+                <button onclick="closeDashTaskDetail()" style="padding:8px 20px;border:1px solid #E5E7EB;border-radius:8px;background:white;cursor:pointer;font-size:14px;">Đóng</button>
+                <button onclick="goToTeamTasks()" style="padding:8px 20px;background:#0D5A9C;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;"><i class="fas fa-external-link-alt" style="margin-right:6px;"></i>Xem đầy đủ</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/btc-dashboard.js"></script>
     <script src="../js/btc-logout.js"></script>
     <script>
-        // Optional: Small script to handle user dropdown accessibility (toggle aria-expanded)
         (function() {
             const userProfile = document.getElementById('userProfile');
             const dropdown = document.getElementById('userDropdown');

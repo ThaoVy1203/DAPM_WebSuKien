@@ -52,6 +52,7 @@ async function loadUsers() {
             if (assigneeSelect) {
                 assigneeSelect.innerHTML = '<option value="">Chọn người phụ trách</option>';
                 taskPageData.users.forEach(user => {
+                    // NguoiPhuTrach trong DB lưu dạng string tên → value = hoTen
                     const name = user.hoTen || user.name || "Người dùng";
                     assigneeSelect.innerHTML += `<option value="${name}">${name}</option>`;
                 });
@@ -69,29 +70,37 @@ async function loadEventsSelector() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${window.API_BASE}/SuKien`, {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+        // Load sự kiện của người dùng hiện tại (giống btc-events.js)
+        let url = `${window.API_BASE}/SuKien`;
+        if (userData.idNguoiDung) {
+            url = `${window.API_BASE}/SuKien/nguoi-tao/${userData.idNguoiDung}`;
+        }
+
+        const res = await fetch(url, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
         if (!res.ok) throw new Error("Lỗi tải sự kiện");
 
         const events = await res.json();
-        taskPageData.events = events;
+        taskPageData.events = Array.isArray(events) ? events : [];
 
-        selector.innerHTML = "";
-        events.forEach(e => {
+        selector.innerHTML = '<option value="">-- Chọn sự kiện --</option>';
+        taskPageData.events.forEach(e => {
             selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
         });
 
         // Get saved selected event
         let savedId = localStorage.getItem("btc_tasks_selected_event_id");
-        if (savedId && events.some(e => e.idSuKien == savedId)) {
+        if (savedId && taskPageData.events.some(e => e.idSuKien == savedId)) {
             selector.value = savedId;
             taskPageData.selectedEventId = savedId;
-        } else if (events.length > 0) {
-            selector.value = events[0].idSuKien;
-            taskPageData.selectedEventId = events[0].idSuKien;
-            localStorage.setItem("btc_tasks_selected_event_id", events[0].idSuKien);
+        } else if (taskPageData.events.length > 0) {
+            selector.value = taskPageData.events[0].idSuKien;
+            taskPageData.selectedEventId = taskPageData.events[0].idSuKien;
+            localStorage.setItem("btc_tasks_selected_event_id", taskPageData.events[0].idSuKien);
         }
 
         // Change listener
@@ -103,13 +112,23 @@ async function loadEventsSelector() {
 
     } catch (error) {
         console.error("Lỗi tải selector:", error);
+        selector.innerHTML = '<option value="">-- Không thể tải sự kiện --</option>';
     }
 }
 
 // ================= LOAD TASKS FOR SELECTED EVENT =================
 async function loadTasksForSelectedEvent() {
     const eventId = taskPageData.selectedEventId;
-    if (!eventId) return;
+    
+    // Xóa nội dung cũ khi chưa chọn sự kiện
+    if (!eventId) {
+        const emptyMsg = '<div class="no-tasks" style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Chọn sự kiện để xem nhiệm vụ</div>';
+        ["list-todo","list-inprogress","list-review","list-done"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = emptyMsg;
+        });
+        return;
+    }
 
     try {
         const token = localStorage.getItem("token");
@@ -117,15 +136,19 @@ async function loadTasksForSelectedEvent() {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
-        if (!res.ok) throw new Error("Lỗi tải danh sách công việc");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const tasks = await res.json();
-        taskPageData.tasks = tasks;
-        renderKanbanBoard(tasks);
+        taskPageData.tasks = Array.isArray(tasks) ? tasks : [];
+        renderKanbanBoard(taskPageData.tasks);
 
     } catch (error) {
         console.error("Lỗi load tasks:", error);
-        alert("Không tải được dữ liệu công việc!");
+        const errMsg = '<div class="no-tasks" style="text-align:center;padding:20px;color:#ef4444;font-size:13px;">Không tải được dữ liệu công việc</div>';
+        ["list-todo","list-inprogress","list-review","list-done"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = errMsg;
+        });
     }
 }
 
@@ -163,23 +186,24 @@ function renderKanbanBoard(tasks) {
         }
 
         col.data.forEach(task => {
-            const priorityClass = getPriorityClass(task.tieuDe); // determine priority color mock
-            const priorityText = getPriorityText(task.tieuDe);
             const assigneeName = task.nguoiPhuTrach || "Chưa phân công";
+            const title = task.tieuDe || task.tenCongViec || "Nhiệm vụ";
+            const deadline = task.hanChot
+                ? new Date(task.hanChot).toLocaleDateString("vi-VN")
+                : "Không có hạn";
 
             col.list.innerHTML += `
                 <div class="task-card" onclick="openTaskDetailModal(${task.idCongViec})">
-                    <div class="task-priority ${priorityClass}">${priorityText}</div>
-                    <h3 class="task-title">${task.tieuDe || task.tenCongViec || "Nhiệm vụ"}</h3>
-                    <p style="font-size:12px; color:#888; margin-bottom:8px; line-height:1.4;">${task.moTa || "Chưa có mô tả"}</p>
+                    <h3 class="task-title">${escapeHtmlTask(title)}</h3>
+                    <p style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.4;">${escapeHtmlTask(task.moTa || "Chưa có mô tả")}</p>
                     <div class="task-footer">
                         <div class="task-assignee">
                             <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(assigneeName)}&background=0D5A9C&color=fff" alt="Assignee">
-                            <span>${assigneeName}</span>
+                            <span>${escapeHtmlTask(assigneeName)}</span>
                         </div>
                         <div class="task-date">
                             <i class="fas fa-calendar"></i>
-                            ${task.hanChot ? new Date(task.hanChot).toLocaleDateString("vi-VN") : "Hạn chót"}
+                            ${deadline}
                         </div>
                     </div>
                 </div>
@@ -190,11 +214,17 @@ function renderKanbanBoard(tasks) {
 
 function mapBackendStatusToKanban(trangThai) {
     if (!trangThai) return "todo";
-    const statusLower = trangThai.toLowerCase();
-    if (statusLower.includes("chưa") || statusLower === "todo") return "todo";
-    if (statusLower.includes("tiến") || statusLower === "in-progress") return "inprogress";
-    if (statusLower.includes("xem") || statusLower === "review") return "review";
-    if (statusLower.includes("hoàn") || statusLower === "done" || statusLower === "completed") return "done";
+    const s = trangThai.toLowerCase().trim();
+    // Khớp với các giá trị từ BE (mapKanbanStatusToBackend)
+    if (s === "chưa bắt đầu" || s === "cần làm" || s === "todo") return "todo";
+    if (s === "đang thực hiện" || s === "in-progress" || s === "inprogress") return "inprogress";
+    if (s === "xem xét" || s === "review") return "review";
+    if (s === "hoàn thành" || s === "done" || s === "completed") return "done";
+    // Fallback theo từ khóa
+    if (s.includes("chưa") || s.includes("cần")) return "todo";
+    if (s.includes("đang") || s.includes("tiến")) return "inprogress";
+    if (s.includes("xem")) return "review";
+    if (s.includes("hoàn")) return "done";
     return "todo";
 }
 
@@ -206,18 +236,11 @@ function mapKanbanStatusToBackend(status) {
     return "Chưa bắt đầu";
 }
 
-function getPriorityClass(title = "") {
-    const lower = title.toLowerCase();
-    if (lower.includes("gấp") || lower.includes("vip") || lower.includes("ký")) return "high";
-    if (lower.includes("thiết kế") || lower.includes("hoàn tất")) return "medium";
-    return "low";
-}
-
-function getPriorityText(title = "") {
-    const lower = title.toLowerCase();
-    if (lower.includes("gấp") || lower.includes("vip") || lower.includes("ký")) return "ƯU TIÊN CAO";
-    if (lower.includes("thiết kế") || lower.includes("hoàn tất")) return "TRUNG BÌNH";
-    return "ƯU TIÊN THẤP";
+function escapeHtmlTask(str) {
+    if (!str) return "";
+    return String(str).replace(/[&<>"']/g, m =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])
+    );
 }
 
 // ================= CREATE / EDIT MODAL =================

@@ -555,6 +555,26 @@
         }
     }
     
+    // Ảnh fallback theo danh mục / tên sự kiện
+    function getEventImg(event) {
+        const hinhAnh = event.hinhAnh || event.HinhAnh;
+        if (hinhAnh) return hinhAnh;
+        // Dùng idSuKien làm seed → mỗi sự kiện có ảnh riêng, không trùng nhau
+        const seed = event.idSuKien || event.IdSuKien || "event";
+        const ten = (event.tenSuKien || event.TenSuKien || "").toLowerCase();
+        if (ten.includes("hội thảo") || ten.includes("học thuật") || ten.includes("seminar"))
+            return "https://picsum.photos/seed/conference/400/200";
+        if (ten.includes("tình nguyện"))
+            return "https://picsum.photos/seed/volunteer/400/200";
+        if (ten.includes("workshop") || ten.includes("kỹ năng") || ten.includes("khởi nghiệp"))
+            return "https://picsum.photos/seed/workshop/400/200";
+        if (ten.includes("văn nghệ") || ten.includes("văn hóa") || ten.includes("festival"))
+            return "https://picsum.photos/seed/festival/400/200";
+        if (ten.includes("hackathon") || ten.includes("công nghệ") || ten.includes("ai"))
+            return "https://picsum.photos/seed/tech/400/200";
+        return `https://picsum.photos/seed/${seed}/400/200`;
+    }
+
     function renderEvents(events) {
         const container = document.querySelector(".events-grid");
         if (!container) return;
@@ -565,18 +585,37 @@
             return;
         }
         
-        events.slice(0, 6).forEach(event => {
-            const startDate = event.thoiGianBatDau ? new Date(event.thoiGianBatDau).toLocaleDateString("vi-VN") : "Chưa có";
+        // Ưu tiên sự kiện đã duyệt, fallback lấy tất cả
+        const published = events.filter(e => {
+            const ts = e.trangThai || e.TrangThai || "";
+            return ts === "Đã duyệt" || ts === "Đang diễn ra";
+        });
+        const toShow = (published.length > 0 ? published : events).slice(0, 6);
+
+        toShow.forEach(event => {
+            const startDate = event.thoiGianBatDau
+                ? new Date(event.thoiGianBatDau).toLocaleDateString("vi-VN")
+                : "Chưa có";
+            const imgSrc = getEventImg(event);
+            const tenSuKien = event.tenSuKien || event.TenSuKien || "Chưa có tên";
+            const diaDiem = event.diaDiem?.tenDiaDiem || event.tenDiaDiem || event.TenDiaDiem || "Đang cập nhật";
+
             container.innerHTML += `
-                <div class="event-card">
-                    <div class="event-badge blue">Sự kiện</div>
+                <div class="event-card" onclick="window.location.href='pages/event-detail.html?id=${event.idSuKien || event.IdSuKien}'" style="cursor:pointer;">
+                    <div style="position:relative;height:180px;overflow:hidden;border-radius:16px 16px 0 0;background:#e5e7eb;">
+                        <img src="${imgSrc}"
+                             alt="${escapeHtml(tenSuKien)}"
+                             style="width:100%;height:100%;object-fit:cover;"
+                             onerror="this.src='https://picsum.photos/seed/fallback/400/200'">
+                        <span class="event-badge" style="position:absolute;top:12px;left:12px;background:#0D5A9C;color:white;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">Sự kiện</span>
+                    </div>
                     <div class="event-card-content">
-                        <h3>${escapeHtml(event.tenSuKien) || "Chưa có tên"}</h3>
-                        <div class="event-meta">
-                            <span><i class="far fa-calendar"></i> ${startDate}</span>
-                            <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(event.diaDiem?.tenDiaDiem || event.tenDiaDiem || "Đang cập nhật")}</span>
+                        <h3 style="font-size:15px;font-weight:700;margin:0 0 8px 0;color:#1a1a2e;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(tenSuKien)}</h3>
+                        <div class="event-meta" style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#666;margin-bottom:12px;">
+                            <span><i class="far fa-calendar" style="color:#0D5A9C;width:14px;"></i> ${startDate}</span>
+                            <span><i class="fas fa-map-marker-alt" style="color:#0D5A9C;width:14px;"></i> ${escapeHtml(diaDiem)}</span>
                         </div>
-                        <a href="pages/event-detail.html?id=${event.idSuKien}" class="btn-view-detail">Xem chi tiết</a>
+                        <a href="pages/event-detail.html?id=${event.idSuKien || event.IdSuKien}" class="btn-view-detail" onclick="event.stopPropagation()">Xem chi tiết</a>
                     </div>
                 </div>
             `;

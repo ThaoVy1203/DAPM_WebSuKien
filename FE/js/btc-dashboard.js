@@ -36,18 +36,31 @@ function loadUserInfo() {
     try {
         const user = JSON.parse(userData);
         const vaiTros = user.vaiTros || user.VaiTros || [];
+        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+
+        const userName = user.hoTen || user.HoTen || "Người dùng";
         const userNameEl = document.getElementById("userName");
-        if (userNameEl) userNameEl.textContent = user.hoTen || user.HoTen || "Người dùng";
+        if (userNameEl) userNameEl.textContent = userName;
+
         let roleText = "Thành viên BTC";
-        if (vaiTros.includes("TruongBanToChuc")) roleText = "Trưởng Ban Tổ chức";
+        if (isTruongBan) roleText = "Trưởng Ban Tổ chức";
         const userRoleEl = document.getElementById("userRole");
         if (userRoleEl) userRoleEl.textContent = roleText;
+
+        // Badge TRƯỞNG BAN
+        const roleBadge = document.getElementById("roleBadge");
+        if (roleBadge && isTruongBan) {
+            roleBadge.style.display = "block";
+            roleBadge.textContent = "TRƯỞNG BAN";
+        }
+
         const avatarUrl = user.anhDaiDien || user.AnhDaiDien ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(user.hoTen || user.HoTen || "User")}&background=0D5A9C&color=fff`;
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D5A9C&color=fff`;
         const userAvatar = document.getElementById("userAvatar");
         if (userAvatar) userAvatar.src = avatarUrl;
+
         const welcomeMsg = document.getElementById("welcomeMsg");
-        if (welcomeMsg) welcomeMsg.innerHTML = `Chào mừng ${user.hoTen || user.HoTen || "bạn"}! Hôm nay là ${new Date().toLocaleDateString("vi-VN")}`;
+        if (welcomeMsg) welcomeMsg.innerHTML = `Chào mừng ${userName}! Hôm nay là ${new Date().toLocaleDateString("vi-VN")}`;
     } catch (error) { console.error("Lỗi load user info:", error); }
 }
 
@@ -85,32 +98,68 @@ async function loadStats() {
     try {
         const token = localStorage.getItem("token");
         const headers = { "Authorization": `Bearer ${token}` };
-        const [tasksRes, eventsRes] = await Promise.all([
-            fetch(`${window.API_BASE}/tasks`, { headers }),
-            fetch(`${window.API_BASE}/SuKien`, { headers })
-        ]);
-        const tasks = tasksRes.ok ? await tasksRes.json() : [];
+
+        // Load sự kiện của user hiện tại
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const userId = userData.idNguoiDung;
+        const eventsUrl = userId
+            ? `${window.API_BASE}/SuKien/nguoi-tao/${userId}`
+            : `${window.API_BASE}/SuKien`;
+
+        const eventsRes = await fetch(eventsUrl, { headers });
         const events = eventsRes.ok ? await eventsRes.json() : [];
-        dashboardData.tasks = tasks;
-        dashboardData.events = events;
-        const totalTasks = tasks.length;
-        const completedTasks = tasks.filter(t =>
+        dashboardData.events = Array.isArray(events) ? events : [];
+
+        // Đếm thành viên từ thanhVienBTCs của sự kiện đầu tiên
+        let memberCount = 0;
+        if (dashboardData.events.length > 0) {
+            const firstEvent = dashboardData.events[0];
+            memberCount = firstEvent.thanhVienBTCs?.length || 0;
+        }
+        setElText("teamMembers", memberCount);
+
+        // Load tasks theo sự kiện đang chọn
+        const savedEventId = localStorage.getItem("btc_tasks_selected_event_id") ||
+            (dashboardData.events[0]?.idSuKien);
+
+        let tasks = [];
+        if (savedEventId) {
+            const tasksRes = await fetch(`${window.API_BASE}/tasks/su-kien/${savedEventId}`, { headers });
+            tasks = tasksRes.ok ? await tasksRes.json() : [];
+        }
+        dashboardData.tasks = Array.isArray(tasks) ? tasks : [];
+
+        const totalTasks = dashboardData.tasks.length;
+        const completedTasks = dashboardData.tasks.filter(t =>
             (t.trangThai || "").toLowerCase().includes("hoàn") || t.trangThai === "done"
         ).length;
         const progress = totalTasks > 0 ? (completedTasks / totalTasks * 100).toFixed(1) : 0;
-        setElText("teamMembers", events.length || 0);
         setElText("completedTasks", completedTasks);
         setElText("totalTasks", totalTasks);
         const pf = document.getElementById("progressFill");
         if (pf) pf.style.width = `${progress}%`;
-        const totalBudget = 150000000, spentBudget = 92450000;
-        const remainingBudget = totalBudget - spentBudget;
-        const budgetPct = (spentBudget / totalBudget * 100).toFixed(1);
-        setElText("totalBudget", formatCurrency(totalBudget));
-        setElText("spentBudget", formatCurrency(spentBudget));
-        setElText("remainingBudget", formatCurrency(remainingBudget));
-        setElText("budgetProgress", `${budgetPct}% hoàn thành`);
-        renderRecentActivity(tasks);
+
+        // Load ngân sách từ API (sự kiện đang chọn)
+        if (savedEventId) {
+            try {
+                const budgetRes = await fetch(`${window.API_BASE}/NganSach/su-kien/${savedEventId}`, { headers });
+                if (budgetRes.ok) {
+                    const budget = await budgetRes.json();
+                    const total = budget.tongNganSach || 0;
+                    const spent = budget.daChi || 0;
+                    const remaining = budget.conLai ?? (total - spent);
+                    const pct = total > 0 ? (spent / total * 100).toFixed(1) : 0;
+                    setElText("totalBudget", formatCurrency(total));
+                    setElText("spentBudget", formatCurrency(spent));
+                    setElText("remainingBudget", formatCurrency(remaining));
+                    setElText("budgetProgress", `${pct}% hoàn thành`);
+                }
+            } catch (e) {
+                console.warn("Không load được ngân sách:", e);
+            }
+        }
+
+        renderRecentActivity(dashboardData.tasks);
     } catch (error) { console.error("Stats load error:", error); }
 }
 
@@ -122,28 +171,42 @@ async function loadDashTaskEventSelector() {
     if (!selector) return;
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${window.API_BASE}/SuKien`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
+        const headers = { "Authorization": `Bearer ${token}` };
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const userId = userData.idNguoiDung;
+        const url = userId
+            ? `${window.API_BASE}/SuKien/nguoi-tao/${userId}`
+            : `${window.API_BASE}/SuKien`;
+
+        const res = await fetch(url, { headers });
         if (!res.ok) throw new Error("Lỗi tải sự kiện");
         const events = await res.json();
-        dashboardData.events = events;
+        dashboardData.events = Array.isArray(events) ? events : [];
+
         selector.innerHTML = '<option value="">-- Chọn sự kiện để xem nhiệm vụ --</option>';
-        events.forEach(e => {
+        dashboardData.events.forEach(e => {
             selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
         });
+
         const savedId = localStorage.getItem("btc_tasks_selected_event_id");
-        if (savedId && events.some(ev => ev.idSuKien == savedId)) {
-            selector.value = savedId;
-            dashboardData.selectedEventId = savedId;
-            await loadTasksByEvent(savedId);
+        const defaultId = savedId && dashboardData.events.some(ev => ev.idSuKien == savedId)
+            ? savedId
+            : (dashboardData.events[0]?.idSuKien);
+
+        if (defaultId) {
+            selector.value = defaultId;
+            dashboardData.selectedEventId = defaultId;
+            await loadTasksByEvent(defaultId);
+            await loadBudgetForEvent(defaultId);
         }
+
         selector.addEventListener("change", async function() {
             const eventId = this.value;
             dashboardData.selectedEventId = eventId;
             if (eventId) {
                 localStorage.setItem("btc_tasks_selected_event_id", eventId);
                 await loadTasksByEvent(eventId);
+                await loadBudgetForEvent(eventId);
             } else {
                 showEmptyTaskState("Chọn sự kiện để xem nhiệm vụ");
                 const th = document.getElementById("taskTableHeader");
@@ -153,6 +216,31 @@ async function loadDashTaskEventSelector() {
     } catch (error) {
         console.error("Lỗi load event selector:", error);
         if (selector) selector.innerHTML = '<option value="">Không tải được sự kiện</option>';
+    }
+}
+
+// ==========================
+// LOAD BUDGET THEO SỰ KIỆN
+// ==========================
+async function loadBudgetForEvent(eventId) {
+    if (!eventId) return;
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/NganSach/su-kien/${eventId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const budget = await res.json();
+        const total = budget.tongNganSach || 0;
+        const spent = budget.daChi || 0;
+        const remaining = budget.conLai ?? (total - spent);
+        const pct = total > 0 ? (spent / total * 100).toFixed(1) : 0;
+        setElText("totalBudget", formatCurrency(total));
+        setElText("spentBudget", formatCurrency(spent));
+        setElText("remainingBudget", formatCurrency(remaining));
+        setElText("budgetProgress", `${pct}% hoàn thành`);
+    } catch (e) {
+        console.warn("Không load được ngân sách:", e);
     }
 }
 

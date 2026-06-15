@@ -99,8 +99,18 @@
         const badge = document.getElementById("notifBadge");
         if (!badge) return;
         const token = localStorage.getItem("token");
+
+        let idNguoiDung = "";
+        const rawUser = localStorage.getItem("userData") || localStorage.getItem("user");
+        if (rawUser) {
+            try {
+                const u = JSON.parse(rawUser);
+                idNguoiDung = u.IdNguoiDung || u.idNguoiDung || u.id || "";
+            } catch (e) {}
+        }
+
         try {
-            const res = await fetch(`${API_BASE}/ThongBao/unread-count`, {
+            const res = await fetch(`${API_BASE}/ThongBao/unread-count?idNguoiDung=${idNguoiDung}`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (!res.ok) return;

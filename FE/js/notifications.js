@@ -23,12 +23,23 @@ async function loadNotifications() {
         return;
     }
 
+    let idNguoiDung = "";
+    const rawUser = localStorage.getItem("userData") || localStorage.getItem("user");
+    if (rawUser) {
+        try {
+            const u = JSON.parse(rawUser);
+            idNguoiDung = u.IdNguoiDung || u.idNguoiDung || u.id || "";
+        } catch (e) {
+            console.error("Lỗi parse userData:", e);
+        }
+    }
+
     const todayList = document.getElementById("notificationsList");
     const olderList = document.getElementById("olderNotificationsList");
     if (todayList) todayList.innerHTML = '<div style="padding:20px;color:#999;text-align:center;"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
 
     try {
-        const res = await fetch(`${API_BASE}/ThongBao`, {
+        const res = await fetch(`${API_BASE}/ThongBao?idNguoiDung=${idNguoiDung}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -143,7 +154,16 @@ async function markAllAsRead() {
     try {
         const token = localStorage.getItem("token");
 
-        await fetch(`${API_BASE}/ThongBao/read-all`, {
+        let idNguoiDung = "";
+        const rawUser = localStorage.getItem("userData") || localStorage.getItem("user");
+        if (rawUser) {
+            try {
+                const u = JSON.parse(rawUser);
+                idNguoiDung = u.IdNguoiDung || u.idNguoiDung || u.id || "";
+            } catch (e) {}
+        }
+
+        await fetch(`${API_BASE}/ThongBao/read-all?idNguoiDung=${idNguoiDung}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -193,15 +213,19 @@ function filterNotifications(type) {
 function updateBadgeCounts() {
     const unread = notifications.filter(n => !n.daDoc);
 
-    document.querySelector(".filter-item[data-filter='all'] .badge")
-        ?.textContent = unread.length;
+    const allBadge = document.querySelector(".filter-item[data-filter='all'] .badge");
+    if (allBadge) allBadge.textContent = unread.length;
 
-    ["event", "system", "reminder", "info"].forEach(type => {
-        const count = unread.filter(n => n.loai === type).length;
+    ["event", "general", "approved", "reminder"].forEach(type => {
+        const count = unread.filter(n => {
+            const t = (n.loai || n.type || "general").toLowerCase();
+            if (type === "general") return t === "general" || t === "info" || t === "system";
+            if (type === "approved") return t === "approved" || t === "success" || t === "system";
+            return t === type;
+        }).length;
 
-        document.querySelector(
-            `.filter-item[data-filter='${type}'] .badge`
-        )?.textContent = count;
+        const badgeEl = document.querySelector(`.filter-item[data-filter='${type}'] .badge`);
+        if (badgeEl) badgeEl.textContent = count;
     });
 }
 
@@ -256,8 +280,10 @@ function getIcon(type) {
     const icons = {
         event: "fa-calendar",
         system: "fa-check-circle",
+        approved: "fa-check-circle",
         reminder: "fa-clock",
-        info: "fa-info-circle"
+        info: "fa-info-circle",
+        general: "fa-info-circle"
     };
 
     return icons[type] || "fa-bell";
@@ -272,4 +298,14 @@ function isToday(date) {
     const now = new Date();
 
     return d.toDateString() === now.toDateString();
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

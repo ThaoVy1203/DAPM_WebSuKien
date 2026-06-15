@@ -85,16 +85,23 @@
         <main class="main-content">
             <!-- Event Info -->
             <div class="event-info">
-                <div class="event-details">
-                    <h1 id="attendanceEventTitle">Điểm danh người tham gia</h1>
-                    <div class="event-selector-wrapper" style="margin: 12px 0;">
-                        <select id="eventSelector" class="event-dropdown-select">
-                            <option value="">-- Chọn sự kiện --</option>
-                        </select>
-                    </div>
-                    <div class="event-meta">
-                        <span id="attendanceEventLocation"><i class="fas fa-map-marker-alt"></i> Đang tải...</span>
-                        <span id="attendanceEventTime"><i class="fas fa-clock"></i> Đang tải...</span>
+                <div class="event-details" style="display:flex;align-items:flex-start;gap:20px;">
+                    <img id="attendanceEventImage"
+                         src=""
+                         alt="Ảnh sự kiện"
+                         style="width:120px;height:80px;object-fit:cover;border-radius:10px;display:none;flex-shrink:0;"
+                         onerror="this.style.display='none'">
+                    <div style="flex:1;">
+                        <h1 id="attendanceEventTitle">Điểm danh người tham gia</h1>
+                        <div class="event-selector-wrapper" style="margin: 12px 0;">
+                            <select id="eventSelector" class="event-dropdown-select">
+                                <option value="">-- Chọn sự kiện --</option>
+                            </select>
+                        </div>
+                        <div class="event-meta">
+                            <span id="attendanceEventLocation"><i class="fas fa-map-marker-alt"></i> Đang tải...</span>
+                            <span id="attendanceEventTime"><i class="fas fa-clock"></i> Đang tải...</span>
+                        </div>
                     </div>
                 </div>
                 <div class="event-actions">

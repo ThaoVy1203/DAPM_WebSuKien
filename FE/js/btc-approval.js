@@ -477,3 +477,4 @@ window.viewApprovalDetail = viewApprovalDetail;
 window.cancelApproval = cancelApproval;
 window.deleteApproval = deleteApproval;
 window.removeFile = removeFile;
+window.approvalPageData = approvalPageData;

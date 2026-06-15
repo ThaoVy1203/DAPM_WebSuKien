@@ -1,4 +1,4 @@
-﻿using aspiCore.Dtos.ThongBao;
+using aspiCore.Dtos.ThongBao;
 
 namespace aspiCore.Services
 {
@@ -6,5 +6,6 @@ namespace aspiCore.Services
     {
         Task<IEnumerable<ThongBaoDto>> GetByNguoiDungAsync(string idNguoiDung);
         Task<bool> DanhDauDaDocAsync(int idThongBao);
+        Task<bool> MarkAllAsReadAsync(string idNguoiDung);
     }
 }

@@ -25,12 +25,17 @@
             </div>
         </div>
         <div class="header-right">
-            <div class="user-profile">
-                <div class="user-info">
-                    <span class="user-name">Nguyễn Văn A</span>
-                    <span class="user-role">Trưởng Ban Tổ chức</span>
+            <div class="user-profile" id="approvalUserProfile" style="display:flex;align-items:center;gap:10px;cursor:pointer;position:relative;padding:6px 12px;">
+                <div class="user-info" style="text-align:right;">
+                    <span class="user-name" id="approvalUserName" style="display:block;font-weight:700;font-size:14px;color:#1a1a2e;">Đang tải...</span>
+                    <span class="user-role" id="approvalUserRole" style="display:block;font-size:12px;color:#666;">Trưởng Ban Tổ chức</span>
                 </div>
-                <img src="../images/avatar1.jpg" alt="User" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Van+A&background=0D5A9C&color=fff'">
+                <div style="position:relative;">
+                    <img id="approvalUserAvatar" src="" alt="Avatar" class="user-avatar"
+                         style="width:40px;height:40px;border-radius:50%;object-fit:cover;"
+                         onerror="this.src='https://ui-avatars.com/api/?name=BTC&background=0D5A9C&color=fff'">
+                    <span style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);background:#0D5A9C;color:white;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;white-space:nowrap;">TRƯỞNG BAN</span>
+                </div>
             </div>
         </div>
     </header>
@@ -109,45 +114,45 @@
             </div>
 
             <!-- Stats Overview -->
-            <div class="approval-stats">
-                <div class="stat-card pending-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
+            <div class="approval-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+                <div class="stat-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;align-items:center;gap:16px;">
+                    <div style="width:48px;height:48px;border-radius:10px;background:#FEF3C7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-clock" style="font-size:20px;color:#D97706;"></i>
                     </div>
-                    <div class="stat-content">
-                        <h3>Chờ duyệt</h3>
-                        <p class="stat-number">5</p>
-                        <span class="stat-label">Yêu cầu đang chờ</span>
-                    </div>
-                </div>
-                <div class="stat-card approved-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>Đã duyệt</h3>
-                        <p class="stat-number">12</p>
-                        <span class="stat-label">Yêu cầu được chấp thuận</span>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:#9CA3AF;letter-spacing:.5px;margin-bottom:2px;">CHỜ DUYỆT</div>
+                        <div class="stat-number" style="font-size:32px;font-weight:800;color:#1a1a2e;line-height:1;">0</div>
+                        <div style="font-size:12px;color:#6B7280;margin-top:2px;">Yêu cầu đang chờ</div>
                     </div>
                 </div>
-                <div class="stat-card rejected-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-times-circle"></i>
+                <div class="stat-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;align-items:center;gap:16px;">
+                    <div style="width:48px;height:48px;border-radius:10px;background:#D1FAE5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-check-circle" style="font-size:20px;color:#059669;"></i>
                     </div>
-                    <div class="stat-content">
-                        <h3>Từ chối</h3>
-                        <p class="stat-number">2</p>
-                        <span class="stat-label">Yêu cầu bị từ chối</span>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:#9CA3AF;letter-spacing:.5px;margin-bottom:2px;">ĐÃ DUYỆT</div>
+                        <div class="stat-number" style="font-size:32px;font-weight:800;color:#1a1a2e;line-height:1;">0</div>
+                        <div style="font-size:12px;color:#6B7280;margin-top:2px;">Yêu cầu được chấp thuận</div>
                     </div>
                 </div>
-                <div class="stat-card draft-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-file-alt"></i>
+                <div class="stat-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;align-items:center;gap:16px;">
+                    <div style="width:48px;height:48px;border-radius:10px;background:#FEE2E2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-times-circle" style="font-size:20px;color:#DC2626;"></i>
                     </div>
-                    <div class="stat-content">
-                        <h3>Nháp</h3>
-                        <p class="stat-number">3</p>
-                        <span class="stat-label">Hồ sơ chưa gửi</span>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:#9CA3AF;letter-spacing:.5px;margin-bottom:2px;">TỪ CHỐI</div>
+                        <div class="stat-number" style="font-size:32px;font-weight:800;color:#1a1a2e;line-height:1;">0</div>
+                        <div style="font-size:12px;color:#6B7280;margin-top:2px;">Yêu cầu bị từ chối</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;align-items:center;gap:16px;">
+                    <div style="width:48px;height:48px;border-radius:10px;background:#F3F4F6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-file-alt" style="font-size:20px;color:#6B7280;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:#9CA3AF;letter-spacing:.5px;margin-bottom:2px;">NHÁP</div>
+                        <div class="stat-number" style="font-size:32px;font-weight:800;color:#1a1a2e;line-height:1;">0</div>
+                        <div style="font-size:12px;color:#6B7280;margin-top:2px;">Hồ sơ chưa gửi</div>
                     </div>
                 </div>
             </div>
@@ -574,6 +579,18 @@
     <script src="../js/btc-auth.js"></script>
     <script src="../js/btc-approval.js"></script>
     <script src="../js/btc-logout.js"></script>
+    <script>
+        (function() {
+            try {
+                const user = JSON.parse(localStorage.getItem("userData") || "{}");
+                const name = user.hoTen || user.HoTen || "Người dùng";
+                const el = document.getElementById("approvalUserName");
+                if (el) el.textContent = name;
+                const av = document.getElementById("approvalUserAvatar");
+                if (av) av.src = user.anhDaiDien || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D5A9C&color=fff`;
+            } catch(e) {}
+        })();
+    </script>
 </body>
 </html>
 

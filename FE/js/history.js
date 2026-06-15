@@ -65,6 +65,7 @@ async function loadHistory(page = 1) {
             thoiGianCheckout: item.ThoiGianCheckout ?? item.thoiGianCheckout ?? null,
             tenDiaDiem:       item.TenDiaDiem       ?? item.tenDiaDiem       ?? "Chưa xác định",
             thoiGianBatDau:   item.ThoiGianBatDau   ?? item.thoiGianBatDau   ?? null,
+            anhBia:           item.AnhBia           ?? item.anhBia           ?? null,
         }));
 
         currentPage = page;
@@ -114,10 +115,10 @@ function renderHistoryTable(data) {
         row.innerHTML = `
             <td>
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="../images/event${item.idSuKien}.png" 
-                         alt="Event" 
-                         style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;"
-                         onerror="this.src='https://via.placeholder.com/50x50/1976D2/FFFFFF?text=Event'">
+                    <img src="${item.anhBia || ''}" 
+                         alt="${escapeHtml(tenSuKien)}" 
+                         style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background:#e5e7eb; flex-shrink:0;"
+                         onerror="this.src='https://via.placeholder.com/50x50/1976D2/FFFFFF?text=SK'">
                     <div>
                         <div style="font-weight:600;color:#1a1a2e;">${escapeHtml(tenSuKien)}</div>
                         <div style="font-size:12px;color:#666;margin-top:4px;">

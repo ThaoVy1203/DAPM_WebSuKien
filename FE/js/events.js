@@ -14,6 +14,43 @@ const EVENT_IMAGES = [
     "../images/Festival.png"
 ];
 
+// Ảnh fallback theo danh mục — dùng picsum.photos (luôn hoạt động, không CORS)
+const CATEGORY_FALLBACK_IMAGES = {
+    "Học thuật":         "https://picsum.photos/seed/academic/400/200",
+    "Hội thảo":          "https://picsum.photos/seed/conference/400/200",
+    "Tình nguyện":       "https://picsum.photos/seed/volunteer/400/200",
+    "Văn nghệ":          "https://picsum.photos/seed/culture/400/200",
+    "Văn nghệ thể thao": "https://picsum.photos/seed/sport/400/200",
+    "Kỹ năng mềm":       "https://picsum.photos/seed/skills/400/200",
+    "Workshop":          "https://picsum.photos/seed/workshop/400/200",
+    "Phong trào Đoàn":   "https://picsum.photos/seed/youth/400/200",
+    "default":           "https://picsum.photos/seed/event/400/200"
+};
+
+function getEventFallbackImage(event) {
+    const danhMucs = event.danhMucs || event.DanhMucs || [];
+    if (danhMucs.length > 0) {
+        const tenDM = (danhMucs[0].tenDanhMuc || danhMucs[0].TenDanhMuc || "").toLowerCase();
+        if (tenDM.includes("học thuật") || tenDM.includes("hội thảo")) return CATEGORY_FALLBACK_IMAGES["Hội thảo"];
+        if (tenDM.includes("tình nguyện")) return CATEGORY_FALLBACK_IMAGES["Tình nguyện"];
+        if (tenDM.includes("workshop") || tenDM.includes("kỹ năng")) return CATEGORY_FALLBACK_IMAGES["Workshop"];
+        if (tenDM.includes("văn nghệ") || tenDM.includes("văn hóa")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ"];
+        if (tenDM.includes("đoàn") || tenDM.includes("phong trào")) return CATEGORY_FALLBACK_IMAGES["Phong trào Đoàn"];
+        if (tenDM.includes("thể thao")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ thể thao"];
+    }
+    const ten = (event.tenSuKien || event.TenSuKien || "").toLowerCase();
+    if (ten.includes("hội thảo") || ten.includes("học thuật") || ten.includes("seminar")) return CATEGORY_FALLBACK_IMAGES["Học thuật"];
+    if (ten.includes("tình nguyện")) return CATEGORY_FALLBACK_IMAGES["Tình nguyện"];
+    if (ten.includes("workshop") || ten.includes("kỹ năng") || ten.includes("khởi nghiệp")) return CATEGORY_FALLBACK_IMAGES["Workshop"];
+    if (ten.includes("văn nghệ") || ten.includes("văn hóa") || ten.includes("festival")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ"];
+    if (ten.includes("hackathon") || ten.includes("công nghệ") || ten.includes("ai")) return "https://picsum.photos/seed/tech/400/200";
+    if (ten.includes("thể thao") || ten.includes("sport")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ thể thao"];
+    if (ten.includes("đoàn") || ten.includes("phong trào")) return CATEGORY_FALLBACK_IMAGES["Phong trào Đoàn"];
+    // Dùng idSuKien làm seed để mỗi sự kiện có ảnh khác nhau
+    const seed = event.idSuKien || event.IdSuKien || Math.floor(Math.random() * 1000);
+    return `https://picsum.photos/seed/${seed}/400/200`;
+}
+
 let allEvents   = [];
 let myRegMap    = {};
 let allCategories = [];
@@ -282,11 +319,21 @@ function applyFiltersAndRender() {
 
         // 4. Lọc theo danh mục
         if (checkedCategories.length > 0) {
-            const catId = ev.IdDanhMuc || ev.idDanhMuc;
-            if (!checkedCategories.includes(String(catId))) return false;
-        } else {
-            // Không tích checkbox nào → không hiển thị gì
-            return false;
+            // Sự kiện có thể có nhiều danh mục (danhMucs[]) hoặc một danh mục đơn (IdDanhMuc)
+            const danhMucs = ev.danhMucs || ev.DanhMucs || [];
+            if (danhMucs.length > 0) {
+                // Kiểm tra có ít nhất 1 danh mục được tick
+                const matched = danhMucs.some(dm => {
+                    const dmId = String(dm.idDanhMuc ?? dm.IdDanhMuc ?? dm.id ?? "");
+                    return checkedCategories.includes(dmId);
+                });
+                if (!matched) return false;
+            } else {
+                // Fallback: trường đơn IdDanhMuc
+                const catId = ev.IdDanhMuc ?? ev.idDanhMuc;
+                if (catId != null && !checkedCategories.includes(String(catId))) return false;
+                // Nếu không có danh mục nào thì vẫn hiển thị (không lọc ra)
+            }
         }
 
         // 5. Lọc theo khoảng thời gian
@@ -410,7 +457,10 @@ function buildEventCard(event, idx) {
         if (ketThucDate) timeStr += ` - ${ketThucDate.toLocaleTimeString("vi-VN", { hour:"2-digit", minute:"2-digit" })}`;
     }
 
-    const imgSrc = EVENT_IMAGES[idx % EVENT_IMAGES.length];
+    const imgSrc = event.hinhAnh || event.HinhAnh || getEventFallbackImage(event);
+    const imgHtml = `<img src="${imgSrc}" alt="${escapeHtml(tenSuKien)}"
+           style="width:100%;height:100%;object-fit:cover;display:block;"
+           onerror="this.src='${getEventFallbackImage(event)}'">`;
 
     const badgeCfg = {
         "Đã duyệt":     { cls:"badge-approved",  text:"MỞ ĐĂNG KÝ" },
@@ -488,8 +538,7 @@ function buildEventCard(event, idx) {
     card.style.cursor = "pointer";
     card.innerHTML = `
         <div class="event-image" style="position:relative;">
-            <img src="${imgSrc}" alt="${escapeHtml(tenSuKien)}"
-                 onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=Event'">
+            ${imgHtml}
             <span class="event-badge ${badge.cls}">${badge.text}</span>
             ${conLai !== null && conLai <= 5 && conLai > 0
                 ? `<span style="position:absolute;bottom:10px;left:10px;background:#ef4444;color:white;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">
@@ -557,3 +606,10 @@ function escapeHtml(str) {
         ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m])
     );
 }
+
+function getFallbackImg() {
+    return `<div style="width:100%;height:100%;background:linear-gradient(135deg,#0D5A9C 0%,#1976D2 100%);display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-calendar-alt" style="font-size:40px;color:rgba(255,255,255,0.35);"></i>
+    </div>`;
+}
+window.getFallbackImg = getFallbackImg;

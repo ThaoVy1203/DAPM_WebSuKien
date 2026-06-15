@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using aspiCore.Data;
 using aspiCore.Dtos.ThongBao;
 
@@ -39,6 +39,23 @@ namespace aspiCore.Services
             if (tb == null) return false;
 
             tb.DaDoc = true;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> MarkAllAsReadAsync(string idNguoiDung)
+        {
+            var unread = await _context.ThongBaos
+                .Where(t => t.IdNguoiDung == idNguoiDung && !t.DaDoc)
+                .ToListAsync();
+
+            if (unread.Count == 0) return true;
+
+            foreach (var tb in unread)
+            {
+                tb.DaDoc = true;
+            }
+
             await _context.SaveChangesAsync();
             return true;
         }

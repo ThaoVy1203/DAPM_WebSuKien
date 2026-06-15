@@ -1,6 +1,43 @@
 // js/home-user.js
 const API_BASE = "http://localhost:5103/api";
 
+// ===== Fallback Images (Consistent with events.js) =====
+const CATEGORY_FALLBACK_IMAGES = {
+    "Học thuật":         "https://picsum.photos/seed/academic/400/200",
+    "Hội thảo":          "https://picsum.photos/seed/conference/400/200",
+    "Tình nguyện":       "https://picsum.photos/seed/volunteer/400/200",
+    "Văn nghệ":          "https://picsum.photos/seed/culture/400/200",
+    "Văn nghệ thể thao": "https://picsum.photos/seed/sport/400/200",
+    "Kỹ năng mềm":       "https://picsum.photos/seed/skills/400/200",
+    "Workshop":          "https://picsum.photos/seed/workshop/400/200",
+    "Phong trào Đoàn":   "https://picsum.photos/seed/youth/400/200",
+    "default":           "https://picsum.photos/seed/event/400/200"
+};
+
+function getEventFallbackImage(event) {
+    const danhMucs = event.danhMucs || event.DanhMucs || [];
+    if (danhMucs.length > 0) {
+        const tenDM = (danhMucs[0].tenDanhMuc || danhMucs[0].TenDanhMuc || "").toLowerCase();
+        if (tenDM.includes("học thuật") || tenDM.includes("hội thảo")) return CATEGORY_FALLBACK_IMAGES["Hội thảo"];
+        if (tenDM.includes("tình nguyện")) return CATEGORY_FALLBACK_IMAGES["Tình nguyện"];
+        if (tenDM.includes("workshop") || tenDM.includes("kỹ năng")) return CATEGORY_FALLBACK_IMAGES["Workshop"];
+        if (tenDM.includes("văn nghệ") || tenDM.includes("văn hóa")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ"];
+        if (tenDM.includes("đoàn") || tenDM.includes("phong trào")) return CATEGORY_FALLBACK_IMAGES["Phong trào Đoàn"];
+        if (tenDM.includes("thể thao")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ thể thao"];
+    }
+    const ten = (event.tenSuKien || event.TenSuKien || "").toLowerCase();
+    if (ten.includes("hội thảo") || ten.includes("học thuật") || ten.includes("seminar")) return CATEGORY_FALLBACK_IMAGES["Học thuật"];
+    if (ten.includes("tình nguyện")) return CATEGORY_FALLBACK_IMAGES["Tình nguyện"];
+    if (ten.includes("workshop") || ten.includes("kỹ năng") || ten.includes("khởi nghiệp")) return CATEGORY_FALLBACK_IMAGES["Workshop"];
+    if (ten.includes("văn nghệ") || ten.includes("văn hóa") || ten.includes("festival")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ"];
+    if (ten.includes("hackathon") || ten.includes("công nghệ") || ten.includes("ai")) return "https://picsum.photos/seed/tech/400/200";
+    if (ten.includes("thể thao") || ten.includes("sport")) return CATEGORY_FALLBACK_IMAGES["Văn nghệ thể thao"];
+    if (ten.includes("đoàn") || ten.includes("phong trào")) return CATEGORY_FALLBACK_IMAGES["Phong trào Đoàn"];
+    // Dùng idSuKien làm seed để mỗi sự kiện có ảnh khác nhau
+    const seed = event.idSuKien || event.IdSuKien || Math.floor(Math.random() * 1000);
+    return `https://picsum.photos/seed/${seed}/400/200`;
+}
+
 // ===== State sự kiện =====
 let huAllEvents = [];
 let huAllDanhMucs = [];
@@ -114,8 +151,17 @@ async function loadNotificationCount() {
     const badge = document.getElementById("notifBadge");
     if (!badge) return;
 
+    let idNguoiDung = "";
+    const rawUser = localStorage.getItem("userData") || localStorage.getItem("user");
+    if (rawUser) {
+        try {
+            const u = JSON.parse(rawUser);
+            idNguoiDung = u.IdNguoiDung || u.idNguoiDung || u.id || "";
+        } catch (e) {}
+    }
+
     try {
-        const res = await fetch(`${API_BASE}/ThongBao/unread-count`, {
+        const res = await fetch(`${API_BASE}/ThongBao/unread-count?idNguoiDung=${idNguoiDung}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         if (!res.ok) return;
@@ -185,6 +231,9 @@ async function loadHuEvents() {
     }
 }
 
+// ==========================
+// RENDER CARD HELPER (Consistent with events.js)
+// ==========================
 function renderHuEvents(events) {
     const grid = document.getElementById('huEventsGrid');
     if (!grid) return;
@@ -242,10 +291,12 @@ function createHuEventCard(event) {
     else if (badgeText === 'Đã kết thúc' || badgeText === 'Kết thúc') { badgeClass = 'green'; badgeText = 'Đã kết thúc'; }
     else if (badgeText === 'Hủy') { badgeClass = 'red'; badgeText = 'Đã hủy'; }
 
+    const imgSrc = event.hinhAnh || event.HinhAnh || getEventFallbackImage(event);
+
     card.innerHTML = `
         <div class="event-badge ${badgeClass}">${badgeText}</div>
-        <img src="../images/event${idSuKien}.png" alt="${escapeHtml(tenSuKien)}"
-             onerror="this.src='https://via.placeholder.com/400x250/0D5A9C/FFFFFF?text=Su+Kien'">
+        <img src="${imgSrc}" alt="${escapeHtml(tenSuKien)}"
+             onerror="this.src='${getEventFallbackImage(event)}'">
         <div class="event-card-content">
             <h3>${escapeHtml(tenSuKien)}</h3>
             <div class="event-meta">
