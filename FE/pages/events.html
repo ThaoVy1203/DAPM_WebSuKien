@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/events.css">
+    <link rel="stylesheet" href="../css/events.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .skip-link {
@@ -61,17 +61,17 @@
                         <i class="fas fa-bell" aria-hidden="true"></i>
                         <span class="notification-badge" id="notifBadge" style="display:none;" aria-label="0 thông báo chưa đọc">0</span>
                     </button>
-                    <div class="user-menu" id="userMenuWrapper" tabindex="0" role="button" aria-label="Menu người dùng" aria-expanded="false">
+                    <div class="user-menu" id="userMenuWrapper" onclick="event.stopPropagation(); const d = document.getElementById('userDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';" style="display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;padding:6px 12px;border-radius:40px;background:#f0f2f5;">
                         <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="Avatar người dùng" class="user-avatar" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
                         <span id="userName" style="font-size:14px;font-weight:600;color:#1a1a2e;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">...</span>
                         <i class="fas fa-chevron-down" style="font-size:12px;color:#666;" aria-hidden="true"></i>
-                        <div id="userDropdown" role="menu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:210px;z-index:9999;overflow:hidden;">
-                            <a href="profile.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Hồ sơ cá nhân</a>
-                            <a href="my-tickets.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Vé của tôi</a>
-                            <a href="history.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Lịch sử tham gia</a>
-                            <a href="notifications.html" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-bell" style="color:#0D5A9C;width:16px;" aria-hidden="true"></i> Thông báo</a>
+                        <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:210px;z-index:9999;overflow:hidden;">
+                            <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-user" style="color:#0D5A9C;width:16px;"></i> Hồ sơ cá nhân</a>
+                            <a href="my-tickets.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-ticket-alt" style="color:#0D5A9C;width:16px;"></i> Vé của tôi</a>
+                            <a href="history.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-history" style="color:#0D5A9C;width:16px;"></i> Lịch sử tham gia</a>
+                            <a href="notifications.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#333;text-decoration:none;font-size:14px;"><i class="fas fa-bell" style="color:#0D5A9C;width:16px;"></i> Thông báo</a>
                             <hr style="margin:0;border:none;border-top:1px solid #eee;">
-                            <a href="#" id="logoutBtn" role="menuitem" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;width:16px;" aria-hidden="true"></i> Đăng xuất</a>
+                            <a href="#" id="logoutBtn" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#e53e3e;text-decoration:none;font-size:14px;"><i class="fas fa-sign-out-alt" style="color:#e53e3e;width:16px;"></i> Đăng xuất</a>
                         </div>
                     </div>
                 </div>
@@ -112,90 +112,83 @@
                                 <span>Thông báo</span>
                             </a>
                         </nav>
-
-                        <div class="help-section">
-                            <h4>HỖ TRỢ SINH VIÊN</h4>
-                            <button type="button" class="btn-help" aria-label="Gửi yêu cầu hỗ trợ">Gửi yêu cầu</button>
-                        </div>
                     </aside>
 
                     <!-- Filters Sidebar -->
                     <aside class="sidebar filters-sidebar" aria-label="Bộ lọc sự kiện">
-                        <div class="filter-section">
-                            <h3><i class="fas fa-sliders-h" aria-hidden="true"></i> Bộ lọc tìm kiếm</h3>
+                        <div class="filter-section" style="margin-bottom: 12px;">
+                            <h3 style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-sliders-h" aria-hidden="true"></i> Bộ lọc tìm kiếm</h3>
                             <div class="search-box">
                                 <i class="fas fa-search" aria-hidden="true"></i>
                                 <input type="text" placeholder="Tìm theo tên, địa điểm..." aria-label="Tìm kiếm sự kiện">
                             </div>
                         </div>
 
-                        <div class="filter-section">
-                            <h4>Khoa / Đơn vị</h4>
-                            <label for="facultyFilter" class="visually-hidden">Lọc theo khoa đơn vị</label>
-                            <select class="filter-select" id="facultyFilter" aria-label="Lọc theo khoa đơn vị">
-                                <option value="all">Tất cả các khoa</option>
-                                <option value="cntt">Khoa CNTT</option>
-                                <option value="dien">Khoa Điện</option>
-                                <option value="cokhi">Khoa Cơ khí</option>
-                            </select>
+                        <div class="filter-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                            <div class="filter-col">
+                                <label for="facultyFilter" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Khoa / Đơn vị</label>
+                                <select class="filter-select" id="facultyFilter" aria-label="Lọc theo khoa đơn vị" style="padding: 6px 8px; font-size: 12px;">
+                                    <option value="all">Tất cả khoa</option>
+                                    <option value="cntt">Khoa CNTT</option>
+                                    <option value="dien">Khoa Điện</option>
+                                    <option value="cokhi">Khoa Cơ khí</option>
+                                </select>
+                            </div>
+                            <div class="filter-col">
+                                <label for="filterDiaDiem" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Địa điểm</label>
+                                <select id="filterDiaDiem" class="filter-select" aria-label="Lọc theo địa điểm" style="padding: 6px 8px; font-size: 12px;">
+                                    <option value="">Tất cả</option>
+                                    <!-- Được render động từ API -->
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="filter-section">
-                            <h4>Loại sự kiện</h4>
-                            <div class="category-checkboxes">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="category-filter" value="1" checked>
+                        <div class="filter-section" style="margin-bottom: 12px;">
+                            <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Loại sự kiện</h4>
+                            <div class="category-checkboxes" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 8px;">
+                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
+                                    <input type="checkbox" class="category-filter" value="1" checked style="width: 14px; height: 14px;">
                                     <span>Hội thảo</span>
                                 </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="category-filter" value="2" checked>
+                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
+                                    <input type="checkbox" class="category-filter" value="2" checked style="width: 14px; height: 14px;">
                                     <span>Cuộc thi</span>
                                 </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="category-filter" value="3" checked>
+                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
+                                    <input type="checkbox" class="category-filter" value="3" checked style="width: 14px; height: 14px;">
                                     <span>Tình nguyện</span>
                                 </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="category-filter" value="4" checked>
+                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
+                                    <input type="checkbox" class="category-filter" value="4" checked style="width: 14px; height: 14px;">
                                     <span>Workshop</span>
                                 </label>
                             </div>
                         </div>
 
-                        <div class="filter-section">
-                            <h4>Trạng thái</h4>
-                            <div class="status-buttons" role="group" aria-label="Lọc theo trạng thái sự kiện">
-                                <button type="button" class="status-btn active" data-status="all">Tất cả</button>
-                                <button type="button" class="status-btn" data-status="open">Đang mở đăng ký</button>
-                                <button type="button" class="status-btn" data-status="ongoing">Đang diễn ra</button>
-                                <button type="button" class="status-btn" data-status="ended">Đã kết thúc</button>
-                            </div>
-                        </div>
-
-                        <div class="filter-section">
-                            <h4>Địa điểm</h4>
-                            <label for="filterDiaDiem" class="visually-hidden">Lọc theo địa điểm</label>
-                            <select id="filterDiaDiem" class="filter-select" aria-label="Lọc theo địa điểm">
-                                <option value="">Tất cả địa điểm</option>
-                                <!-- Được render động từ API -->
+                        <div class="filter-section" style="margin-bottom: 12px;">
+                            <label for="statusFilterSelect" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Trạng thái</label>
+                            <select id="statusFilterSelect" class="filter-select" aria-label="Lọc theo trạng thái sự kiện" style="padding: 6px 8px; font-size: 12px; width: 100%;">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="open">Đang mở đăng ký</option>
+                                <option value="ongoing">Đang diễn ra</option>
+                                <option value="ended">Đã kết thúc</option>
                             </select>
                         </div>
 
-                        <div class="filter-section">
-                            <h4>Khoảng thời gian</h4>
-                            <div class="date-range">
-                                <label for="dateFrom" class="date-label">Từ ngày</label>
-                                <input type="date" id="dateFrom" class="filter-date" aria-label="Từ ngày">
-                                <label for="dateTo" class="date-label">Đến ngày</label>
-                                <input type="date" id="dateTo" class="filter-date" aria-label="Đến ngày">
+                        <div class="filter-section" style="margin-bottom: 12px;">
+                            <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Khoảng thời gian</h4>
+                            <div class="date-range" style="display: flex; align-items: center; gap: 4px;">
+                                <input type="date" id="dateFrom" class="filter-date" aria-label="Từ ngày" title="Từ ngày" style="padding: 4px 6px; font-size: 11px;">
+                                <span style="color: var(--text-gray); font-size: 11px;">đến</span>
+                                <input type="date" id="dateTo" class="filter-date" aria-label="Đến ngày" title="Đến ngày" style="padding: 4px 6px; font-size: 11px;">
                             </div>
                         </div>
 
-                        <div class="filter-actions">
-                            <button type="button" class="btn-apply-filter" aria-label="Áp dụng bộ lọc">
+                        <div class="filter-actions" style="display: flex; gap: 8px; margin-top: 16px;">
+                            <button type="button" class="btn-apply-filter" aria-label="Áp dụng bộ lọc" style="padding: 8px; font-size: 12px; flex: 1.5; border-radius: 6px;">
                                 <i class="fas fa-check" aria-hidden="true"></i> Áp dụng
                             </button>
-                            <button type="button" class="btn-reset-filter" aria-label="Đặt lại bộ lọc">
+                            <button type="button" class="btn-reset-filter" aria-label="Đặt lại bộ lọc" style="padding: 8px; font-size: 12px; flex: 1; border-radius: 6px; background: #e5e7eb; color: #4b5563; border: none; cursor: pointer;">
                                 <i class="fas fa-undo" aria-hidden="true"></i> Đặt lại
                             </button>
                         </div>
@@ -240,21 +233,9 @@
                             <i class="fas fa-star" aria-hidden="true"></i>
                             <h4>Sự kiện nổi bật</h4>
                         </div>
-                        <div class="highlight-item">
-                            <img src="../images/UTE Tech Showcase.png" alt="Lễ trao giải Sinh viên 5 tốt" onerror="this.src='https://via.placeholder.com/80x80/0D5A9C/FFFFFF?text=Event'">
-                            <div>
-                                <h5>Lễ trao giải Sinh viên 5 tốt Cấp Trường 2024</h5>
-                                <span>Ngày 15/12/2024</span>
-                            </div>
+                        <div id="featuredEventsList">
+                            <div style="text-align:center;padding:12px;color:#999;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>
                         </div>
-                        <div class="highlight-item">
-                            <img src="../images/Skills Talk.png" alt="Ngày hội việc làm CNTT" onerror="this.src='https://via.placeholder.com/80x80/1976D2/FFFFFF?text=Event'">
-                            <div>
-                                <h5>Ngày hội việc làm CNTT - IT Job Fair</h5>
-                                <span>Ngày 18/11/2024</span>
-                            </div>
-                        </div>
-                        <a href="#" class="view-all-link">Xem tất cả tin nổi bật</a>
                     </div>
 
                     <div class="highlight-card">
@@ -262,20 +243,8 @@
                             <i class="fas fa-bullhorn" aria-hidden="true"></i>
                             <h4>Thông báo mới</h4>
                         </div>
-                        <div class="notification-item">
-                            <h5>Cập nhật thời hạn đầu Hackathon</h5>
-                            <p>Thời gian thi đấu được gia hạn thêm 2h để sinh viên có thể hoàn thiện...</p>
-                            <span>2 ngày trước</span>
-                        </div>
-                        <div class="notification-item">
-                            <h5>Mở cộng đăng ký Workshop Kỹ năng</h5>
-                            <p>Sinh viên khóa 4 trở lên có thể đăng ký tham dự Workshop...</p>
-                            <span>3 ngày trước</span>
-                        </div>
-                        <div class="notification-item">
-                            <h5>Thông báo cấp chứng nhận Tình nguyện</h5>
-                            <p>Các em tham gia đầy đủ hoạt động tình nguyện có thể...</p>
-                            <span>5 ngày trước</span>
+                        <div id="recentNotificationsList">
+                            <div style="text-align:center;padding:12px;color:#999;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>
                         </div>
                     </div>
 
@@ -286,11 +255,11 @@
                         </div>
                         <div class="activity-stats">
                             <div class="stat-item">
-                                <div class="stat-number">04</div>
+                                <div class="stat-number" id="userEventsCount">04</div>
                                 <div class="stat-label">Sự kiện đã tham gia</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-number">12</div>
+                                <div class="stat-number" id="userPoints">12</div>
                                 <div class="stat-label">Điểm rèn luyện tích lũy</div>
                             </div>
                         </div>
@@ -355,32 +324,5 @@
     <script src="../js/config.js"></script>
     <script src="../js/events.js"></script>
     <script src="../js/header-user.js"></script>
-    <script>
-        // User dropdown toggle with accessibility
-        (function() {
-            const userMenu = document.getElementById('userMenuWrapper');
-            const userDropdown = document.getElementById('userDropdown');
-            if (userMenu && userDropdown) {
-                userMenu.addEventListener('click', function(e) {
-                    const isExpanded = userDropdown.style.display === 'block';
-                    userDropdown.style.display = isExpanded ? 'none' : 'block';
-                    userMenu.setAttribute('aria-expanded', !isExpanded);
-                    e.stopPropagation();
-                });
-                document.addEventListener('click', function() {
-                    userDropdown.style.display = 'none';
-                    userMenu.setAttribute('aria-expanded', 'false');
-                });
-                userMenu.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        const isExpanded = userDropdown.style.display === 'block';
-                        userDropdown.style.display = isExpanded ? 'none' : 'block';
-                        userMenu.setAttribute('aria-expanded', !isExpanded);
-                    }
-                });
-            }
-        })();
-    </script>
 </body>
 </html>

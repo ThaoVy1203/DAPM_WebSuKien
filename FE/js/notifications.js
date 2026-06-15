@@ -39,7 +39,7 @@ async function loadNotifications() {
     if (todayList) todayList.innerHTML = '<div style="padding:20px;color:#999;text-align:center;"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
 
     try {
-        const res = await fetch(`${API_BASE}/ThongBao?idNguoiDung=${idNguoiDung}`, {
+        const res = await fetch(`${API_BASE}/notifications?idNguoiDung=${encodeURIComponent(idNguoiDung)}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 

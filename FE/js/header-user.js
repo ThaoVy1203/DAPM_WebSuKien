@@ -71,16 +71,22 @@
 
         if (!wrapper || !dropdown) return;
 
+        // Xóa onclick hardcode nếu có (tránh double-toggle)
+        wrapper.removeAttribute("onclick");
+
         // Đảm bảo wrapper có position:relative
         wrapper.style.position = "relative";
 
         wrapper.addEventListener("click", function (e) {
             e.stopPropagation();
-            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+            const isOpen = dropdown.style.display === "block";
+            dropdown.style.display = isOpen ? "none" : "block";
         });
 
-        document.addEventListener("click", function () {
-            if (dropdown) dropdown.style.display = "none";
+        document.addEventListener("click", function (e) {
+            if (dropdown && !wrapper.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
         });
 
         if (logoutBtn) {

@@ -137,7 +137,7 @@ body {
 
 .content-layout {
     display: grid;
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: 220px 1fr;
     gap: 24px;
 }
 
@@ -157,7 +157,7 @@ body {
     margin-bottom: 24px;
 }
 
-.sidebar-item {
+.nav-item {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -170,19 +170,20 @@ body {
     transition: all 0.3s ease;
 }
 
-.sidebar-item:hover {
+.nav-item:hover {
     background-color: var(--secondary-color);
     color: var(--primary-color);
 }
 
-.sidebar-item.active {
+.nav-item.active {
     background-color: var(--primary-color);
     color: var(--white);
 }
 
-.sidebar-item i {
+.nav-item i {
     font-size: 16px;
     width: 20px;
+    text-align: center;
 }
 
 .help-section {

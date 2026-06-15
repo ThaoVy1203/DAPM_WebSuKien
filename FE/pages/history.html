@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/history.css">
+    <link rel="stylesheet" href="../css/history.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -29,7 +29,7 @@
                         <i class="fas fa-bell"></i>
                         <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
                     </button>
-                    <div class="user-menu" id="userMenuWrapper" style="display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;padding:6px 12px;border-radius:40px;background:#f0f2f5;">
+                    <div class="user-menu" id="userMenuWrapper" onclick="event.stopPropagation(); const d = document.getElementById('userDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';" style="display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;padding:6px 12px;border-radius:40px;background:#f0f2f5;">
                         <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="User" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
                         <span id="userName" style="font-size:14px;font-weight:600;color:#1a1a2e;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">...</span>
                         <i class="fas fa-chevron-down" style="font-size:12px;color:#666;"></i>
@@ -54,36 +54,31 @@
                 <!-- Sidebar -->
                 <aside class="sidebar">
                     <nav class="sidebar-nav">
-                        <a href="home-user.html" class="sidebar-item">
+                        <a href="home-user.html" class="nav-item">
                             <i class="fas fa-home"></i>
                             <span>Trang chủ</span>
                         </a>
-                        <a href="events.html" class="sidebar-item">
+                        <a href="events.html" class="nav-item">
                             <i class="fas fa-calendar-alt"></i>
                             <span>Sự kiện</span>
                         </a>
-                        <a href="calender.html" class="sidebar-item">
+                        <a href="calender.html" class="nav-item">
                             <i class="fas fa-calendar-check"></i>
                             <span>Lịch cá nhân</span>
                         </a>
-                        <a href="profile.html" class="sidebar-item">
+                        <a href="profile.html" class="nav-item">
                             <i class="fas fa-user"></i>
                             <span>Hồ sơ cá nhân</span>
                         </a>
-                        <a href="history.html" class="sidebar-item active">
+                        <a href="history.html" class="nav-item active">
                             <i class="fas fa-history"></i>
                             <span>Lịch sử tham gia</span>
                         </a>
-                        <a href="notifications.html" class="sidebar-item">
+                        <a href="notifications.html" class="nav-item">
                             <i class="fas fa-bell"></i>
                             <span>Thông báo</span>
                         </a>
                     </nav>
-
-                    <div class="help-section">
-                        <h4>HỖ TRỢ SINH VIÊN</h4>
-                        <button class="btn-help">Gửi yêu cầu</button>
-                    </div>
                 </aside>
 
                 <!-- Main History Content -->
@@ -94,13 +89,9 @@
                             <h1>Lịch sử Tham gia & Khen thưởng</h1>
                             <p class="subtitle">Theo dõi hoạt động ngoại khóa và điểm rèn luyện của bạn.</p>
                         </div>
-                        <button class="btn-analyze">
-                            <i class="fas fa-chart-pie"></i>
-                            Phân tích hiệu điểm
-                        </button>
                     </div>
 
-                    <!-- Stats Cards -->
+                    <!-- Stats Cards — số được JS cập nhật từ SQL -->
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon blue">
@@ -108,7 +99,7 @@
                             </div>
                             <div class="stat-info">
                                 <div class="stat-label">HỌC KỲ NÀY</div>
-                                <div class="stat-number">24</div>
+                                <div class="stat-number" id="statTotalEvents">0</div>
                                 <div class="stat-description">Tổng sự kiện tham gia</div>
                             </div>
                         </div>
@@ -119,7 +110,7 @@
                             </div>
                             <div class="stat-info">
                                 <div class="stat-label">TÍCH LUỸ</div>
-                                <div class="stat-number">85</div>
+                                <div class="stat-number" id="statPoints">0</div>
                                 <div class="stat-description">Điểm rèn luyện (ĐRL)</div>
                             </div>
                         </div>
@@ -130,7 +121,7 @@
                             </div>
                             <div class="stat-info">
                                 <div class="stat-label">CÔNG TÁC XÃ HỘI</div>
-                                <div class="stat-number">120.5</div>
+                                <div class="stat-number" id="statHours">0</div>
                                 <div class="stat-description">Giờ phục vụ cộng đồng</div>
                             </div>
                         </div>
@@ -164,36 +155,16 @@
                             </table>
                         </div>
 
-                        <!-- Pagination -->
+                        <!-- Pagination — được JS điều khiển -->
                         <div class="pagination">
-                            <span class="pagination-info">Hiển thị 1-4 trong số 24 sự kiện</span>
-                            <div class="pagination-controls">
-                                <button class="page-btn" disabled>
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <button class="page-btn active">1</button>
-                                <button class="page-btn">2</button>
-                                <button class="page-btn">3</button>
-                                <button class="page-btn">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
+                            <span class="pagination-info" id="paginationInfo"></span>
+                            <div class="pagination-controls" id="paginationControls">
+                                <!-- Rendered by JS -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- Achievement Banner -->
-                    <div class="achievement-banner">
-                        <div class="banner-content">
-                            <div class="banner-icon">
-                                <i class="fas fa-trophy"></i>
-                            </div>
-                            <div class="banner-text">
-                                <h3>Thành tích xuất sắc học kỳ!</h3>
-                                <p>Bạn nằm trong top 5% sinh viên có giá trị cộng đồng cao nhất. Tiếp tục phát huy để nhận học bổng khuyến khích hoạt động xã hội.</p>
-                            </div>
-                        </div>
-                        <button class="btn-banner">Xem bảng xếp hạng</button>
-                    </div>
+                    <!-- Achievement Banner removed -->
                 </div>
             </div>
         </div>

@@ -90,11 +90,16 @@ async function loadAllMyRegistrations() {
             }
         }
 
+        const attendedCount = allMyRegistrations.filter(i => i.trangThai === "Đã tham gia" || i.trangThai === "Hoàn thành").length;
         const statValue = document.querySelector(".stat-value");
-        if (statValue) statValue.textContent = allMyRegistrations.filter(i => i.trangThai !== "Đã hủy").length;
+        if (statValue) statValue.textContent = attendedCount;
 
         renderUpcomingEvents(allMyRegistrations.filter(i => i.trangThai !== "Đã hủy"));
         buildEventDatesSet(allMyRegistrations);
+
+        const today = new Date();
+        const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+        showEventsOnDate(todayKey);
 
     } catch (e) {
         console.warn("Không load được đăng ký:", e.message);
@@ -204,28 +209,28 @@ function renderUpcomingEvents(items) {
     });
 }
 
-// ── LOAD THỐNG KÊ ─────────────────────────────────────────────────
 async function loadStats() {
-    const attended = allMyRegistrations.filter(i => i.trangThai === "Đã tham gia").length;
+    const attended = allMyRegistrations.filter(i => i.trangThai === "Đã tham gia" || i.trangThai === "Hoàn thành").length;
     const total    = allMyRegistrations.filter(i => i.trangThai !== "Đã hủy").length;
+    const upcoming = allMyRegistrations.filter(i => i.trangThai === "Đã xác nhận" || i.trangThai === "Chờ xác nhận").length;
 
-    const statDetail = document.querySelector(".stat-detail");
-    if (statDetail) statDetail.textContent = `${attended} sự kiện đã tham gia`;
+    const statsAttended = document.getElementById("statsAttended");
+    if (statsAttended) statsAttended.textContent = attended;
 
-    const drl = Math.min(attended * 5, 100);
-    const progressFill  = document.querySelector(".progress-fill");
-    const progressValue = document.querySelector(".stat-progress .progress-value");
-    if (progressFill)  progressFill.style.width = `${drl}%`;
-    if (progressValue) progressValue.textContent = `${drl} / 100`;
+    const statsTotal = document.getElementById("statsTotal");
+    if (statsTotal) statsTotal.textContent = `/ ${total} đã đăng ký`;
 
-    const statGrowth = document.querySelector(".stat-growth");
-    if (statGrowth) statGrowth.textContent = `${total} sự kiện đã đăng ký`;
+    const statsUpcoming = document.getElementById("statsUpcoming");
+    if (statsUpcoming) statsUpcoming.textContent = upcoming;
+
+    const statsPoints = document.getElementById("statsPoints");
+    if (statsPoints) statsPoints.textContent = attended * 5;
 }
 
 // ── LOAD THÔNG BÁO SIDEBAR ────────────────────────────────────────
 async function loadNotifications() {
     const token = localStorage.getItem("token");
-    const container = document.querySelector(".notifications-card");
+    const container = document.getElementById("notificationsList");
     if (!container) return;
 
     try {
@@ -236,32 +241,31 @@ async function loadNotifications() {
 
         const data = await res.json();
         const items = Array.isArray(data) ? data : (data.items || data.data || []);
-        if (!items || items.length === 0) return;
+        if (!items || items.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#999;font-size:12px;">Không có thông báo mới</div>`;
+            return;
+        }
 
-        container.querySelectorAll(".notification-item").forEach(el => el.remove());
+        container.innerHTML = "";
 
-        items.slice(0, 3).forEach(notif => {
-            const daDoc = notif.daDoc === true || notif.daDoc === 1;
+        items.slice(0, 4).forEach(notif => {
             const thoiGian = notif.thoiGianGui || notif.ngayTao;
             const timeStr = thoiGian ? formatRelativeTime(new Date(thoiGian)) : "";
 
             const div = document.createElement("div");
             div.className = "notification-item";
-            div.style.cursor = "pointer";
+            div.style = "padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:8px;align-items:flex-start;transition:background 0.2s;";
+            div.addEventListener("mouseenter", () => div.style.background = "#f8fafc");
+            div.addEventListener("mouseleave", () => div.style.background = "transparent");
             div.innerHTML = `
-                <div class="notif-icon ${daDoc ? "info" : "success"}">
-                    <i class="fas ${daDoc ? "fa-info-circle" : "fa-bell"}"></i>
-                </div>
-                <div class="notif-content">
-                    <h5 style="${!daDoc ? "font-weight:700;" : ""}">${escapeHtml(notif.tieuDe || "Thông báo")}</h5>
-                    <p>${escapeHtml((notif.noiDung || "").substring(0, 60))}${(notif.noiDung || "").length > 60 ? "..." : ""}</p>
-                    <span class="notif-time">${timeStr}</span>
+                <span style="color:#0d5a9c;font-size:16px;line-height:1;margin-top:2px;">•</span>
+                <div style="flex:1;min-width:0;">
+                    <h5 style="font-size:12px;font-weight:700;color:#1e293b;margin:0 0 2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(notif.tieuDe || "Thông báo")}</h5>
+                    <p style="font-size:11px;color:#475569;margin:0 0 4px 0;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(notif.noiDung)}</p>
+                    <span style="font-size:10px;color:#94a3b8;display:block;">${timeStr}</span>
                 </div>`;
             div.addEventListener("click", () => window.location.href = "notifications.html");
-
-            const viewAll = container.querySelector(".view-all-link");
-            if (viewAll) container.insertBefore(div, viewAll);
-            else container.appendChild(div);
+            container.appendChild(div);
         });
 
     } catch (e) {
@@ -308,11 +312,16 @@ function renderCalendar(date) {
         div.className = cls;
         div.textContent = d;
 
-        if (eventDatesSet.has(key)) {
-            div.title = "Có sự kiện";
-            div.style.cursor = "pointer";
-            div.addEventListener("click", () => showEventsOnDate(key));
-        }
+        div.style.cursor = "pointer";
+        div.addEventListener("click", () => {
+            document.querySelectorAll(".calendar-date").forEach(el => {
+                el.style.outline = "none";
+                el.style.boxShadow = "none";
+            });
+            div.style.outline = "2px solid #0D5A9C";
+            div.style.outlineOffset = "-2px";
+            showEventsOnDate(key);
+        });
 
         body.appendChild(div);
     }
@@ -338,12 +347,56 @@ function showEventsOnDate(dateKey) {
         return key === dateKey;
     });
 
-    if (eventsOnDate.length === 0) return;
+    const titleEl = document.getElementById("selectedDayTitle");
+    const listEl = document.getElementById("selectedDayEventsList");
+    if (!listEl) return;
 
-    const lines = eventsOnDate.map(e =>
-        `• ${e.tenSuKien || "Sự kiện"} [${e.trangThai}]`
-    ).join("\n");
-    alert(`Sự kiện ngày ${dateKey.split("-").reverse().join("/")}:\n\n${lines}`);
+    if (titleEl) {
+        const dParts = dateKey.split("-");
+        titleEl.innerHTML = `<i class="fas fa-calendar-day" style="color:#0D5A9C;"></i> Sự kiện ngày ${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+    }
+
+    listEl.innerHTML = "";
+
+    if (eventsOnDate.length === 0) {
+        listEl.innerHTML = `<div style="text-align:center;padding:20px;color:#999;font-size:13px;">Không có sự kiện nào vào ngày này</div>`;
+        return;
+    }
+
+    eventsOnDate.forEach(e => {
+        const batDau = e.thoiGianBatDau ? new Date(e.thoiGianBatDau) : null;
+        const timeStr = batDau ? `${String(batDau.getHours()).padStart(2,"0")}:${String(batDau.getMinutes()).padStart(2,"0")}` : "Cả ngày";
+
+        const statusCfg = {
+            "Chờ xác nhận": { bg:"#fef3c7", color:"#92400e", label:"Chờ xác nhận" },
+            "Đã xác nhận":  { bg:"#d1fae5", color:"#065f46", label:"Đã xác nhận" },
+            "Đã tham gia":  { bg:"#dbeafe", color:"#1e40af", label:"Đã tham gia" },
+            "Hoàn thành":   { bg:"#dbeafe", color:"#1e40af", label:"Hoàn thành" },
+            "Vắng mặt":     { bg:"#fee2e2", color:"#ef4444", label:"Vắng mặt" },
+        };
+        const cfg = statusCfg[e.trangThai] || { bg:"#f3f4f6", color:"#6b7280", label: e.trangThai || "Đã đăng ký" };
+
+        const div = document.createElement("div");
+        div.style = "background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;";
+        div.innerHTML = `
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                <div style="font-weight:700;font-size:13px;color:#0d5a9c;background:#eff6ff;padding:2px 6px;border-radius:4px;">${timeStr}</div>
+                <div style="flex:1;font-weight:600;font-size:13px;color:#1e293b;line-height:1.3;">${escapeHtml(e.tenSuKien)}</div>
+            </div>
+            <div style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px;">
+                <i class="fas fa-map-marker-alt" style="color:#ef4444;"></i> ${escapeHtml(e.tenDiaDiem || "Hội trường")}
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                <span style="background:${cfg.bg};color:${cfg.color};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;">
+                    ${cfg.label}
+                </span>
+                <a href="event-detail.html?id=${e.idSuKien}" style="font-size:11px;color:#0d5a9c;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:4px;">
+                    <i class="fas fa-info-circle"></i> Chi tiết
+                </a>
+            </div>
+        `;
+        listEl.appendChild(div);
+    });
 }
 
 // ── ĐIỀU HƯỚNG LỊCH ───────────────────────────────────────────────
@@ -364,14 +417,6 @@ function initCalendarNav() {
 
 // ── BUTTONS ───────────────────────────────────────────────────────
 function initializeButtons() {
-    document.querySelector(".btn-help")?.addEventListener("click", function () {
-        alert("Tính năng hỗ trợ đang được phát triển.\nVui lòng liên hệ: eventdhspkt@ute.udn.vn");
-    });
-
-    document.querySelector(".btn-download")?.addEventListener("click", function () {
-        showToast("Tính năng tải báo cáo đang được phát triển.", "info");
-    });
-
     document.querySelector(".view-all-link")?.addEventListener("click", function (e) {
         e.preventDefault();
         window.location.href = "notifications.html";

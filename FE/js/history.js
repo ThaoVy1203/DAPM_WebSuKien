@@ -111,14 +111,16 @@ function renderHistoryTable(data) {
         const role = trangThai === 'Đã tham gia' ? 'Thành viên' : 'Người tham gia';
         const points = trangThai === 'Đã tham gia' ? '5 điểm' : '-';
 
+        const imgSrc = getHistoryEventImg(item);
+
         const row = document.createElement("tr");
         row.innerHTML = `
             <td>
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="${item.anhBia || ''}" 
+                    <img src="${imgSrc}" 
                          alt="${escapeHtml(tenSuKien)}" 
-                         style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background:#e5e7eb; flex-shrink:0;"
-                         onerror="this.src='https://via.placeholder.com/50x50/1976D2/FFFFFF?text=SK'">
+                         style="width:50px;height:50px;border-radius:8px;object-fit:cover;background:#e5e7eb;flex-shrink:0;"
+                         onerror="this.src='https://picsum.photos/seed/${item.idSuKien || 'ev'}/50/50'">
                     <div>
                         <div style="font-weight:600;color:#1a1a2e;">${escapeHtml(tenSuKien)}</div>
                         <div style="font-size:12px;color:#666;margin-top:4px;">
@@ -146,7 +148,27 @@ function renderHistoryTable(data) {
     });
 }
 
-function getStatusClass(status) {
+// ==========================
+// FALLBACK ẢNH THEO TÊN SỰ KIỆN (dùng picsum seed)
+// ==========================
+function getHistoryEventImg(item) {
+    if (item.anhBia) return item.anhBia;
+    const ten = (item.tenSuKien || "").toLowerCase();
+    if (ten.includes("hội thảo") || ten.includes("học thuật") || ten.includes("seminar") || ten.includes("chuyển đổi"))
+        return "https://picsum.photos/seed/conference/50/50";
+    if (ten.includes("tình nguyện"))
+        return "https://picsum.photos/seed/volunteer/50/50";
+    if (ten.includes("workshop") || ten.includes("kỹ năng") || ten.includes("khởi nghiệp"))
+        return "https://picsum.photos/seed/workshop/50/50";
+    if (ten.includes("văn nghệ") || ten.includes("văn hóa") || ten.includes("festival"))
+        return "https://picsum.photos/seed/festival/50/50";
+    if (ten.includes("hackathon") || ten.includes("công nghệ") || ten.includes("ai"))
+        return "https://picsum.photos/seed/tech/50/50";
+    if (ten.includes("thể thao") || ten.includes("sport"))
+        return "https://picsum.photos/seed/sport/50/50";
+    // Dùng idSuKien làm seed — mỗi sự kiện ảnh khác nhau, nhất quán
+    return `https://picsum.photos/seed/${item.idSuKien || "event"}/50/50`;
+}
     const statusMap = {
         'Chờ xác nhận': 'pending',
         'Đã xác nhận': 'confirmed',
@@ -158,24 +180,34 @@ function getStatusClass(status) {
 }
 
 // ==========================
-// CẬP NHẬT THỐNG KÊ (Giữ logic từ HEAD cho 3 thẻ stat)
+// CẬP NHẬT THỐNG KÊ từ dữ liệu SQL
 // ==========================
 function updateStats(items) {
-    const totalEvents = items.length;
-    const attendedEvents = items.filter(r => 
-        r.trangThai === 'Đã tham gia' || r.trangThai === 'Đã xác nhận'
+    const totalEvents = items.filter(r => r.trangThai !== 'Đã hủy').length;
+    const attendedEvents = items.filter(r =>
+        r.trangThai === 'Đã tham gia' || r.trangThai === 'Hoàn thành'
     ).length;
 
+    // Ưu tiên dùng id riêng nếu có
+    const el0 = document.getElementById("statTotalEvents");
+    const el1 = document.getElementById("statPoints");
+    const el2 = document.getElementById("statHours");
+
+    if (el0) el0.textContent = totalEvents;
+    if (el1) el1.textContent = Math.min(100, attendedEvents * 5);
+    if (el2) el2.textContent = (attendedEvents * 5).toFixed(1);
+
+    // Fallback cho .stat-number nếu không có id
     const statNumbers = document.querySelectorAll(".stat-number");
-    
-    // 1. Tổng số sự kiện
-    if (statNumbers[0]) statNumbers[0].textContent = totalEvents;
-    
-    // 2. Điểm rèn luyện (mock data: mỗi sự kiện ~4 điểm)
-    if (statNumbers[1]) statNumbers[1].textContent = Math.min(100, attendedEvents * 4);
-    
-    // 3. Giờ hoạt động cộng đồng (mock data: mỗi sự kiện ~5h)
-    if (statNumbers[2]) statNumbers[2].textContent = (attendedEvents * 5).toFixed(1);
+    if (!el0 && statNumbers[0]) statNumbers[0].textContent = totalEvents;
+    if (!el1 && statNumbers[1]) statNumbers[1].textContent = Math.min(100, attendedEvents * 5);
+    if (!el2 && statNumbers[2]) statNumbers[2].textContent = (attendedEvents * 5).toFixed(1);
+
+    // Cập nhật pagination info
+    const pInfo = document.getElementById("paginationInfo");
+    if (pInfo) pInfo.textContent = items.length > 0
+        ? `Hiển thị 1-${items.length} trong số ${items.length} sự kiện`
+        : "";
 }
 
 // ==========================

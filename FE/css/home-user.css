@@ -32,17 +32,17 @@ body {
 /* Header Styles */
 .header {
     background-color: var(--white);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     position: sticky;
     top: 0;
     z-index: 1000;
-    padding: 16px 0;
 }
 
 .header-wrapper {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 16px 0;
 }
 
 .logo img {
@@ -75,9 +75,8 @@ body {
     bottom: -8px;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 2px;
     background-color: var(--primary-color);
-    border-radius: 2px;
 }
 
 .header-actions {
@@ -134,7 +133,6 @@ body {
     height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--secondary-color);
 }
 
 /* Hero Section */

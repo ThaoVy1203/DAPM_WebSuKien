@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/calender.css">
+    <link rel="stylesheet" href="../css/calender.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Ngày hôm nay */
@@ -67,11 +67,7 @@
                         <i class="fas fa-bell"></i>
                         <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
                     </button>
-                    <button class="btn-download">
-                        <i class="fas fa-download"></i>
-                        Tải báo cáo
-                    </button>
-                    <div class="user-menu" id="userMenuWrapper" style="display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;padding:6px 12px;border-radius:40px;background:#f0f2f5;">
+                    <div class="user-menu" id="userMenuWrapper" onclick="event.stopPropagation(); const d = document.getElementById('userDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';" style="display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;padding:6px 12px;border-radius:40px;background:#f0f2f5;">
                         <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=0D5A9C&color=fff" alt="User" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
                         <span id="userName" style="font-size:14px;font-weight:600;color:#1a1a2e;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">...</span>
                         <i class="fas fa-chevron-down" style="font-size:12px;color:#666;"></i>
@@ -94,7 +90,7 @@
         <div class="container">
             <div class="content-layout">
                 <!-- Left Sidebar -->
-                <aside class="sidebar">
+                <aside class="sidebar" aria-label="Thanh điều hướng phụ">
                     <nav class="sidebar-nav">
                         <a href="home-user.html" class="nav-item">
                             <i class="fas fa-home"></i>
@@ -112,15 +108,15 @@
                             <i class="fas fa-user"></i>
                             <span>Hồ sơ cá nhân</span>
                         </a>
+                        <a href="history.html" class="nav-item">
+                            <i class="fas fa-history"></i>
+                            <span>Lịch sử tham gia</span>
+                        </a>
                         <a href="notifications.html" class="nav-item">
                             <i class="fas fa-bell"></i>
                             <span>Thông báo</span>
                         </a>
                     </nav>
-                    <div class="help-section">
-                        <h4>HỖ TRỢ SINH VIÊN</h4>
-                        <button class="btn-help">Gửi yêu cầu</button>
-                    </div>
                 </aside>
 
                 <!-- Main Content Area -->
@@ -134,61 +130,43 @@
                     </section>
 
                     <!-- Stats Cards -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-chart-line"></i>
+                    <div class="stats-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:20px;margin-bottom:24px;">
+                        <div class="stat-card" style="background:white;border-radius:12px;padding:24px;box-shadow:var(--shadow-sm);display:flex;gap:20px;align-items:center;">
+                            <div class="stat-icon blue" style="width:60px;height:60px;background:#eff6ff;color:#0d5a9c;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">
+                                <i class="fas fa-calendar-check"></i>
                             </div>
-                            <div class="stat-content">
-                                <div class="stat-label">HOẠT ĐỘNG TÍCH LŨY</div>
-                                <div class="stat-value">15</div>
-                                <div class="stat-detail">Sự kiện đã tham gia</div>
-                                <div class="stat-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 85%"></div>
-                                    </div>
-                                    <span class="progress-label">ĐIỂM RÈN LUYỆN</span>
-                                    <span class="progress-value">85 / 100</span>
-                                </div>
-                                <span class="stat-growth">+12% Tháng này</span>
+                            <div class="stat-info" style="flex:1;">
+                                <div class="stat-label" style="font-size:11px;font-weight:600;color:#6b7280;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">ĐÃ THAM GIA</div>
+                                <div class="stat-number" id="statsAttended" style="font-size:32px;font-weight:700;color:#1e293b;margin-bottom:4px;line-height:1.2;">0</div>
+                                <div class="stat-description" id="statsTotal" style="font-size:13px;color:#6b7280;">/ 0 đã đăng ký</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" style="background:white;border-radius:12px;padding:24px;box-shadow:var(--shadow-sm);display:flex;gap:20px;align-items:center;">
+                            <div class="stat-icon green" style="width:60px;height:60px;background:#ecfdf5;color:#10b981;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="stat-info" style="flex:1;">
+                                <div class="stat-label" style="font-size:11px;font-weight:600;color:#6b7280;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">SẮP DIỄN RA</div>
+                                <div class="stat-number" id="statsUpcoming" style="font-size:32px;font-weight:700;color:#1e293b;margin-bottom:4px;line-height:1.2;">0</div>
+                                <div class="stat-description" style="font-size:13px;color:#6b7280;">sự kiện đã đăng ký</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" style="background:white;border-radius:12px;padding:24px;box-shadow:var(--shadow-sm);display:flex;gap:20px;align-items:center;">
+                            <div class="stat-icon purple" style="width:60px;height:60px;background:#f5f3ff;color:#8b5cf6;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="stat-info" style="flex:1;">
+                                <div class="stat-label" style="font-size:11px;font-weight:600;color:#6b7280;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">ĐIỂM RÈN LUYỆN</div>
+                                <div class="stat-number" id="statsPoints" style="font-size:32px;font-weight:700;color:#1e293b;margin-bottom:4px;line-height:1.2;">0</div>
+                                <div class="stat-description" style="font-size:13px;color:#6b7280;">/ 100 điểm</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Upcoming Events -->
-                    <section class="section">
-                        <div class="section-header">
-                            <h3>Vé của tôi</h3>
-                            <a href="my-tickets.html" class="link-view-all">Xem tất cả</a>
-                        </div>
-                        <div class="events-list">
-                            <div class="event-item">
-                                <div class="event-date-box">
-                                    <div class="date-month">OCT</div>
-                                    <div class="date-day">24</div>
-                                </div>
-                                <div class="event-info">
-                                    <h4>Hội thảo AI & Future Career</h4>
-                                    <p><i class="fas fa-map-marker-alt"></i> Hội trường A</p>
-                                </div>
-                                <a href="my-tickets.html" class="btn-view">Xem vé</a>
-                            </div>
-                            <div class="event-item">
-                                <div class="event-date-box orange">
-                                    <div class="date-month">OCT</div>
-                                    <div class="date-day">28</div>
-                                </div>
-                                <div class="event-info">
-                                    <h4>Ngày hội Tuyển dụng 2024</h4>
-                                    <p><i class="fas fa-map-marker-alt"></i> Sân vận động UTE</p>
-                                </div>
-                                <a href="my-tickets.html" class="btn-view">Xem vé</a>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Calendar -->
-                    <section class="section">
+                    <!-- Calendar Section (Pushed before Upcoming Events) -->
+                    <section class="section calendar-section">
                         <div class="section-header">
                             <h3>Lịch sự kiện</h3>
                             <div class="calendar-nav">
@@ -197,106 +175,71 @@
                                 <button class="btn-nav"><i class="fas fa-chevron-right"></i></button>
                             </div>
                         </div>
-                        <div class="calendar">
-                            <div class="calendar-header">
-                                <div class="calendar-day">CN</div>
-                                <div class="calendar-day">T2</div>
-                                <div class="calendar-day">T3</div>
-                                <div class="calendar-day">T4</div>
-                                <div class="calendar-day">T5</div>
-                                <div class="calendar-day">T6</div>
-                                <div class="calendar-day">T7</div>
-                            </div>
-                            <div class="calendar-body">
-                                <div class="calendar-date inactive">30</div>
-                                <div class="calendar-date">1</div>
-                                <div class="calendar-date">2</div>
-                                <div class="calendar-date">3</div>
-                                <div class="calendar-date">4</div>
-                                <div class="calendar-date">5</div>
-                                <div class="calendar-date">6</div>
-                                
-                                <div class="calendar-date">7</div>
-                                <div class="calendar-date">8</div>
-                                <div class="calendar-date">9</div>
-                                <div class="calendar-date">10</div>
-                                <div class="calendar-date">11</div>
-                                <div class="calendar-date">12</div>
-                                <div class="calendar-date">13</div>
-                                
-                                <div class="calendar-date">14</div>
-                                <div class="calendar-date">15</div>
-                                <div class="calendar-date">16</div>
-                                <div class="calendar-date has-event">17</div>
-                                <div class="calendar-date">18</div>
-                                <div class="calendar-date">19</div>
-                                <div class="calendar-date">20</div>
-                                
-                                <div class="calendar-date">21</div>
-                                <div class="calendar-date">22</div>
-                                <div class="calendar-date">23</div>
-                                <div class="calendar-date has-event">24</div>
-                                <div class="calendar-date">25</div>
-                                <div class="calendar-date">26</div>
-                                <div class="calendar-date">27</div>
-                                
-                                <div class="calendar-date">28</div>
-                                <div class="calendar-date">29</div>
-                                <div class="calendar-date">30</div>
-                                <div class="calendar-date has-event">31</div>
-                                <div class="calendar-date inactive">1</div>
-                                <div class="calendar-date inactive">2</div>
-                                <div class="calendar-date inactive">3</div>
-                            </div>
-                            <div class="calendar-legend">
-                                <div class="legend-item">
-                                    <span class="legend-dot upcoming"></span>
-                                    <span>SẮP DIỄN RA</span>
-                                </div>
-                                <div class="legend-item">
-                                    <span class="legend-dot important"></span>
-                                    <span>QUAN TRỌNG</span>
+                        <div class="calendar-container-layout" style="display:flex;gap:24px;background:white;padding:24px;border-radius:12px;box-shadow:var(--shadow-sm);">
+                            <!-- Left: Monthly calendar grid -->
+                            <div class="calendar-grid-column" style="flex:1.2;min-width:0;">
+                                <div class="calendar" style="box-shadow:none;padding:0;background:transparent;max-width:none;margin:0;">
+                                    <div class="calendar-header">
+                                        <div class="calendar-day">CN</div>
+                                        <div class="calendar-day">T2</div>
+                                        <div class="calendar-day">T3</div>
+                                        <div class="calendar-day">T4</div>
+                                        <div class="calendar-day">T5</div>
+                                        <div class="calendar-day">T6</div>
+                                        <div class="calendar-day">T7</div>
+                                    </div>
+                                    <div class="calendar-body">
+                                        <!-- Will be rendered dynamically -->
+                                    </div>
+                                    <div class="calendar-legend" style="margin-top:16px;">
+                                        <div class="legend-item">
+                                            <span class="legend-dot today" style="background:#0D5A9C;"></span>
+                                            <span>Hôm nay</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <span class="legend-dot has-event" style="background:#1e40af;"></span>
+                                            <span>Có sự kiện</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <!-- Right: Selected day event list -->
+                            <div class="calendar-events-column" style="flex:1;border-left:1px solid #eee;padding-left:24px;min-width:0;">
+                                <h4 id="selectedDayTitle" style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:16px;display:flex;align-items:center;gap:6px;">
+                                    <i class="fas fa-calendar-day" style="color:#0D5A9C;"></i> Sự kiện ngày hôm nay
+                                </h4>
+                                <div id="selectedDayEventsList" style="display:flex;flex-direction:column;gap:12px;">
+                                    <div style="text-align:center;padding:20px;color:#999;font-size:13px;">Chọn ngày trên lịch để xem sự kiện</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Upcoming Events ("Vé của tôi") -->
+                    <section class="section">
+                        <div class="section-header">
+                            <h3>Vé của tôi</h3>
+                            <a href="my-tickets.html" class="link-view-all">Xem tất cả</a>
+                        </div>
+                        <div class="events-list">
+                            <!-- Dynamically loaded -->
                         </div>
                     </section>
                 </div>
 
                 <!-- Right Sidebar - Notifications -->
                 <aside class="notifications-sidebar">
-                    <div class="notifications-card">
-                        <h3>Thông báo mới</h3>
-                        <div class="notification-item">
-                            <div class="notif-icon success">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="notif-content">
-                                <h5>Đăng ký thành công!</h5>
-                                <p>Hội thảo AI & Career đã được xác nhận.</p>
-                                <span class="notif-time">2 giờ trước</span>
-                            </div>
+                    <div class="notifications-card" style="background:white;border-radius:12px;box-shadow:var(--shadow-sm);padding:20px;border:1px solid #e2e8f0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+                            <h3 style="font-size:15px;font-weight:700;color:#1e293b;margin:0;display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-bell" style="color:#0D5A9C;"></i> Thông báo
+                            </h3>
+                            <a href="notifications.html" style="font-size:12px;font-weight:600;color:#0d5a9c;text-decoration:none;">Xem tất cả</a>
                         </div>
-                        <div class="notification-item">
-                            <div class="notif-icon warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="notif-content">
-                                <h5>Thay đổi địa điểm</h5>
-                                <p>Hội thảo Kỹ năng Mềm chuyển sang phòng B.102.</p>
-                                <span class="notif-time">5 giờ trước</span>
-                            </div>
+                        <div id="notificationsList" style="display:flex;flex-direction:column;gap:0;">
+                            <!-- Will be rendered dynamically -->
                         </div>
-                        <div class="notification-item">
-                            <div class="notif-icon info">
-                                <i class="fas fa-info-circle"></i>
-                            </div>
-                            <div class="notif-content">
-                                <h5>Đã mở rèn luyện mới</h5>
-                                <p>Bạn vừa nhận được +5 điểm cho sự kiện tuần trước.</p>
-                                <span class="notif-time">1 ngày trước</span>
-                            </div>
-                        </div>
-                        <a href="notifications.html" class="view-all-link">XEM TẤT CẢ</a>
                     </div>
                 </aside>
             </div>

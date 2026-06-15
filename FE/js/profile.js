@@ -152,6 +152,27 @@ async function loadUserStatistics() {
         const upcomingElement = document.querySelector('.activity-stat-item:nth-child(2) .stat-number');
         if (upcomingElement) upcomingElement.textContent = upcomingEvents.length;
 
+        const certElement = document.querySelector('.activity-stat-item:nth-child(3) .stat-number');
+        if (certElement) certElement.textContent = attendedCount;
+
+        // Update Diem Ren Luyen
+        const statsScoreElement = document.querySelector('.stats-score');
+        if (statsScoreElement) {
+            const points = attendedCount * 5;
+            statsScoreElement.textContent = points;
+
+            const statsRankElement = document.querySelector('.stats-rank');
+            if (statsRankElement) {
+                let rank = "Trung bình";
+                if (points >= 90) rank = "Xuất sắc";
+                else if (points >= 80) rank = "Tốt";
+                else if (points >= 65) rank = "Khá";
+                else if (points >= 50) rank = "Trung bình";
+                else rank = "Yếu";
+                statsRankElement.textContent = `Hạng: ${rank}`;
+            }
+        }
+
         // Update UI Sự kiện gần đây
         renderRecentEvents(upcomingEvents.slice(0, 2));
 
