@@ -47,11 +47,14 @@ function loadUserInfo() {
         const userRoleEl = document.getElementById("userRole");
         if (userRoleEl) userRoleEl.textContent = roleText;
 
-        // Badge TRƯỞNG BAN
-        const roleBadge = document.getElementById("roleBadge");
-        if (roleBadge && isTruongBan) {
-            roleBadge.style.display = "block";
-            roleBadge.textContent = "TRƯỞNG BAN";
+        // Dynamic Role Badge matching btc-auth.js
+        const userInfoEl = document.querySelector('.user-info');
+        if (userInfoEl) {
+            userInfoEl.querySelector('.role-badge')?.remove();
+            const badge = document.createElement('span');
+            badge.className = 'role-badge ' + (isTruongBan ? 'leader' : 'member');
+            badge.textContent = isTruongBan ? 'Trưởng ban' : 'Thành viên';
+            userInfoEl.appendChild(badge);
         }
 
         const avatarUrl = user.anhDaiDien || user.AnhDaiDien ||
@@ -294,12 +297,12 @@ function renderTaskList(tasks) {
         div.title = "Nhấn để xem chi tiết";
         div.innerHTML = `
             <div class="task-info">
-                <h4 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;" title="${task.tieuDe || ''}">${task.tieuDe || task.tenCongViec || "Chưa có tên"}</h4>
-                <p style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">${task.moTa || "—"}</p>
+                <h4 title="${task.tieuDe || ''}">${task.tieuDe || task.tenCongViec || "Chưa có tên"}</h4>
+                <p>${task.moTa || "—"}</p>
             </div>
             <div class="task-assignee">
-                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(assignee)}&background=0D5A9C&color=fff&size=32" alt="${assignee}" style="width:28px;height:28px;border-radius:50%;">
-                <span style="font-size:13px;">${assignee}</span>
+                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(assignee)}&background=0D5A9C&color=fff&size=32" alt="${assignee}">
+                <span>${assignee}</span>
             </div>
             <div class="task-date" style="${dateStyle}">${isOverdue ? '<i class="fas fa-exclamation-circle" style="margin-right:4px;color:#EF4444;"></i>' : ''}${deadlineText}</div>
             <span class="task-status ${statusInfo.cssClass}">${statusInfo.label}</span>

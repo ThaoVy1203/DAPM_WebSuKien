@@ -273,7 +273,7 @@ function addRoleBadge() {
     userInfo.querySelector('.role-badge')?.remove();
 
     const badge = document.createElement('span');
-    badge.className = 'role-badge';
+    badge.className = 'role-badge ' + (role === BTC_ROLES.LEADER ? 'leader' : 'member');
     badge.textContent = role === BTC_ROLES.LEADER ? 'Trưởng ban' : 'Thành viên';
     userInfo.appendChild(badge);
 }
