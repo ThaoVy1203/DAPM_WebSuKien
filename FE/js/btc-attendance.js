@@ -210,7 +210,7 @@ async function loadEventDetailsAndAttendance() {
     try {
         // Hiện loading
         const tbody = document.getElementById("participantsTableBody");
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#9CA3AF;">
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:#9CA3AF;">
             <i class="fas fa-spinner fa-spin" style="font-size:20px;display:block;margin-bottom:8px;"></i>Đang tải danh sách...
         </td></tr>`;
 
@@ -251,7 +251,7 @@ async function loadEventDetailsAndAttendance() {
     } catch (error) {
         console.error("Lỗi load đăng ký:", error);
         const tbody = document.getElementById("participantsTableBody");
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:#EF4444;">
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:#EF4444;">
             <i class="fas fa-exclamation-triangle" style="font-size:28px;display:block;margin-bottom:8px;"></i>
             Không tải được dữ liệu: ${escapeHtml(error.message)}<br>
             <button onclick="loadEventDetailsAndAttendance()" style="margin-top:10px;padding:6px 16px;background:#0D5A9C;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">
@@ -291,7 +291,7 @@ function renderParticipantsTable(list) {
     tbody.innerHTML = "";
 
     if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:#888;">
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:#888;">
             <i class="fas fa-inbox" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3;"></i>
             Chưa có người đăng ký
         </td></tr>`;
@@ -348,8 +348,7 @@ function renderParticipantsTable(list) {
             </td>
             <td style="color:#374151;font-weight:500;">${escapeHtml(p.idNguoiDung || "—")}</td>
             <td style="color:#374151;">${timeStr}</td>
-            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-            <td class="td-actions">${actions}</td>`;
+            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`;
         tbody.appendChild(row);
     });
 
