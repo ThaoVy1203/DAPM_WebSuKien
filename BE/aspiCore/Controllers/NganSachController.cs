@@ -64,7 +64,7 @@ namespace aspiCore.Controllers
             {
                 try
                 {
-                    itemsList = JsonSerializer.Deserialize<List<NganSachItemDto>>(ns.GhiChu) ?? new List<NganSachItemDto>();
+                    itemsList = JsonSerializer.Deserialize<List<NganSachItemDto>>(ns.GhiChu, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<NganSachItemDto>();
                 }
                 catch
                 {
@@ -81,7 +81,7 @@ namespace aspiCore.Controllers
                 DaChi = ns.ChiTietNganSach ?? 0,
                 ConLai = (ns.TongChiPhiDuKien ?? 0) - (ns.ChiTietNganSach ?? 0),
                 // Sử dụng cột GhiChu làm nguồn lưu trữ items, trạng thái có thể lưu giả lập hoặc dựa trên các phê duyệt của nó
-                TrangThai = "approved", 
+                TrangThai = ns.SuKien?.TrangThai ?? "Nháp", 
                 GhiChu = string.IsNullOrEmpty(ns.GhiChu) || ns.GhiChu.StartsWith("[") ? "" : ns.GhiChu,
                 Items = itemsList
             };
@@ -134,7 +134,7 @@ namespace aspiCore.Controllers
             {
                 try
                 {
-                    itemsList = JsonSerializer.Deserialize<List<NganSachItemDto>>(ns.GhiChu) ?? new List<NganSachItemDto>();
+                    itemsList = JsonSerializer.Deserialize<List<NganSachItemDto>>(ns.GhiChu, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<NganSachItemDto>();
                 }
                 catch {}
             }
@@ -147,7 +147,7 @@ namespace aspiCore.Controllers
                 TongNganSach = ns.TongChiPhiDuKien ?? 0,
                 DaChi = ns.ChiTietNganSach ?? 0,
                 ConLai = (ns.TongChiPhiDuKien ?? 0) - (ns.ChiTietNganSach ?? 0),
-                TrangThai = "approved",
+                TrangThai = ns.SuKien?.TrangThai ?? "Nháp",
                 Items = itemsList
             };
 

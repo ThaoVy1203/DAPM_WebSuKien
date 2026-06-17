@@ -143,7 +143,6 @@ function initializeSidebarPermissions() {
         { selector: 'a[href="btc-dashboard.html"]', permission: 'canAccessDashboard' },
         { selector: 'a[href="btc-events.html"]', permission: 'canAccessEvents' },
         { selector: 'a[href="btc-budget.html"]', permission: 'canAccessBudget' },
-        { selector: 'a[href="btc-approval.html"]', permission: 'canAccessApproval' },
         { selector: 'a[href="btc-team-tasks.html"]', permission: 'canAccessTasks' },
         { selector: 'a[href="btc-attendance.html"]', permission: 'canAccessAttendance' },
         { selector: 'a[href="btc-reports.html"]', permission: 'canAccessReports' }
@@ -177,7 +176,6 @@ function checkPageAccess() {
 
     const pagePermissions = {
         'btc-budget.html':     'canAccessBudget',
-        'btc-approval.html':   'canAccessApproval',
         'btc-attendance.html': 'canAccessAttendance',
         'btc-reports.html':    'canAccessReports'
     };

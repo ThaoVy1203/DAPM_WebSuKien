@@ -58,7 +58,7 @@ async function loadEventsSelector() {
         const events = await res.json();
         budgetPageData.events = events;
 
-        selector.innerHTML = "";
+        selector.innerHTML = `<option value="all">Tất cả sự kiện</option>`;
         events.forEach(e => {
             selector.innerHTML += `<option value="${e.idSuKien}">${e.tenSuKien}</option>`;
         });
@@ -74,13 +74,13 @@ async function loadEventsSelector() {
 
         // Get saved selected event
         let savedId = localStorage.getItem("btc_budget_selected_event_id");
-        if (savedId && events.some(e => e.idSuKien == savedId)) {
+        if (savedId && (savedId === "all" || events.some(e => e.idSuKien == savedId))) {
             selector.value = savedId;
             budgetPageData.selectedEventId = savedId;
-        } else if (events.length > 0) {
-            selector.value = events[0].idSuKien;
-            budgetPageData.selectedEventId = events[0].idSuKien;
-            localStorage.setItem("btc_budget_selected_event_id", events[0].idSuKien);
+        } else {
+            selector.value = "all";
+            budgetPageData.selectedEventId = "all";
+            localStorage.setItem("btc_budget_selected_event_id", "all");
         }
 
         // Add change listener
@@ -104,6 +104,63 @@ async function loadBudgetForSelectedEvent() {
 
     try {
         const token = localStorage.getItem("token");
+
+        if (eventId === "all") {
+            const fetchPromises = budgetPageData.events.map(e => 
+                fetch(`${window.API_BASE}/NganSach/su-kien/${e.idSuKien}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                }).then(r => r.ok ? r.json() : null)
+            );
+            const budgets = (await Promise.all(fetchPromises)).filter(b => b !== null);
+
+            let totalBudget = 0;
+            let totalSpent = 0;
+            let totalRemaining = 0;
+
+            budgets.forEach(b => {
+                totalBudget += b.tongNganSach;
+                totalSpent += b.daChi;
+                totalRemaining += b.conLai;
+            });
+
+            // Update Overview Cards
+            const totalEl = document.querySelector(".overview-card.total .amount");
+            if (totalEl) totalEl.textContent = formatCurrency(totalBudget) + " đ";
+
+            const spentEl = document.querySelector(".overview-card.spent .amount");
+            if (spentEl) spentEl.textContent = formatCurrency(totalSpent) + " đ";
+            
+            const spentPctSub = document.querySelector(".overview-card.spent .sub-text");
+            if (spentPctSub && totalBudget > 0) {
+                spentPctSub.textContent = ((totalSpent / totalBudget) * 100).toFixed(1) + "% tổng ngân sách";
+            } else if (spentPctSub) {
+                spentPctSub.textContent = "0% tổng ngân sách";
+            }
+
+            const remainingEl = document.querySelector(".overview-card.remaining .amount");
+            if (remainingEl) remainingEl.textContent = formatCurrency(totalRemaining) + " đ";
+            
+            const remainingPctSub = document.querySelector(".overview-card.remaining .sub-text");
+            if (remainingPctSub && totalBudget > 0) {
+                remainingPctSub.textContent = ((totalRemaining / totalBudget) * 100).toFixed(1) + "% tổng ngân sách";
+            } else if (remainingPctSub) {
+                remainingPctSub.textContent = "0% tổng ngân sách";
+            }
+
+            // Update pending status card
+            let pendingCount = budgets.filter(b => b.trangThai === "pending" || b.trangThai === "Chờ duyệt").length;
+            let pendingAmount = budgets.filter(b => b.trangThai === "pending" || b.trangThai === "Chờ duyệt").reduce((sum, b) => sum + b.tongNganSach, 0);
+            
+            const pendingEl = document.querySelector(".overview-card.pending .amount");
+            if (pendingEl) pendingEl.textContent = formatCurrency(pendingAmount) + " đ";
+            const pendingSub = document.querySelector(".overview-card.pending .sub-text");
+            if (pendingSub) pendingSub.textContent = pendingCount + " yêu cầu";
+
+            // Render all budgets
+            renderBudgetTable(budgets);
+            return;
+        }
+
         const res = await fetch(`${window.API_BASE}/NganSach/su-kien/${eventId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
@@ -131,6 +188,12 @@ async function loadBudgetForSelectedEvent() {
             remainingPctSub.textContent = ((budgetData.conLai / budgetData.tongNganSach) * 100).toFixed(1) + "% tổng ngân sách";
         }
 
+        const isPending = budgetData.trangThai === "pending" || budgetData.trangThai === "Chờ duyệt";
+        const pendingEl = document.querySelector(".overview-card.pending .amount");
+        if (pendingEl) pendingEl.textContent = formatCurrency(isPending ? budgetData.tongNganSach : 0) + " đ";
+        const pendingSub = document.querySelector(".overview-card.pending .sub-text");
+        if (pendingSub) pendingSub.textContent = (isPending ? 1 : 0) + " yêu cầu";
+
         // Render event budget table row (only showing the selected event's budget)
         renderBudgetTable([budgetData]);
 
@@ -149,7 +212,7 @@ function renderBudgetTable(budgets) {
     tbody.innerHTML = '';
 
     if (budgets.length === 0 || !budgets[0]) {
-        tbody.innerHTML = '<tr><td colspan="7" class="loading">Không có dữ liệu ngân sách cho sự kiện này</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Không có dữ liệu ngân sách cho sự kiện này</td></tr>';
         return;
     }
 
@@ -157,11 +220,14 @@ function renderBudgetTable(budgets) {
         const row = document.createElement('tr');
         const progressPct = budget.tongNganSach > 0 ? ((budget.daChi / budget.tongNganSach) * 100).toFixed(1) : 0;
         
+        const eventObj = budgetPageData.events.find(e => e.idSuKien === budget.idSuKien);
+        const eventDateStr = eventObj ? new Date(eventObj.thoiGianBatDau).toLocaleDateString('vi-VN') : '';
+
         row.innerHTML = `
             <td>
                 <div class="event-info">
                     <h4>${budget.tenSuKien}</h4>
-                    <span class="event-date">Sự kiện đang chọn</span>
+                    <span class="event-date">${eventDateStr}</span>
                 </div>
             </td>
             <td><strong>${formatCurrency(budget.tongNganSach)} đ</strong></td>
@@ -175,15 +241,16 @@ function renderBudgetTable(budgets) {
                     <span class="progress-text">${progressPct}%</span>
                 </div>
             </td>
-            <td><span class="status-badge ${budget.trangThai}">${getStatusText(budget.trangThai)}</span></td>
             <td>
                 <div class="action-buttons">
-                    <button class="btn-action" onclick="viewBudgetDetail()" title="Xem chi tiết">
+                    <button class="btn-action" onclick="viewBudgetDetail(${budget.idSuKien})" title="Xem chi tiết">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-action" onclick="editBudget()" title="Chỉnh sửa">
+                    ${budget.trangThai === "Nháp" ? `
+                    <button class="btn-action" onclick="editBudget(${budget.idSuKien})" title="Chỉnh sửa">
                         <i class="fas fa-edit"></i>
                     </button>
+                    ` : ''}
                 </div>
             </td>
         `;
@@ -257,7 +324,7 @@ async function saveBudget(trangThai = "approved") {
 
     document.querySelectorAll('#budgetItemsBody tr').forEach(row => {
         const name = row.querySelector('.item-name').value;
-        const category = row.querySelector('.item-category').value;
+        const category = "other";
         const qty = parseInt(row.querySelector('.item-quantity').value) || 0;
         const price = parseFloat(row.querySelector('.item-price').value) || 0;
         const itemTotal = qty * price;
@@ -318,18 +385,26 @@ async function saveBudget(trangThai = "approved") {
 // Bind Submit buttons
 document.getElementById('budgetForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
-    await saveBudget("pending"); // Gửi phê duyệt => Chờ duyệt
-});
-
-document.querySelector('.btn-save-draft')?.addEventListener('click', async function () {
-    await saveBudget("Nháp");
+    await saveBudget("approved"); 
 });
 
 // ==========================
 // LOAD DETAILS FOR MODAL
 // ==========================
-function viewBudgetDetail() {
-    const data = budgetPageData.currentBudget;
+async function viewBudgetDetail(idSuKien = null) {
+    let data = budgetPageData.currentBudget;
+    if (idSuKien) {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/NganSach/su-kien/${idSuKien}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+            data = await res.json();
+            budgetPageData.currentBudget = data;
+        } else {
+            return;
+        }
+    }
     if (!data) return;
 
     document.getElementById('detailEventName').textContent = data.tenSuKien;
@@ -344,17 +419,30 @@ function viewBudgetDetail() {
     const tbody = document.getElementById('detailItemsBody');
     if (tbody) {
         tbody.innerHTML = '';
-        data.items.forEach(item => {
+        const items = data.items || data.Items || [];
+        items.forEach(item => {
+            const name = item.tenHangMuc || item.TenHangMuc || '';
+            const qty = item.soLuong !== undefined ? item.soLuong : (item.SoLuong !== undefined ? item.SoLuong : 0);
+            const price = item.donGia !== undefined ? item.donGia : (item.DonGia !== undefined ? item.DonGia : 0);
+            const total = item.thanhTien !== undefined ? item.thanhTien : (item.ThanhTien !== undefined ? item.ThanhTien : qty * price);
             tbody.innerHTML += `
                 <tr>
-                    <td>${item.tenHangMuc}</td>
-                    <td><span class="category-badge ${item.loai}">${item.loai}</span></td>
-                    <td>${item.soLuong}</td>
-                    <td>${formatCurrency(item.donGia)} đ</td>
-                    <td><strong>${formatCurrency(item.thanhTien)} đ</strong></td>
+                    <td>${name}</td>
+                    <td>${qty}</td>
+                    <td>${formatCurrency(price)} đ</td>
+                    <td><strong>${formatCurrency(total)} đ</strong></td>
                 </tr>
             `;
         });
+    }
+
+    const editBtn = document.getElementById('btnEditFromDetail');
+    if (editBtn) {
+        if (data.trangThai === "Nháp") {
+            editBtn.style.display = 'inline-block';
+        } else {
+            editBtn.style.display = 'none';
+        }
     }
 
     document.getElementById('budgetDetailModal').classList.add('active');
@@ -363,9 +451,26 @@ function viewBudgetDetail() {
 // ==========================
 // EDIT BUDGET
 // ==========================
-function editBudget() {
-    const data = budgetPageData.currentBudget;
+async function editBudget(idSuKien = null) {
+    let data = budgetPageData.currentBudget;
+    if (idSuKien) {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${window.API_BASE}/NganSach/su-kien/${idSuKien}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+            data = await res.json();
+            budgetPageData.currentBudget = data;
+        } else {
+            return;
+        }
+    }
     if (!data) return;
+
+    if (data.trangThai !== "Nháp") {
+        alert("Chỉ được chỉnh sửa ngân sách của sự kiện đang ở trạng thái Nháp.");
+        return;
+    }
 
     closeBudgetDetailModal();
 
@@ -375,18 +480,21 @@ function editBudget() {
 
     modalTitle.textContent = 'Chỉnh sửa kế hoạch chi phí';
     
-    document.getElementById('eventSelect').value = data.eventId;
+    document.getElementById('eventSelect').value = data.idSuKien;
     document.getElementById('budgetNotes').value = data.ghiChu || '';
 
     const tbody = document.getElementById('budgetItemsBody');
     if (tbody) {
         tbody.innerHTML = '';
-        data.items.forEach(item => {
+        const items = data.items || data.Items || [];
+        items.forEach(item => {
+            const name = item.tenHangMuc || item.TenHangMuc || '';
+            const qty = item.soLuong !== undefined ? item.soLuong : (item.SoLuong !== undefined ? item.SoLuong : 1);
+            const price = item.donGia !== undefined ? item.donGia : (item.DonGia !== undefined ? item.DonGia : 0);
             tbody.appendChild(createBudgetItemRow({
-                name: item.tenHangMuc,
-                category: item.loai,
-                quantity: item.soLuong,
-                price: item.donGia
+                name: name,
+                quantity: qty,
+                price: price
             }));
         });
     }
@@ -458,17 +566,6 @@ function createBudgetItemRow(item) {
     tr.className = 'budget-item-row';
     tr.innerHTML = `
         <td><input type="text" class="item-name" value="${item.name || ''}" required></td>
-        <td>
-            <select class="item-category">
-                <option value="venue" ${item.category === 'venue' ? 'selected' : ''}>Địa điểm</option>
-                <option value="food" ${item.category === 'food' ? 'selected' : ''}>Ăn uống</option>
-                <option value="decoration" ${item.category === 'decoration' ? 'selected' : ''}>Trang trí</option>
-                <option value="equipment" ${item.category === 'equipment' ? 'selected' : ''}>Thiết bị</option>
-                <option value="marketing" ${item.category === 'marketing' ? 'selected' : ''}>Marketing</option>
-                <option value="staff" ${item.category === 'staff' ? 'selected' : ''}>Nhân sự</option>
-                <option value="other" ${item.category === 'other' ? 'selected' : ''}>Khác</option>
-            </select>
-        </td>
         <td><input type="number" class="item-quantity" value="${item.quantity || 1}" min="1" required></td>
         <td><input type="number" class="item-price" value="${item.price || 0}" min="0" required></td>
         <td class="item-total">${formatCurrency((item.quantity || 1) * (item.price || 0))} đ</td>

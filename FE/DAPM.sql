@@ -193,8 +193,8 @@ CREATE TABLE NganSachDuKien (
     idNganSach INTEGER NOT NULL IDENTITY(1,1),
     idSuKien INTEGER NOT NULL,
     tongChiPhiDuKien DECIMAL(18,2) NULL,
-    chiTietNganSach DECIMAL(18,2) NULL,
-    ghiChu NVARCHAR(100) NULL,
+    chiTietNganSach NVARCHAR(MAX) NULL,
+    ghiChu DECIMAL(18,2) NULL,
 
     CONSTRAINT PK_NganSachDuKien PRIMARY KEY (idNganSach),
     CONSTRAINT FK_NSDK_SuKien FOREIGN KEY (idSuKien) REFERENCES SuKien(idSuKien)
@@ -450,9 +450,9 @@ GO
 
 -- 10. Ngân sách
 INSERT INTO NganSachDuKien (idSuKien, tongChiPhiDuKien, chiTietNganSach, ghiChu) VALUES
-(1, 15000000, 12500000, N'Bao gồm thuê hội trường, tiếp khách, in ấn tài liệu'),
-(2, 8000000,  7200000,  N'Chi phí đi lại, dụng cụ, đồng phục tình nguyện viên'),
-(3, 2000000,  1800000,  N'Thuê phòng, tài liệu học tập');
+(1, 15000000, N'[{"tenHangMuc": "Thuê hội trường và âm thanh", "loai": "other", "soLuong": 1, "donGia": 10000000.0, "thanhTien": 10000000.0}, {"tenHangMuc": "Tiệc trà giữa giờ", "loai": "other", "soLuong": 100, "donGia": 30000.0, "thanhTien": 3000000.0}, {"tenHangMuc": "In ấn tài liệu & Backdrop", "loai": "other", "soLuong": 1, "donGia": 2000000.0, "thanhTien": 2000000.0}]', 12500000),
+(2, 8000000,  N'[{"tenHangMuc": "Chi phí đi lại (xe đưa đón)", "loai": "other", "soLuong": 2, "donGia": 2000000.0, "thanhTien": 4000000.0}, {"tenHangMuc": "Dụng cụ vệ sinh & cây xanh", "loai": "other", "soLuong": 1, "donGia": 2000000.0, "thanhTien": 2000000.0}, {"tenHangMuc": "Đồng phục áo thun tình nguyện", "loai": "other", "soLuong": 100, "donGia": 20000.0, "thanhTien": 2000000.0}]', 7200000),
+(3, 2000000,  N'[{"tenHangMuc": "Thuê phòng học chuyên đề", "loai": "other", "soLuong": 1, "donGia": 1000000.0, "thanhTien": 1000000.0}, {"tenHangMuc": "Tài liệu học tập & nước uống", "loai": "other", "soLuong": 80, "donGia": 12500.0, "thanhTien": 1000000.0}]', 1800000);
 GO
 
 -- 11. Công việc

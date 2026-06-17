@@ -18,10 +18,10 @@ namespace aspiCore.Model
         [Column("tongChiPhiDuKien", TypeName = "decimal(18,2)")]
         public decimal? TongChiPhiDuKien { get; set; }
 
-        [Column("chiTietNganSach", TypeName = "decimal(18,2)")]
+        [Column("ghiChu", TypeName = "decimal(18,2)")]
         public decimal? ChiTietNganSach { get; set; }
 
-        [Column("ghiChu", TypeName = "nvarchar(max)")]
+        [Column("chiTietNganSach", TypeName = "nvarchar(max)")]
         public string? GhiChu { get; set; }
 
         [ForeignKey("IdSuKien")]
