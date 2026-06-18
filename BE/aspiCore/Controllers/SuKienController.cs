@@ -55,6 +55,13 @@ namespace aspiCore.Controllers
             return Ok(result);
         }
 
+        [HttpGet("assigned/{idNguoiDung}")]
+        public async Task<ActionResult<IEnumerable<SuKienDto>>> GetAssignedEvents(string idNguoiDung)
+        {
+            var result = await _suKienService.GetAssignedEventsAsync(idNguoiDung);
+            return Ok(result);
+        }
+
         /// <summary>
         /// Tìm kiếm và lọc sự kiện theo nhiều tiêu chí.
         /// GET /api/SuKien/search?keyword=...&idDanhMuc=...&idDiaDiem=...&trangThai=...&tuNgay=...&denNgay=...

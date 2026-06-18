@@ -15,6 +15,16 @@ let budgetPageData = {
 document.addEventListener('DOMContentLoaded', async function () {
     initializeBudgetCalculation();
     setupModals();
+
+    // Hide Create Budget button for Member
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const vaiTros = userData.vaiTros || [];
+    const isTruongBan = vaiTros.includes("TruongBanToChuc");
+    if (!isTruongBan) {
+        const btnCreate = document.querySelector(".btn-primary[onclick='openCreateBudgetModal()']");
+        if (btnCreate) btnCreate.style.display = "none";
+    }
+
     await loadEventsSelector();
     await loadBudgetForSelectedEvent();
 });
@@ -49,7 +59,15 @@ async function loadEventsSelector() {
 
     try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${window.API_BASE}/SuKien`, {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const vaiTros = userData.vaiTros || [];
+        const isTruong = vaiTros.includes("TruongBanToChuc");
+
+        const url = isTruong 
+            ? `${window.API_BASE}/SuKien`
+            : `${window.API_BASE}/SuKien/assigned/${userData.idNguoiDung}`;
+
+        const res = await fetch(url, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -216,6 +234,10 @@ function renderBudgetTable(budgets) {
         return;
     }
 
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const vaiTros = userData.vaiTros || [];
+    const isTruongBan = vaiTros.includes("TruongBanToChuc");
+
     budgets.forEach(budget => {
         const row = document.createElement('tr');
         const progressPct = budget.tongNganSach > 0 ? ((budget.daChi / budget.tongNganSach) * 100).toFixed(1) : 0;
@@ -246,7 +268,7 @@ function renderBudgetTable(budgets) {
                     <button class="btn-action" onclick="viewBudgetDetail(${budget.idSuKien})" title="Xem chi tiết">
                         <i class="fas fa-eye"></i>
                     </button>
-                    ${budget.trangThai === "Nháp" ? `
+                    ${isTruongBan && budget.trangThai === "Nháp" ? `
                     <button class="btn-action" onclick="editBudget(${budget.idSuKien})" title="Chỉnh sửa">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -438,7 +460,10 @@ async function viewBudgetDetail(idSuKien = null) {
 
     const editBtn = document.getElementById('btnEditFromDetail');
     if (editBtn) {
-        if (data.trangThai === "Nháp") {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const vaiTros = userData.vaiTros || [];
+        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+        if (isTruongBan && data.trangThai === "Nháp") {
             editBtn.style.display = 'inline-block';
         } else {
             editBtn.style.display = 'none';

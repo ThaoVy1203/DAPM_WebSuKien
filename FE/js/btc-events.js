@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Hide create event button for Member BTC
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const vaiTros = userData.vaiTros || [];
+    const isTruongBan = vaiTros.includes("TruongBanToChuc");
+    if (!isTruongBan) {
+        const btnCreate = document.querySelector('.btn-create');
+        if (btnCreate) btnCreate.style.display = 'none';
+    }
+
     loadLocations();
     loadCategories();
     loadUsers();
@@ -107,8 +116,15 @@ async function loadEvents() {
         const userDataStr = localStorage.getItem('userData');
         if (!userDataStr) return;
         const userData = JSON.parse(userDataStr);
+        const vaiTros = userData.vaiTros || [];
+        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+
+        // Trưởng ban thì tải sự kiện họ tạo, Thành viên thì tải sự kiện được phân công
+        const endpoint = isTruongBan 
+            ? `${window.API_BASE}/SuKien/nguoi-tao/${userData.idNguoiDung}`
+            : `${window.API_BASE}/SuKien/assigned/${userData.idNguoiDung}`;
         
-        const res = await authFetch(`${window.API_BASE}/SuKien/nguoi-tao/${userData.idNguoiDung}`);
+        const res = await authFetch(endpoint);
         if (res.ok) {
             eventsData = await res.json();
             renderEvents();
@@ -229,19 +245,25 @@ function renderEvents() {
         const statusInfo = getEventStatusInfo(event);
         const startTime = new Date(event.thoiGianBatDau).toLocaleString('vi-VN');
         
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const vaiTros = userData.vaiTros || [];
+        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+
         let actionsHtml = '';
-        if (event.trangThai === 'Nháp' || event.trangThai === 'Từ chối') {
-            actionsHtml += `<button class="btn-action btn-edit" onclick="openEditEventModal(${event.idSuKien})"><i class="fas fa-edit"></i> Chỉnh sửa</button>`;
-        }
-        if (event.trangThai === 'Nháp') {
-            actionsHtml += `<button class="btn-action btn-submit-approval" style="color: #0056b3; border-color: #0056b3; background: #e6f0fa;" onclick="submitApproval(${event.idSuKien})"><i class="fas fa-paper-plane"></i> Gửi phê duyệt</button>`;
-            actionsHtml += `<button class="btn-action btn-cancel" onclick="deleteEvent(${event.idSuKien})"><i class="fas fa-trash"></i> Xóa</button>`;
-        }
-        const cancelAllowedStatuses = ['Chờ duyệt', 'Từ chối', 'Đã duyệt'];
-        const isFutureEvent = new Date(event.thoiGianBatDau) > new Date();
-        const canCancel = (cancelAllowedStatuses.includes(event.trangThai) && isFutureEvent) || event.trangThai === 'Từ chối';
-        if (canCancel) {
-            actionsHtml += `<button class="btn-action btn-cancel" onclick="confirmCancelEvent(${event.idSuKien})"><i class="fas fa-times-circle"></i> Hủy</button>`;
+        if (isTruongBan) {
+            if (event.trangThai === 'Nháp' || event.trangThai === 'Từ chối') {
+                actionsHtml += `<button class="btn-action btn-edit" onclick="openEditEventModal(${event.idSuKien})"><i class="fas fa-edit"></i> Chỉnh sửa</button>`;
+            }
+            if (event.trangThai === 'Nháp') {
+                actionsHtml += `<button class="btn-action btn-submit-approval" style="color: #0056b3; border-color: #0056b3; background: #e6f0fa;" onclick="submitApproval(${event.idSuKien})"><i class="fas fa-paper-plane"></i> Gửi phê duyệt</button>`;
+                actionsHtml += `<button class="btn-action btn-cancel" onclick="deleteEvent(${event.idSuKien})"><i class="fas fa-trash"></i> Xóa</button>`;
+            }
+            const cancelAllowedStatuses = ['Chờ duyệt', 'Từ chối', 'Đã duyệt'];
+            const isFutureEvent = new Date(event.thoiGianBatDau) > new Date();
+            const canCancel = (cancelAllowedStatuses.includes(event.trangThai) && isFutureEvent) || event.trangThai === 'Từ chối';
+            if (canCancel) {
+                actionsHtml += `<button class="btn-action btn-cancel" onclick="confirmCancelEvent(${event.idSuKien})"><i class="fas fa-times-circle"></i> Hủy</button>`;
+            }
         }
         actionsHtml += `<button class="btn-action btn-view" onclick="openViewEventModal(${event.idSuKien})"><i class="fas fa-eye"></i> Chi tiết</button>`;
         

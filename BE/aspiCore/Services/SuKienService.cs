@@ -73,6 +73,22 @@ namespace aspiCore.Services
             return suKiens.Select(MapToDto);
         }
 
+        public async Task<IEnumerable<SuKienDto>> GetAssignedEventsAsync(string idNguoiDung)
+        {
+            var suKiens = await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .Include(s => s.DangKySuKiens)
+                .Include(s => s.SuKien_DanhMucs).ThenInclude(sd => sd.DanhMuc)
+                .Include(s => s.NguoiDung_SuKiens).ThenInclude(ns => ns.NguoiDung)
+                .Include(s => s.NganSachDuKiens)
+                .Where(s => s.NguoiDung_SuKiens.Any(ns => ns.IdNguoiDung == idNguoiDung) || 
+                            _context.CongViecs.Any(cv => cv.IdSuKien == s.IdSuKien && cv.PhanCongs.Any(pc => pc.IdNguoiDung == idNguoiDung)))
+                .OrderByDescending(s => s.ThoiGianTao)
+                .ToListAsync();
+            return suKiens.Select(MapToDto);
+        }
+
         public async Task<IEnumerable<SuKienDto>> SearchAsync(SuKienQueryDto query)
         {
             var q = _context.SuKiens

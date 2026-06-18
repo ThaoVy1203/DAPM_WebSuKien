@@ -31,10 +31,10 @@ const PERMISSIONS = {
     [BTC_ROLES.MEMBER]: {
         canAccessDashboard: true,
         canAccessEvents: true,
-        canAccessBudget: false,
+        canAccessBudget: true,
         canAccessApproval: false,
         canAccessTasks: true,
-        canAccessAttendance: false,
+        canAccessAttendance: true,
         canAccessReports: false,
         canCreate: false,
         canEdit: false,
@@ -164,6 +164,15 @@ function initializeSidebarPermissions() {
             element.classList.remove("disabled");
         }
     });
+
+    if (role === BTC_ROLES.MEMBER) {
+        // Khóa và ẩn tất cả các nút Tạo sự kiện mới, Thêm nhiệm vụ mới
+        const createButtons = document.querySelectorAll(".btn-create, .btn-add-task, .btn-add-budget, button[onclick='openCreateEventModal()'], button[onclick='openCreateTaskModal()']");
+        createButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.style.display = "none";
+        });
+    }
 
     updateUserRoleDisplay(role);
 }

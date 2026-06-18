@@ -112,10 +112,14 @@ async function loadEventsSelector() {
         // Load sự kiện của BTC hiện tại (không phải tất cả sự kiện)
         const userData = JSON.parse(localStorage.getItem("userData") || "{}");
         const userId = userData.idNguoiDung;
+        const vaiTros = userData.vaiTros || [];
+        const isTruong = vaiTros.includes("TruongBanToChuc");
 
         let url = `${window.API_BASE}/SuKien`;
         if (userId) {
-            url = `${window.API_BASE}/SuKien/nguoi-tao/${userId}`;
+            url = isTruong 
+                ? `${window.API_BASE}/SuKien/nguoi-tao/${userId}`
+                : `${window.API_BASE}/SuKien/assigned/${userId}`;
         }
 
         const res = await fetch(url, { headers: authHeaders() });
@@ -325,15 +329,21 @@ function renderParticipantsTable(list) {
 
         // Nút thao tác
         let actions = "";
-        const lower = (p.trangThai || "").toLowerCase();
-        if (lower.includes("chờ xác nhận") || lower === "chờ chỗ" || lower === "pending") {
-            actions = `
-                <button class="btn-btc-approve" title="Xác nhận" onclick="approveRegistration('${escapeHtml(p.idNguoiDung)}')">
-                    <i class="fas fa-check"></i>
-                </button>
-                <button class="btn-btc-reject" title="Từ chối" onclick="rejectRegistration('${escapeHtml(p.idNguoiDung)}')">
-                    <i class="fas fa-times"></i>
-                </button>`;
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const vaiTros = userData.vaiTros || [];
+        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+
+        if (isTruongBan) {
+            const lower = (p.trangThai || "").toLowerCase();
+            if (lower.includes("chờ xác nhận") || lower === "chờ chỗ" || lower === "pending") {
+                actions = `
+                    <button class="btn-btc-approve" title="Xác nhận" onclick="approveRegistration('${escapeHtml(p.idNguoiDung)}')">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn-btc-reject" title="Từ chối" onclick="rejectRegistration('${escapeHtml(p.idNguoiDung)}')">
+                        <i class="fas fa-times"></i>
+                    </button>`;
+            }
         }
 
         row.innerHTML = `
@@ -631,6 +641,23 @@ function escapeHtml(str) {
 document.addEventListener("DOMContentLoaded", async function () {
     setupSearch();
     
+    // Hide UI components for Member BTC
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const vaiTros = userData.vaiTros || [];
+    const isTruongBan = vaiTros.includes("TruongBanToChuc");
+    if (!isTruongBan) {
+        // Hide Excel/CSV buttons (header-actions)
+        const actionsDiv = document.querySelector(".header-actions");
+        if (actionsDiv) actionsDiv.style.display = "none";
+
+        // Hide QR check-in input card (the parent element containing qrTokenInput)
+        const qrInput = document.getElementById("qrTokenInput");
+        if (qrInput) {
+            const qrCard = qrInput.closest(".card");
+            if (qrCard) qrCard.style.display = "none";
+        }
+    }
+
     // Bind verify check-in button
     document.getElementById("btnScanQr")?.addEventListener("click", () => {
         checkInByQrToken(document.getElementById("qrTokenInput")?.value);

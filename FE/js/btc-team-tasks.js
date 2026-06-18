@@ -15,6 +15,16 @@ let taskPageData = {
 document.addEventListener('DOMContentLoaded', async function () {
     setupModals();
     await loadUsers();
+    
+    // Hide Add Task button for Member BTC
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const vaiTros = userData.vaiTros || [];
+    const isTruongBan = vaiTros.includes("TruongBanToChuc");
+    if (!isTruongBan) {
+        const btnAdd = document.querySelector('.btn-add-task');
+        if (btnAdd) btnAdd.style.display = 'none';
+    }
+
     await loadEventsSelector();
     await loadTasksForSelectedEvent();
 });
@@ -71,11 +81,15 @@ async function loadEventsSelector() {
     try {
         const token = localStorage.getItem("token");
         const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const vaiTros = userData.vaiTros || [];
+        const isTruong = vaiTros.includes("TruongBanToChuc");
 
         // Load sự kiện của người dùng hiện tại (giống btc-events.js)
         let url = `${window.API_BASE}/SuKien`;
         if (userData.idNguoiDung) {
-            url = `${window.API_BASE}/SuKien/nguoi-tao/${userData.idNguoiDung}`;
+            url = isTruong 
+                ? `${window.API_BASE}/SuKien/nguoi-tao/${userData.idNguoiDung}`
+                : `${window.API_BASE}/SuKien/assigned/${userData.idNguoiDung}`;
         }
 
         const res = await fetch(url, {
@@ -138,8 +152,19 @@ async function loadTasksForSelectedEvent() {
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const tasks = await res.json();
-        taskPageData.tasks = Array.isArray(tasks) ? tasks : [];
+        let tasks = await res.json();
+        if (!Array.isArray(tasks)) tasks = [];
+
+        // Lọc công việc của riêng Thành viên BTC
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const vaiTros = userData.vaiTros || [];
+        const isTruong = vaiTros.includes("TruongBanToChuc");
+        if (!isTruong) {
+            const currentUserName = userData.hoTen || "";
+            tasks = tasks.filter(t => t.nguoiPhuTrach === currentUserName);
+        }
+
+        taskPageData.tasks = tasks;
         renderKanbanBoard(taskPageData.tasks);
 
     } catch (error) {
@@ -300,6 +325,31 @@ async function loadTaskData(taskId) {
         document.getElementById('taskAssignee').value = data.nguoiPhuTrach || '';
         document.getElementById('taskNotes').value = ''; // field optional
 
+        // Check if user is a member
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const vaiTros = userData.vaiTros || [];
+        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+        if (!isTruongBan) {
+            // Disable other fields for Member
+            document.getElementById('taskTitle').disabled = true;
+            document.getElementById('taskDescription').disabled = true;
+            document.getElementById('taskDeadline').disabled = true;
+            document.getElementById('taskAssignee').disabled = true;
+            const priorityEl = document.getElementById('taskPriority');
+            if (priorityEl) priorityEl.disabled = true;
+            const notesEl = document.getElementById('taskNotes');
+            if (notesEl) notesEl.disabled = true;
+        } else {
+            document.getElementById('taskTitle').disabled = false;
+            document.getElementById('taskDescription').disabled = false;
+            document.getElementById('taskDeadline').disabled = false;
+            document.getElementById('taskAssignee').disabled = false;
+            const priorityEl = document.getElementById('taskPriority');
+            if (priorityEl) priorityEl.disabled = false;
+            const notesEl = document.getElementById('taskNotes');
+            if (notesEl) notesEl.disabled = false;
+        }
+
     } catch (error) {
         console.error('Lỗi load task:', error);
         alert('Không tải được dữ liệu nhiệm vụ');
@@ -373,6 +423,19 @@ async function loadTaskDetailData(taskId) {
         const isCompleted = statusKanban === "done";
         document.getElementById('detailProgressBar').style.width = isCompleted ? "100%" : (statusKanban === "review" ? "80%" : (statusKanban === "inprogress" ? "40%" : "0%"));
         document.getElementById('detailProgressText').textContent = isCompleted ? "100%" : (statusKanban === "review" ? "80%" : (statusKanban === "inprogress" ? "40%" : "0%"));
+
+        // Check if user is a member and change button text
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const vaiTros = userData.vaiTros || [];
+        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+        const editBtn = document.querySelector("#taskDetailModal .modal-footer .btn-primary");
+        if (editBtn) {
+            if (!isTruongBan) {
+                editBtn.innerHTML = `<i class="fas fa-edit"></i> Cập nhật trạng thái`;
+            } else {
+                editBtn.innerHTML = `<i class="fas fa-edit"></i> Chỉnh sửa`;
+            }
+        }
 
     } catch (error) {
         console.error('Lỗi load detail:', error);
