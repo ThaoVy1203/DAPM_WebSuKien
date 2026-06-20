@@ -5,7 +5,9 @@ using System.Text;
 using aspiCore.Data;
 using aspiCore.Services;
 using aspiCore.Middlewares;
+using QuestPDF.Infrastructure;
 
+QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container

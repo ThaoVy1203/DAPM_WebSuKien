@@ -101,5 +101,45 @@ namespace aspiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Xuất PDF báo cáo sự kiện (cho BTC).
+        /// </summary>
+        [HttpGet("xuat-pdf/{idSuKien}")]
+        public async Task<IActionResult> XuatPdf(int idSuKien)
+        {
+            try
+            {
+                string reportsDir = Path.Combine(_env.ContentRootPath, "..", "..", "Reports");
+                reportsDir = Path.GetFullPath(reportsDir);
+
+                var fileResult = await _baoCaoService.XuatPdfAsync(idSuKien, reportsDir);
+                return fileResult;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Xuất PDF báo cáo tài chính (cho BTC).
+        /// </summary>
+        [HttpGet("xuat-pdf-tai-chinh/{idSuKien}")]
+        public async Task<IActionResult> XuatPdfTaiChinh(int idSuKien)
+        {
+            try
+            {
+                string reportsDir = Path.Combine(_env.ContentRootPath, "..", "..", "Reports");
+                reportsDir = Path.GetFullPath(reportsDir);
+
+                var fileResult = await _baoCaoService.XuatPdfTaiChinhAsync(idSuKien, reportsDir);
+                return fileResult;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

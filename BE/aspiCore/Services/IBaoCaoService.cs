@@ -8,5 +8,7 @@ namespace aspiCore.Services
         Task<FileResult> XuatExcelCtsvAsync(string outputDir);
         Task<FileResult> XuatExcelBghAsync(string outputDir);
         Task<FileResult> XuatExcelTaiChinhAsync(int idSuKien, string outputDir);
+        Task<FileResult> XuatPdfAsync(int idSuKien, string outputDir);
+        Task<FileResult> XuatPdfTaiChinhAsync(int idSuKien, string outputDir);
     }
 }

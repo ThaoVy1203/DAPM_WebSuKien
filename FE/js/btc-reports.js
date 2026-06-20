@@ -533,27 +533,36 @@ function showAlert(message, type = 'success') {
 
 // ================= DOWNLOAD REPORT (gọi API thật) =================
 window.downloadReport = async function(id, format) {
-    if (format !== 'excel') {
-        showAlert('Xuất PDF đang được phát triển. Vui lòng dùng xuất Excel.', 'error');
-        return;
-    }
-
-    // Xác định loại báo cáo để gọi đúng API
     const report = reportPageData.reports.find(r => r.id == id);
     const reportType = report?.type || 'event';
 
-    const apiMap = {
-        'budget':     `${window.API_BASE}/BaoCao/xuat-excel-tai-chinh/${id}`,
-        'event':      `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
-        'attendance': `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
-        'summary':    `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
+    const apiMapByFormat = {
+        excel: {
+            budget:     `${window.API_BASE}/BaoCao/xuat-excel-tai-chinh/${id}`,
+            event:      `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
+            attendance: `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
+            summary:    `${window.API_BASE}/BaoCao/xuat-excel/${id}`,
+        },
+        pdf: {
+            budget:     `${window.API_BASE}/BaoCao/xuat-pdf-tai-chinh/${id}`,
+            event:      `${window.API_BASE}/BaoCao/xuat-pdf/${id}`,
+            attendance: `${window.API_BASE}/BaoCao/xuat-pdf/${id}`,
+            summary:    `${window.API_BASE}/BaoCao/xuat-pdf/${id}`,
+        }
     };
-    const apiUrl = apiMap[reportType] || `${window.API_BASE}/BaoCao/xuat-excel/${id}`;
+
+    const apiMap = apiMapByFormat[format] || apiMapByFormat.excel;
+    const apiUrl = apiMap[reportType] || apiMap.event;
+
+    const acceptHeader = format === 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const fileExt = format === 'pdf' ? 'pdf' : 'xlsx';
 
     try {
         const response = await fetch(apiUrl, {
             method: 'GET',
-            headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+            headers: { 'Accept': acceptHeader }
         });
 
         if (!response.ok) throw new Error(`Lỗi server (${response.status})`);
@@ -565,7 +574,7 @@ window.downloadReport = async function(id, format) {
         const link = document.createElement('a');
         link.href = objectUrl;
         const loaiBC = reportType === 'budget' ? 'TaiChinh' : 'SuKien';
-        link.download = `BaoCao_${loaiBC}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        link.download = `BaoCao_${loaiBC}_${new Date().toISOString().slice(0, 10)}.${fileExt}`;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
@@ -574,11 +583,11 @@ window.downloadReport = async function(id, format) {
             URL.revokeObjectURL(objectUrl);
         }, 100);
 
-        showAlert('File Excel đã được tải về máy thành công!');
+        showAlert(`File ${format === 'pdf' ? 'PDF' : 'Excel'} đã được tải về máy thành công!`);
 
     } catch (err) {
         console.error('Export error:', err);
-        showAlert('Không thể xuất Excel: ' + err.message, 'error');
+        showAlert(`Không thể xuất ${format === 'pdf' ? 'PDF' : 'Excel'}: ` + err.message, 'error');
     }
 };
 

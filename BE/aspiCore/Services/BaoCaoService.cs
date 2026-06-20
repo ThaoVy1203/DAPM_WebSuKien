@@ -2,6 +2,9 @@ using ClosedXML.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using aspiCore.Data;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace aspiCore.Services
 {
@@ -763,6 +766,338 @@ namespace aspiCore.Services
             var fileBytes = await File.ReadAllBytesAsync(fullPath);
             return new FileContentResult(fileBytes,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = tenFile
+            };
+        }
+
+        public async Task<FileResult> XuatPdfAsync(int idSuKien, string outputDir)
+        {
+            var suKien = await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .FirstOrDefaultAsync(s => s.IdSuKien == idSuKien);
+
+            if (suKien == null)
+                throw new Exception("Không tìm thấy sự kiện.");
+
+            var dangKyList = await _context.DangKySuKiens
+                .Include(dk => dk.NguoiDung)
+                .Where(dk => dk.IdSuKien == idSuKien)
+                .OrderBy(dk => dk.ThoiGianDangKy)
+                .ToListAsync();
+
+            int tongDangKy = dangKyList.Count;
+            int daCheckin = dangKyList.Count(dk => dk.ThoiGianCheckin != null);
+            int noShow = dangKyList.Count(dk => dk.ThoiGianCheckin == null && dk.TrangThai != "Đã hủy");
+            int daHuy = dangKyList.Count(dk => dk.TrangThai == "Đã hủy");
+            string tiLe = tongDangKy > 0
+                ? Math.Round((double)daCheckin / tongDangKy * 100, 1) + "%"
+                : "0%";
+
+            const string mauChinh = "#0D5A9C";
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontFamily("Arial").FontSize(10));
+
+                    // HEADER
+                    page.Header().Background(mauChinh).Padding(12).Row(row =>
+                    {
+                        row.RelativeItem().Text("BÁO CÁO SỰ KIỆN").FontSize(16).Bold().FontColor("#FFFFFF");
+                        row.ConstantItem(150).AlignRight()
+                            .Text(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(9).FontColor("#FFFFFF");
+                    });
+
+                    // CONTENT
+                    page.Content().PaddingVertical(15).Column(col =>
+                    {
+                        col.Spacing(12);
+
+                        // Thông tin sự kiện
+                        col.Item().Border(1).BorderColor("#E5E7EB").Padding(10).Column(info =>
+                        {
+                            info.Spacing(4);
+                            void Row(string label, string value)
+                            {
+                                info.Item().Row(r =>
+                                {
+                                    r.ConstantItem(130).Text(label).Bold();
+                                    r.RelativeItem().Text(value);
+                                });
+                            }
+                            Row("Tên sự kiện:", suKien.TenSuKien);
+                            Row("Địa điểm:", suKien.DiaDiem?.TenDiaDiem ?? "Chưa xác định");
+                            Row("Thời gian bắt đầu:", suKien.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm"));
+                            Row("Thời gian kết thúc:", suKien.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm"));
+                            Row("Sức chứa tối đa:", suKien.SoLuongToiDa.HasValue ? suKien.SoLuongToiDa.Value.ToString() : "Không giới hạn");
+                            Row("Trạng thái:", suKien.TrangThai);
+                            Row("Người tổ chức:", suKien.NguoiTao?.HoTen ?? "");
+                        });
+
+                        // Thống kê dạng ô
+                        col.Item().Text("THỐNG KÊ THAM DỰ").Bold().FontSize(12).FontColor(mauChinh);
+                        col.Item().Row(row =>
+                        {
+                            void StatBox(string label, string value, string color)
+                            {
+                                row.RelativeItem().Border(1).BorderColor("#E5E7EB").Padding(8).Column(c =>
+                                {
+                                    c.Item().AlignCenter().Text(value).FontSize(16).Bold().FontColor(color);
+                                    c.Item().AlignCenter().Text(label).FontSize(8).FontColor("#6B7280");
+                                });
+                            }
+                            StatBox("Tổng đăng ký", tongDangKy.ToString(), mauChinh);
+                            StatBox("Đã tham dự", daCheckin.ToString(), "#059669");
+                            StatBox("Vắng mặt", noShow.ToString(), "#D97706");
+                            StatBox("Đã hủy", daHuy.ToString(), "#EF4444");
+                            StatBox("Tỷ lệ tham dự", tiLe, mauChinh);
+                        });
+
+                        // Bảng danh sách tham gia
+                        col.Item().Text("DANH SÁCH NGƯỜI THAM GIA").Bold().FontSize(12).FontColor(mauChinh);
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(c =>
+                            {
+                                c.ConstantColumn(28);
+                                c.RelativeColumn(3);
+                                c.RelativeColumn(1.4f);
+                                c.RelativeColumn(1.6f);
+                                c.RelativeColumn(2f);
+                                c.RelativeColumn(2f);
+                                c.RelativeColumn(1.6f);
+                            });
+
+                            table.Header(header =>
+                            {
+                                void HeaderCell(string text) =>
+                                    header.Cell().Background(mauChinh).Padding(5)
+                                        .Text(text).FontColor("#FFFFFF").Bold().FontSize(9);
+
+                                HeaderCell("STT");
+                                HeaderCell("Họ tên");
+                                HeaderCell("Mã số");
+                                HeaderCell("Ngày ĐK");
+                                HeaderCell("Check-in");
+                                HeaderCell("Check-out");
+                                HeaderCell("Trạng thái");
+                            });
+
+                            for (int i = 0; i < dangKyList.Count; i++)
+                            {
+                                var dk = dangKyList[i];
+                                string trangThai = dk.ThoiGianCheckin.HasValue
+                                    ? "Đã tham dự"
+                                    : (dk.TrangThai == "Đã hủy" ? "Đã hủy" : "Vắng mặt");
+                                string mauTrangThai = trangThai switch
+                                {
+                                    "Đã tham dự" => "#059669",
+                                    "Đã hủy" => "#EF4444",
+                                    _ => "#D97706"
+                                };
+                                string bg = i % 2 == 1 ? "#F3F4F6" : "#FFFFFF";
+
+                                table.Cell().Background(bg).Padding(5).Text((i + 1).ToString()).FontSize(9);
+                                table.Cell().Background(bg).Padding(5).Text(dk.NguoiDung?.HoTen ?? dk.IdNguoiDung).FontSize(9);
+                                table.Cell().Background(bg).Padding(5).Text(dk.IdNguoiDung).FontSize(9);
+                                table.Cell().Background(bg).Padding(5).Text(dk.ThoiGianDangKy.ToString("dd/MM/yyyy")).FontSize(9);
+                                table.Cell().Background(bg).Padding(5)
+                                    .Text(dk.ThoiGianCheckin.HasValue ? dk.ThoiGianCheckin.Value.ToString("dd/MM/yyyy HH:mm") : "—").FontSize(9);
+                                table.Cell().Background(bg).Padding(5)
+                                    .Text(dk.ThoiGianCheckout.HasValue ? dk.ThoiGianCheckout.Value.ToString("dd/MM/yyyy HH:mm") : "—").FontSize(9);
+                                table.Cell().Background(bg).Padding(5).Text(trangThai).FontColor(mauTrangThai).FontSize(9);
+                            }
+
+                            if (dangKyList.Count == 0)
+                            {
+                                table.Cell().ColumnSpan(7).Padding(10).AlignCenter()
+                                    .Text("Chưa có người đăng ký.").Italic().FontColor("#6B7280");
+                            }
+                        });
+                    });
+
+                    // FOOTER
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("Trang ").FontSize(8).FontColor("#6B7280");
+                        text.CurrentPageNumber().FontSize(8).FontColor("#6B7280");
+                        text.Span(" / ").FontSize(8).FontColor("#6B7280");
+                        text.TotalPages().FontSize(8).FontColor("#6B7280");
+                    });
+                });
+            });
+
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            string tenFile = $"BaoCao_{SanitizeFileName(suKien.TenSuKien)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string fullPath = Path.Combine(outputDir, tenFile);
+            document.GeneratePdf(fullPath);
+
+            var fileBytes = await File.ReadAllBytesAsync(fullPath);
+            return new FileContentResult(fileBytes, "application/pdf")
+            {
+                FileDownloadName = tenFile
+            };
+        }
+
+        public async Task<FileResult> XuatPdfTaiChinhAsync(int idSuKien, string outputDir)
+        {
+            var suKien = await _context.SuKiens
+                .Include(s => s.DiaDiem)
+                .Include(s => s.NguoiTao)
+                .FirstOrDefaultAsync(s => s.IdSuKien == idSuKien);
+
+            if (suKien == null)
+                throw new Exception("Không tìm thấy sự kiện.");
+
+            var nganSachList = await _context.NganSachDuKiens
+                .Where(ns => ns.IdSuKien == idSuKien)
+                .ToListAsync();
+
+            decimal tongDuToan = nganSachList.Sum(ns => ns.TongChiPhiDuKien ?? 0);
+            decimal tongThucChi = nganSachList.Sum(ns => ns.ChiTietNganSach ?? 0);
+            decimal conLai = tongDuToan - tongThucChi;
+            string tiLeSD = tongDuToan > 0
+                ? Math.Round((double)(tongThucChi / tongDuToan) * 100, 1) + "%" : "0%";
+
+            const string mau = "#D97706";
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontFamily("Arial").FontSize(10));
+
+                    page.Header().Background(mau).Padding(12).Row(row =>
+                    {
+                        row.RelativeItem().Text("BÁO CÁO TÀI CHÍNH SỰ KIỆN").FontSize(16).Bold().FontColor("#FFFFFF");
+                        row.ConstantItem(150).AlignRight()
+                            .Text(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(9).FontColor("#FFFFFF");
+                    });
+
+                    page.Content().PaddingVertical(15).Column(col =>
+                    {
+                        col.Spacing(12);
+
+                        col.Item().Border(1).BorderColor("#E5E7EB").Padding(10).Column(info =>
+                        {
+                            info.Spacing(4);
+                            void Row(string label, string value)
+                            {
+                                info.Item().Row(r =>
+                                {
+                                    r.ConstantItem(130).Text(label).Bold();
+                                    r.RelativeItem().Text(value);
+                                });
+                            }
+                            Row("Sự kiện:", suKien.TenSuKien);
+                            Row("Địa điểm:", suKien.DiaDiem?.TenDiaDiem ?? "Chưa xác định");
+                            Row("Ngày tổ chức:", suKien.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm"));
+                            Row("Người tổ chức:", suKien.NguoiTao?.HoTen ?? "");
+                        });
+
+                        col.Item().Text("CHI TIẾT NGÂN SÁCH").Bold().FontSize(12).FontColor(mau);
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(c =>
+                            {
+                                c.ConstantColumn(28);
+                                c.RelativeColumn(2);
+                                c.RelativeColumn(2);
+                                c.RelativeColumn(2);
+                                c.RelativeColumn(3);
+                            });
+
+                            table.Header(header =>
+                            {
+                                void HeaderCell(string text) =>
+                                    header.Cell().Background(mau).Padding(5).Text(text).FontColor("#FFFFFF").Bold().FontSize(9);
+                                HeaderCell("STT");
+                                HeaderCell("Dự toán (VNĐ)");
+                                HeaderCell("Thực chi (VNĐ)");
+                                HeaderCell("Còn lại (VNĐ)");
+                                HeaderCell("Ghi chú");
+                            });
+
+                            if (nganSachList.Count > 0)
+                            {
+                                for (int i = 0; i < nganSachList.Count; i++)
+                                {
+                                    var ns = nganSachList[i];
+                                    decimal duToan = ns.TongChiPhiDuKien ?? 0;
+                                    decimal thucChi = ns.ChiTietNganSach ?? 0;
+                                    decimal cl = duToan - thucChi;
+                                    string bg = i % 2 == 1 ? "#FEF3C7" : "#FFFFFF";
+
+                                    table.Cell().Background(bg).Padding(5).Text((i + 1).ToString()).FontSize(9);
+                                    table.Cell().Background(bg).Padding(5).Text($"{duToan:N0}").FontSize(9);
+                                    table.Cell().Background(bg).Padding(5).Text($"{thucChi:N0}").FontSize(9);
+                                    table.Cell().Background(bg).Padding(5).Text($"{cl:N0}")
+                                        .FontColor(cl >= 0 ? "#059669" : "#EF4444").FontSize(9);
+                                    table.Cell().Background(bg).Padding(5).Text(ns.GhiChu ?? "").FontSize(9);
+                                }
+
+                                table.Cell().Background("#FDE68A").Padding(5).Text("TỔNG CỘNG").Bold().FontSize(9);
+                                table.Cell().Background("#FDE68A").Padding(5).Text($"{tongDuToan:N0}").Bold().FontSize(9);
+                                table.Cell().Background("#FDE68A").Padding(5).Text($"{tongThucChi:N0}").Bold().FontSize(9);
+                                table.Cell().Background("#FDE68A").Padding(5).Text($"{conLai:N0}").Bold()
+                                    .FontColor(conLai >= 0 ? "#059669" : "#EF4444").FontSize(9);
+                                table.Cell().Background("#FDE68A").Padding(5).Text("").FontSize(9);
+                            }
+                            else
+                            {
+                                table.Cell().ColumnSpan(5).Padding(10).AlignCenter()
+                                    .Text("Chưa có dữ liệu ngân sách.").Italic().FontColor("#6B7280");
+                            }
+                        });
+
+                        col.Item().Text("TỔNG HỢP TÀI CHÍNH").Bold().FontSize(12).FontColor(mau);
+                        col.Item().Column(sum =>
+                        {
+                            sum.Spacing(4);
+                            void SumRow(string label, string value, string? valColor = null)
+                            {
+                                sum.Item().Border(1).BorderColor("#E5E7EB").Padding(6).Row(r =>
+                                {
+                                    r.RelativeItem().Text(label).Bold();
+                                    r.ConstantItem(150).AlignRight().Text(value)
+                                        .FontColor(valColor ?? "#111827").Bold();
+                                });
+                            }
+                            SumRow("Tổng dự toán ngân sách", $"{tongDuToan:N0} đ");
+                            SumRow("Tổng thực chi", $"{tongThucChi:N0} đ");
+                            SumRow("Ngân sách còn lại", $"{conLai:N0} đ", conLai >= 0 ? "#059669" : "#EF4444");
+                            SumRow("Tỷ lệ sử dụng ngân sách", tiLeSD);
+                        });
+                    });
+
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("Trang ").FontSize(8).FontColor("#6B7280");
+                        text.CurrentPageNumber().FontSize(8).FontColor("#6B7280");
+                        text.Span(" / ").FontSize(8).FontColor("#6B7280");
+                        text.TotalPages().FontSize(8).FontColor("#6B7280");
+                    });
+                });
+            });
+
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            string tenFile = $"BaoCao_TaiChinh_{SanitizeFileName(suKien.TenSuKien)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string fullPath = Path.Combine(outputDir, tenFile);
+            document.GeneratePdf(fullPath);
+
+            var fileBytes = await File.ReadAllBytesAsync(fullPath);
+            return new FileContentResult(fileBytes, "application/pdf")
             {
                 FileDownloadName = tenFile
             };
