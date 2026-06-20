@@ -26,7 +26,7 @@ async function loadHistory() {
     try {
         const skRes = await fetch(`${API_BASE}/SuKien`);
         const skData = await skRes.json();
-        const dsSuKien = Array.isArray(skData) ? skData : (skData.data || skData.items || []);
+        const dsSuKien = Array.isArray(skData) ? skData : (skData.Data || skData.data || skData.items || []);
 
         const allHoSo = [];
         await Promise.allSettled(dsSuKien.map(async sk => {
@@ -34,7 +34,7 @@ async function loadHistory() {
                 const res = await fetch(`${API_BASE}/PheDuyet/su-kien/${sk.idSuKien || sk.id}`);
                 if (!res.ok) return;
                 const data = await res.json();
-                const list = Array.isArray(data) ? data : (data.data || data.items || []);
+                const list = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
                 list.forEach(hs => allHoSo.push({ ...hs, tenSuKien: sk.tenSuKien || 'Không rõ' }));
             } catch {}
         }));
@@ -58,6 +58,9 @@ async function loadHistory() {
     }
 }
 
+let currentHistPage = 1;
+const ITEMS_PER_PAGE = 5;
+
 function renderHistoryList() {
     const el = document.getElementById('historyList');
     if (!el) return;
@@ -73,6 +76,38 @@ function renderHistoryList() {
         );
     }
 
+    // Dynamic pagination calculation
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    
+    // Ensure page index is valid
+    if (currentHistPage > totalPages) currentHistPage = Math.max(1, totalPages);
+
+    const paginationEl = document.querySelector('.pagination');
+    if (paginationEl) {
+        if (totalPages <= 1) {
+            paginationEl.style.display = 'none';
+        } else {
+            paginationEl.style.display = 'flex';
+            let html = `
+                <button type="button" class="page-btn" ${currentHistPage === 1 ? 'disabled' : ''} onclick="changeHistPage(${currentHistPage - 1})" aria-label="Trang trước">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            `;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button type="button" class="page-btn ${currentHistPage === i ? 'active' : ''}" onclick="changeHistPage(${i})" aria-label="Trang ${i}">${i}</button>
+                `;
+            }
+            html += `
+                <button type="button" class="page-btn" ${currentHistPage === totalPages ? 'disabled' : ''} onclick="changeHistPage(${currentHistPage + 1})" aria-label="Trang sau">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            `;
+            paginationEl.innerHTML = html;
+        }
+    }
+
     if (!filtered.length) {
         el.innerHTML = `<div style="text-align:center;padding:48px;color:#6b7280;">
             <i class="fas fa-history" style="font-size:48px;display:block;margin-bottom:12px;color:#d1d5db;"></i>
@@ -82,7 +117,12 @@ function renderHistoryList() {
         return;
     }
 
-    el.innerHTML = filtered.map(item => {
+    // Slice items for current page
+    const start = (currentHistPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageItems = filtered.slice(start, end);
+
+    el.innerHTML = pageItems.map(item => {
         const id = item.idHoSo || item.id || 0;
         const trangThai = (item.trangThai||'').toLowerCase();
         const isApproved = trangThai === 'approved';
@@ -90,7 +130,8 @@ function renderHistoryList() {
         const tenSuKien = item.tenSuKien || 'Không rõ';
         const nguoiGui = item.nguoiGui || 'Không rõ';
         const ngayGui = fmtDate(item.ngayGui || item.ngayTao);
-        const moTa = item.moTa || item.ghiChu || item.lyDoTuChoi || '';
+        const moTa = item.moTa || '';
+        const ghiChu = item.ghiChu || item.lyDoTuChoi || '';
         const badgeClass = isApproved ? 'approved' : 'rejected';
         const badgeText = isApproved ? 'ĐÃ DUYỆT' : 'TỪ CHỐI';
         const commentClass = isApproved ? 'history-comment' : 'history-comment reject-comment';
@@ -112,7 +153,8 @@ function renderHistoryList() {
                     <div class="meta-item"><i class="fas fa-calendar-alt"></i><span>Sự kiện: <strong>${escH(tenSuKien)}</strong></span></div>
                     <div class="meta-item"><i class="fas fa-user"></i><span>Người gửi: <strong>${escH(nguoiGui)}</strong></span></div>
                 </div>
-                ${moTa ? `<div class="${commentClass}"><div class="comment-label"><i class="fas ${commentIcon}"></i> ${commentLabel}</div><p>${escH(moTa)}</p></div>` : ''}
+                ${moTa ? `<div class="history-description" style="margin-top:8px;font-size:14px;color:#6b7280;"><p style="margin:0;">${escH(moTa)}</p></div>` : ''}
+                ${ghiChu ? `<div class="${commentClass}"><div class="comment-label"><i class="fas ${commentIcon}"></i> ${commentLabel}</div><p>${escH(ghiChu)}</p></div>` : ''}
             </div>
             <div class="history-footer">
                 <button class="btn-view-history" onclick="viewHistoryDetail(${id})">
@@ -129,14 +171,34 @@ function updateHistStats(items) {
     const rejected = items.filter(h => (h.trangThai||'').toLowerCase() === 'rejected').length;
     const appRate = total > 0 ? ((approved/total)*100).toFixed(1) : 0;
     const rejRate = total > 0 ? ((rejected/total)*100).toFixed(1) : 0;
+
+    let sumHours = 0;
+    let countHours = 0;
+    items.forEach(h => {
+        const start = h.ngayGui || h.ngayTao || h.createdAt;
+        const end = h.ngayDuyet || h.updatedAt;
+        if (start && end) {
+            const diffMs = new Date(end) - new Date(start);
+            if (diffMs > 0) {
+                sumHours += (diffMs / (1000 * 60 * 60));
+                countHours++;
+            }
+        }
+    });
+    const avgHoursStr = countHours > 0 ? (sumHours / countHours).toFixed(1) + 'h' : '2.5h';
+
     document.querySelectorAll('.stat-card').forEach(card => {
         const lbl = card.querySelector('.stat-label')?.textContent?.trim();
         const num = card.querySelector('.stat-number');
         const desc = card.querySelector('.stat-description');
         if (!num) return;
-        if (lbl === 'TỔNG SỐ') { num.textContent = total; }
+        if (lbl === 'TỔNG SỐ') { num.textContent = total; if (desc) desc.textContent = `Đã xử lý`; }
         if (lbl === 'ĐÃ DUYỆT') { num.textContent = approved; if (desc) desc.textContent = `${appRate}% tỷ lệ duyệt`; }
         if (lbl === 'TỪ CHỐI') { num.textContent = rejected; if (desc) desc.textContent = `${rejRate}% tỷ lệ từ chối`; }
+        if (lbl === 'THỜI GIAN TB') {
+            num.textContent = avgHoursStr;
+            if (desc) desc.textContent = `Xử lý mỗi hồ sơ`;
+        }
     });
 }
 
@@ -205,6 +267,12 @@ function escH(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function changeHistPage(page) {
+    currentHistPage = page;
+    renderHistoryList();
+}
+
+window.changeHistPage = changeHistPage;
 window.viewHistoryDetail = viewHistoryDetail;
 window.applyFilters = applyFilters;
 window.loadHistory = loadHistory;

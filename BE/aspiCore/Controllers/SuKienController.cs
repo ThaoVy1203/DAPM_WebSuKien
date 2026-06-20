@@ -182,6 +182,10 @@ namespace aspiCore.Controllers
                     var dict = doc.RootElement.Deserialize<Dictionary<string, object>>() ?? new Dictionary<string, object>();
                     dict["TrangThai"] = dto.KetQua == "Đồng ý" ? "approved" : "rejected";
                     dict["NguoiDuyet"] = dto.CapDuyet;
+                    if (!string.IsNullOrEmpty(dto.GhiChu))
+                    {
+                        dict["MoTa"] = dto.GhiChu;
+                    }
                     hoSo.NoiDungKeHoach = JsonSerializer.Serialize(dict);
                 }
                 catch { }

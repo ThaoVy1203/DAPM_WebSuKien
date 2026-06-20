@@ -11,5 +11,6 @@ namespace aspiCore.Services
         Task<NguoiDungDto?> UpdateAsync(string id, UpdateNguoiDungDto dto);
         Task<bool> DeleteAsync(string id);
         Task<bool> GanVaiTroAsync(string idNguoiDung, int idVaiTro);
+        Task<bool> ChangePasswordAsync(string id, string currentPassword, string newPassword);
     }
 }

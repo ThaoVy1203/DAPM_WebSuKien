@@ -14,6 +14,7 @@ namespace aspiCore.Dtos.PheDuyet
         public string NgayGui { get; set; } = string.Empty;
         public string NguoiDuyet { get; set; } = "Ban Giám hiệu";
         public string MoTa { get; set; } = string.Empty;
+        public string? GhiChu { get; set; }
     }
 
     public class CreateUpdatePheDuyetDto

@@ -333,15 +333,15 @@ body {
 
 .date-range {
     display: flex;
-    align-items: center;
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
 }
 
 
 .category-checkboxes {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .checkbox-label {

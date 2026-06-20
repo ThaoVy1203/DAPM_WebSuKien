@@ -63,17 +63,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 // ─── SKELETON LOADING ─────────────────────────────────────────────────────────
 function showSkeleton(show) {
-    const card = document.getElementById("eventInfoCard");
-    if (!card) return;
-    if (show) {
-        card.innerHTML = `
-            <div class="event-icon" style="background:#e2e8f0;"></div>
-            <div style="flex:1;">
-                <div style="height:20px;background:#e2e8f0;border-radius:6px;width:60%;margin-bottom:12px;"></div>
-                <div style="height:14px;background:#e2e8f0;border-radius:4px;width:80%;margin-bottom:8px;"></div>
-                <div style="height:14px;background:#e2e8f0;border-radius:4px;width:50%;"></div>
-            </div>`;
-    }
+    // Skeleton đã được đặt sẵn trong HTML — không cần làm gì thêm
 }
 
 // ─── LOAD THÔNG TIN SỰ KIỆN ───────────────────────────────────────────────────
@@ -108,11 +98,25 @@ function renderEventInfo(event) {
     const soToiDa    = event.soLuongToiDa ?? null;
     const soDaDK     = event.soDaDangKy ?? event.soLuongDaDangKy ?? 0;
     const conLai     = soToiDa !== null ? soToiDa - soDaDK : null;
+    const hinhAnh    = event.hinhAnh || event.HinhAnh || null;
 
     // Cập nhật title trang và breadcrumb
     document.title = `Đăng ký: ${tenSuKien} - UTE Events`;
     const bc = document.getElementById("breadcrumbEvent");
     if (bc) bc.textContent = tenSuKien;
+
+    // Cập nhật ảnh sự kiện
+    const imgWrap = document.getElementById("eventImgWrap");
+    if (imgWrap) {
+        if (hinhAnh) {
+            imgWrap.outerHTML = `<img id="eventImgWrap" class="event-info-img" src="${hinhAnh}"
+                alt="${escapeHtml(tenSuKien)}"
+                onerror="this.outerHTML='<div class=\\'event-info-img-placeholder\\'><i class=\\'fas fa-calendar-star\\'></i></div>'">`;
+        } else {
+            // fallback: giữ placeholder nhưng đổi icon nếu có thể
+            imgWrap.innerHTML = `<i class="fas fa-calendar-star"></i>`;
+        }
+    }
 
     // Cập nhật tên sự kiện
     const nameEl = document.getElementById("eventName");
@@ -127,25 +131,24 @@ function renderEventInfo(event) {
             weekday: "long", day: "2-digit", month: "2-digit", year: "numeric"
         });
         timeStr = start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-        if (end) timeStr += ` - ${end.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
+        if (end) timeStr += ` – ${end.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
     }
 
-    // Màu badge trạng thái
     const badgeClass = trangThai === "Đã duyệt" ? "badge-approved" : "badge-pending";
 
-    // Render meta info card
     const metaEl = document.getElementById("eventMeta");
     if (metaEl) {
         metaEl.innerHTML = `
-            <span><i class="fas fa-calendar"></i> ${dateStr}</span>
-            ${timeStr   ? `<span><i class="fas fa-clock"></i> ${timeStr}</span>` : ""}
+            <span><i class="fas fa-calendar"></i> ${escapeHtml(dateStr)}</span>
+            ${timeStr ? `<span><i class="fas fa-clock"></i> ${escapeHtml(timeStr)}</span>` : ""}
             <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</span>
-            ${soToiDa   ? `<span><i class="fas fa-users"></i> ${soDaDK}/${soToiDa} người đã đăng ký</span>` : ""}
-            ${conLai !== null ? `<span><i class="fas fa-ticket-alt"></i>
-                <strong style="color:${conLai > 0 ? '#059669' : '#e53e3e'}">
-                    ${conLai > 0 ? `Còn ${conLai} chỗ trống` : "Đã hết chỗ"}
-                </strong></span>` : ""}
-            <br>
+            ${soToiDa ? `<span><i class="fas fa-users"></i> ${soDaDK}/${soToiDa} người đã đăng ký</span>` : ""}
+            ${conLai !== null
+                ? `<span><i class="fas fa-ticket-alt"></i>
+                    <strong style="color:${conLai > 0 ? '#059669' : '#e53e3e'}">
+                        ${conLai > 0 ? `Còn ${conLai} chỗ` : "Đã hết chỗ"}
+                    </strong></span>`
+                : ""}
             <span class="event-status-badge ${badgeClass}">${escapeHtml(trangThai || "Đang cập nhật")}</span>
         `;
     }
@@ -153,7 +156,6 @@ function renderEventInfo(event) {
     // ── Kiểm tra điều kiện cho phép đăng ký ──────────────────────────────────
     const now = new Date();
 
-    // a. Sự kiện chưa được duyệt
     const notApproved = trangThai && !["Đã duyệt", "Đang diễn ra"].includes(trangThai);
     if (notApproved) {
         showFormError(`Sự kiện đang ở trạng thái "<strong>${escapeHtml(trangThai)}</strong>". Chưa mở đăng ký.`);
@@ -161,18 +163,15 @@ function renderEventInfo(event) {
         return;
     }
 
-    // b. Hết chỗ
     if (conLai !== null && conLai <= 0) {
         showFormError("Sự kiện đã <strong>hết chỗ đăng ký</strong>. Bạn có thể đăng ký vào danh sách chờ (Waitlist).");
     }
 
-    // c. Sự kiện đã kết thúc — không cho đăng ký
     if (event.thoiGianKetThuc && new Date(event.thoiGianKetThuc) < now) {
         showFormError("Sự kiện này đã <strong>kết thúc</strong>. Không thể đăng ký.");
         disableForm();
         return;
     }
-    // Lưu ý: sự kiện đang diễn ra (batDau <= now <= ketThuc) vẫn cho đăng ký
 }
 
 // ─── KIỂM TRA ĐÃ ĐĂNG KÝ CHƯA ────────────────────────────────────────────────

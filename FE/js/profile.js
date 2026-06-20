@@ -20,6 +20,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Load thống kê sự kiện (từ lịch sử)
     await loadUserStatistics();
 
+    // Load sự kiện gần đây từ API SuKien
+    await loadRecentEventsCatalog();
+
     setupEventListeners();
 });
 
@@ -40,8 +43,14 @@ function prefillFromLocalStorage() {
 // ==========================
 async function loadUserProfile() {
     const token = localStorage.getItem("token");
+    const raw = localStorage.getItem("userData") || localStorage.getItem("user");
+    if (!raw) return;
     try {
-        const res = await fetch(`${API_BASE}/NguoiDung/profile`, {
+        const userObj = JSON.parse(raw);
+        const idNguoiDung = userObj.IdNguoiDung || userObj.idNguoiDung || userObj.id;
+        if (!idNguoiDung) return;
+
+        const res = await fetch(`${API_BASE}/NguoiDung/${idNguoiDung}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -132,7 +141,7 @@ async function loadUserStatistics() {
         if (!res.ok) return;
 
         const data = await res.json();
-        const registrations = Array.isArray(data) ? data : (data.items || data.data || []);
+        const registrations = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         // Đếm số lượng
         const attendedCount = registrations.filter(r => 
@@ -173,11 +182,36 @@ async function loadUserStatistics() {
             }
         }
 
-        // Update UI Sự kiện gần đây
-        renderRecentEvents(upcomingEvents.slice(0, 2));
-
     } catch (error) {
         console.error('Lỗi load thống kê:', error);
+    }
+}
+
+// ==========================
+// LOAD SỰ KIỆN GẦN ĐÂY TỪ CATALOG
+// ==========================
+async function loadRecentEventsCatalog() {
+    try {
+        const res = await fetch(`${API_BASE}/SuKien`);
+        if (!res.ok) return;
+        const events = await res.json();
+        
+        // Lọc các sự kiện đang hoạt động (không bị hủy hoặc từ chối)
+        const activeEvents = events.filter(e => {
+            const status = (e.trangThai || e.TrangThai || "").toLowerCase();
+            return status !== "từ chối" && status !== "hủy" && status !== "nháp";
+        });
+
+        // Sắp xếp các sự kiện: Mới nhất lên trước
+        activeEvents.sort((a, b) => {
+            const dateA = new Date(a.thoiGianBatDau || a.ThoiGianBatDau);
+            const dateB = new Date(b.thoiGianBatDau || b.ThoiGianBatDau);
+            return dateB - dateA;
+        });
+
+        renderRecentEvents(activeEvents.slice(0, 2));
+    } catch (error) {
+        console.error('Lỗi load danh sách sự kiện gần đây:', error);
     }
 }
 
@@ -201,17 +235,22 @@ function renderRecentEvents(events) {
         const month = `T${startDate.getMonth() + 1}`;
         const tenSuKien = event.tenSuKien || event.TenSuKien || "Sự kiện";
         const diaDiem = event.tenDiaDiem || event.TenDiaDiem || "Chưa xác định";
+        const idSuKien = event.idSuKien || event.IdSuKien;
 
         const item = document.createElement('div');
         item.className = 'recent-event-item';
+        item.style.cursor = 'pointer';
+        item.onclick = () => {
+            window.location.href = `event-detail.html?id=${idSuKien}`;
+        };
         item.innerHTML = `
             <div class="event-date">
                 <span class="date-day">${day}</span>
                 <span class="date-month">${month}</span>
             </div>
             <div class="event-info">
-                <h4>${escapeHtml(tenSuKien)}</h4>
-                <p><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</p>
+                <h4 style="margin: 0; font-size: 14px; font-weight: 600;">${escapeHtml(tenSuKien)}</h4>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(diaDiem)}</p>
             </div>
         `;
         container.appendChild(item);
@@ -223,14 +262,28 @@ function renderRecentEvents(events) {
 // ==========================
 async function updateProfile(data) {
     const token = localStorage.getItem("token");
+    const raw = localStorage.getItem("userData") || localStorage.getItem("user");
+    if (!raw) return;
     try {
-        const res = await fetch(`${API_BASE}/NguoiDung/profile`, {
+        const userObj = JSON.parse(raw);
+        const idNguoiDung = userObj.IdNguoiDung || userObj.idNguoiDung || userObj.id;
+        if (!idNguoiDung) return;
+
+        const updatePayload = {
+            hoTen: data.hoTen !== undefined ? data.hoTen : (userObj.hoTen || userObj.HoTen || ""),
+            email: data.email !== undefined ? data.email : (userObj.email || userObj.Email || ""),
+            sdt: data.sdt !== undefined ? data.sdt : (userObj.sdt || userObj.SDT || userObj.phone || ""),
+            anhDaiDien: data.anhDaiDien !== undefined ? data.anhDaiDien : (userObj.anhDaiDien || userObj.AnhDaiDien || null),
+            trangThai: userObj.trangThai !== undefined ? userObj.trangThai : (userObj.TrangThai !== undefined ? userObj.TrangThai : true)
+        };
+
+        const res = await fetch(`${API_BASE}/NguoiDung/${idNguoiDung}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(updatePayload)
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -241,6 +294,50 @@ async function updateProfile(data) {
     } catch (e) {
         console.error("Lỗi cập nhật profile:", e);
         showToast("Không thể cập nhật hồ sơ. Vui lòng thử lại.", "error");
+    }
+}
+
+// ==========================
+// ĐỔI MẬT KHẨU
+// ==========================
+async function changePassword(currentPassword, newPassword) {
+    const token = localStorage.getItem("token");
+    const raw = localStorage.getItem("userData") || localStorage.getItem("user");
+    if (!raw) return;
+    try {
+        const userObj = JSON.parse(raw);
+        const idNguoiDung = userObj.IdNguoiDung || userObj.idNguoiDung || userObj.id;
+        if (!idNguoiDung) return;
+
+        const res = await fetch(`${API_BASE}/NguoiDung/${idNguoiDung}/change-password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const resText = await res.text();
+        let resData = null;
+        try {
+            if (resText) {
+                resData = JSON.parse(resText);
+            }
+        } catch (err) {
+            console.warn("Response body is not JSON:", resText);
+        }
+
+        if (!res.ok) {
+            throw new Error((resData && resData.message) || resText || `HTTP ${res.status}`);
+        }
+
+        showToast("Thay đổi mật khẩu thành công!", "success");
+        return true;
+    } catch (e) {
+        console.error("Lỗi đổi mật khẩu:", e);
+        showToast(e.message || "Không thể đổi mật khẩu.", "error");
+        return false;
     }
 }
 
@@ -274,14 +371,39 @@ async function uploadAvatar(file) {
 // EVENT LISTENERS
 // ==========================
 function setupEventListeners() {
-    // 1. Sửa thông tin cá nhân
+    // 1. Sửa thông tin cá nhân (hiển thị modal)
     document.getElementById("editPersonalInfo")?.addEventListener("click", () => {
         const raw = localStorage.getItem("userData") || localStorage.getItem("user");
         const user = raw ? JSON.parse(raw) : {};
-        const newName = prompt("Nhập họ tên mới:", user.hoTen || user.HoTen || "");
-        if (newName && newName.trim()) {
-            updateProfile({ hoTen: newName.trim() });
+
+        document.getElementById("editFullName").value = user.hoTen || user.HoTen || "";
+        document.getElementById("editEmail").value = user.email || user.Email || "";
+        document.getElementById("editPhone").value = user.sdt || user.SDT || user.phone || "";
+
+        document.getElementById("editProfileModal").style.display = "flex";
+    });
+
+    // Close Personal Info Modal
+    const closeEditModal = () => {
+        document.getElementById("editProfileModal").style.display = "none";
+    };
+    document.getElementById("closeEditModal")?.addEventListener("click", closeEditModal);
+    document.getElementById("cancelEditBtn")?.addEventListener("click", closeEditModal);
+
+    // Submit Personal Info Form
+    document.getElementById("editProfileForm")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const hoTen = document.getElementById("editFullName").value.trim();
+        const email = document.getElementById("editEmail").value.trim();
+        const sdt = document.getElementById("editPhone").value.trim();
+
+        if (!hoTen || !email) {
+            showToast("Họ tên và Email không được để trống.", "error");
+            return;
         }
+
+        await updateProfile({ hoTen, email, sdt });
+        closeEditModal();
     });
 
     // 2. Upload avatar
@@ -296,28 +418,69 @@ function setupEventListeners() {
         input.click();
     });
 
-    // 3. Toggle Tags Sở thích
-    document.querySelectorAll(".interest-tag").forEach(tag => {
-        tag.addEventListener("click", function () {
-            this.classList.toggle("active");
-        });
-    });
-
-    // 4. Button Lưu Sở Thích
-    document.getElementById("editInterests")?.addEventListener("click", () => {
-        const activeTags = Array.from(document.querySelectorAll('.interest-tag.active span'))
-                                .map(span => span.textContent);
-        showToast(`Đã lưu ${activeTags.length} sở thích! Tính năng API đang phát triển.`, "info");
-    });
-
-    // 5. Button Xem Lịch sử / Vé
+    // 3. Button Xem Lịch sử / Vé
     document.querySelector(".btn-view-details")?.addEventListener("click", () => {
         window.location.href = "history.html";
     });
 
-    // 6. Menu Cài đặt & Đăng xuất
+    // 4. Open Change Password Modal
+    document.getElementById("changePasswordBtn")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        document.getElementById("currentPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+        
+        document.getElementById("changePasswordModal").style.display = "flex";
+    });
+
+    // Close Change Password Modal
+    const closePasswordModal = () => {
+        document.getElementById("changePasswordModal").style.display = "none";
+    };
+    document.getElementById("closePasswordModal")?.addEventListener("click", closePasswordModal);
+    document.getElementById("cancelPasswordBtn")?.addEventListener("click", closePasswordModal);
+
+    // Submit Change Password Form
+    document.getElementById("changePasswordForm")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const currentPassword = document.getElementById("currentPassword").value;
+        const newPassword = document.getElementById("newPassword").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+
+        if (newPassword !== confirmPassword) {
+            showToast("Mật khẩu mới và xác nhận mật khẩu không khớp.", "error");
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            showToast("Mật khẩu mới phải từ 6 ký tự trở lên.", "error");
+            return;
+        }
+
+        const success = await changePassword(currentPassword, newPassword);
+        if (success) {
+            closePasswordModal();
+        }
+    });
+
+    // 5. Click outside modals to close
+    window.addEventListener("click", (e) => {
+        const editModal = document.getElementById("editProfileModal");
+        const pwdModal = document.getElementById("changePasswordModal");
+        if (e.target === editModal) {
+            editModal.style.display = "none";
+        }
+        if (e.target === pwdModal) {
+            pwdModal.style.display = "none";
+        }
+    });
+
+    // 6. Menu Đăng xuất
     document.querySelectorAll(".setting-item").forEach(item => {
-        item.addEventListener("click", function () {
+        item.addEventListener("click", function (e) {
+            if (this.id === "changePasswordBtn") {
+                return;
+            }
             const isDanger = this.classList.contains("danger");
             const title = this.querySelector("h4")?.textContent?.trim();
             
@@ -329,8 +492,6 @@ function setupEventListeners() {
                     sessionStorage.clear();
                     window.location.href = "login.html";
                 }
-            } else {
-                showToast("Tính năng này đang được phát triển.", "info");
             }
         });
     });

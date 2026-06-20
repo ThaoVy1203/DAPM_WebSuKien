@@ -84,13 +84,8 @@ async function loadEventsSelector() {
         const vaiTros = userData.vaiTros || [];
         const isTruong = vaiTros.includes("TruongBanToChuc");
 
-        // Load sự kiện của người dùng hiện tại (giống btc-events.js)
+        // Load all events from SQL
         let url = `${window.API_BASE}/SuKien`;
-        if (userData.idNguoiDung) {
-            url = isTruong 
-                ? `${window.API_BASE}/SuKien/nguoi-tao/${userData.idNguoiDung}`
-                : `${window.API_BASE}/SuKien/assigned/${userData.idNguoiDung}`;
-        }
 
         const res = await fetch(url, {
             headers: { "Authorization": `Bearer ${token}` }

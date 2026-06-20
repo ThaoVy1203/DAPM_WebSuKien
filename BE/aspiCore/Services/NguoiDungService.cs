@@ -273,5 +273,18 @@ namespace aspiCore.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> ChangePasswordAsync(string id, string currentPassword, string newPassword)
+        {
+            var user = await _context.NguoiDungs.FindAsync(id);
+            if (user == null || user.MatKhauSSO != currentPassword)
+            {
+                return false;
+            }
+
+            user.MatKhauSSO = newPassword;
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

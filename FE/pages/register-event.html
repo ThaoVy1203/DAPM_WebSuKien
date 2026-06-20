@@ -37,29 +37,60 @@
         .event-info-card {
             background: white;
             border-radius: 16px;
-            padding: 24px;
+            padding: 0;
             margin-bottom: 24px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
             display: flex;
-            gap: 20px;
-            align-items: flex-start;
+            align-items: stretch;
         }
-        .event-info-card .event-icon {
-            width: 56px; height: 56px; border-radius: 12px;
+        .event-info-img {
+            width: 200px;
+            min-height: 150px;
+            flex-shrink: 0;
+            object-fit: cover;
             background: linear-gradient(135deg, #0D5A9C, #1976D2);
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 24px; flex-shrink: 0;
+            display: block;
         }
-        .event-info-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-        .event-meta-row { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #666; }
+        .event-info-img-placeholder {
+            width: 200px;
+            min-height: 150px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #0D5A9C, #1976D2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+        .event-info-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+        }
+        .event-info-card h2 { font-size: 20px; font-weight: 700; margin: 0; }
+        .event-meta-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #555; }
         .event-meta-row span { display: flex; align-items: center; gap: 6px; }
-        .event-meta-row i { color: #0D5A9C; }
+        .event-meta-row i { color: #0D5A9C; width: 14px; text-align: center; }
         .event-status-badge {
             display: inline-block; padding: 4px 12px; border-radius: 20px;
-            font-size: 12px; font-weight: 600; margin-top: 8px;
+            font-size: 12px; font-weight: 600;
         }
         .badge-approved { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; }
         .badge-pending  { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+
+        /* skeleton shimmer */
+        .skeleton { background: linear-gradient(90deg,#e2e8f0 25%,#f0f4f8 50%,#e2e8f0 75%);
+            background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        @media (max-width: 640px) {
+            .event-info-card { flex-direction: column; }
+            .event-info-img, .event-info-img-placeholder { width: 100%; min-height: 160px; }
+        }
 
         /* ── FORM CARD ── */
         .form-card {
@@ -206,13 +237,15 @@
 
         <!-- Event Info -->
         <div class="event-info-card" id="eventInfoCard">
-            <div class="event-icon">
+            <div class="event-info-img-placeholder" id="eventImgWrap">
                 <i class="fas fa-calendar-star"></i>
             </div>
-            <div style="flex:1;">
-                <h2 id="eventName">Đang tải...</h2>
+            <div class="event-info-body">
+                <h2 id="eventName"><span class="skeleton" style="display:inline-block;width:60%;height:22px;"></span></h2>
                 <div class="event-meta-row" id="eventMeta">
-                    <span><i class="fas fa-spinner fa-spin"></i> Đang tải thông tin sự kiện...</span>
+                    <span class="skeleton" style="width:140px;height:14px;"></span>
+                    <span class="skeleton" style="width:100px;height:14px;"></span>
+                    <span class="skeleton" style="width:120px;height:14px;"></span>
                 </div>
             </div>
         </div>

@@ -1,418 +1,344 @@
+"use strict";
+// admin-locations.js — Quản lý địa điểm, lấy dữ liệu từ SQL qua API
+
 const API_URL = "http://localhost:5103/api/DiaDiem";
 
 let editingId = null;
 let allLocations = [];
 
-// ==========================
-// INIT
-// ==========================
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function () {
     await loadLocations();
-    initTabs();
     initSearch();
-    initializeEventHandlers();
+    initTabFilter();
+    initLogout();
 });
 
-// ==========================
-// LOAD
-// ==========================
+// ─── LOAD TỪ API ──────────────────────────────────────────────────────────────
 async function loadLocations() {
+    showGridLoading(true);
     try {
-        const response = await fetch(API_URL);
-        allLocations = await response.json();
-
-        renderLocationCards(allLocations);
-        renderLocationTable(allLocations);
-        renderLocations(allLocations);
-        updateStats(allLocations);
-
-    } catch (error) {
-        console.error("Lỗi load địa điểm:", error);
-        showError('Không tải được dữ liệu địa điểm. Vui lòng kiểm tra Backend đã chạy chưa.');
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        // Chuẩn hóa PascalCase → camelCase
+        allLocations = (Array.isArray(data) ? data : []).map(normalizeLocation);
+        renderAll(allLocations);
+    } catch (e) {
+        console.error("Lỗi load địa điểm:", e);
+        showGridError("Không tải được dữ liệu. Vui lòng kiểm tra Backend đã chạy chưa.");
     }
 }
 
-// ==========================
-// ẢNH ĐỊA ĐIỂM — map theo tên / loại
-// ==========================
-const LOCATION_IMAGES = {
-    // Theo từ khóa trong tên (lowercase)
-    keywords: [
-        { match: ['hội trường', 'hall', 'auditorium'],
-          url: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80' },
-        { match: ['sân vận động', 'sân thể thao', 'stadium', 'sport'],
-          url: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=600&q=80' },
-        { match: ['phòng họp', 'meeting', 'họp'],
-          url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80' },
-        { match: ['phòng học', 'classroom', 'giảng đường', 'room'],
-          url: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80' },
-        { match: ['sân', 'yard', 'outdoor', 'ngoài trời', 'vườn', 'garden'],
-          url: 'https://images.unsplash.com/photo-1567972526827-9e4d6c2f6dfb?w=600&q=80' },
-        { match: ['thư viện', 'library'],
-          url: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80' },
-        { match: ['nhà ăn', 'canteen', 'cafeteria', 'ăn'],
-          url: 'https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600&q=80' },
-        { match: ['phòng lab', 'laboratory', 'máy tính', 'computer'],
-          url: 'https://images.unsplash.com/photo-1517433456452-f9633a875f6f?w=600&q=80' },
-    ],
-    // Fallback theo loại địa điểm
-    types: {
-        hall:    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80',
-        room:    'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80',
-        outdoor: 'https://images.unsplash.com/photo-1567972526827-9e4d6c2f6dfb?w=600&q=80',
-    },
-    default: 'https://images.unsplash.com/photo-1562774053-701939374585?w=600&q=80'
-};
-
-function getLocationImage(location) {
-    // Ưu tiên ảnh đã có trong DB
-    if (location.hinhAnh && location.hinhAnh.startsWith('http')) return location.hinhAnh;
-
-    const name = (location.tenDiaDiem || '').toLowerCase();
-
-    // Tìm theo từ khóa trong tên
-    for (const entry of LOCATION_IMAGES.keywords) {
-        if (entry.match.some(kw => name.includes(kw))) return entry.url;
-    }
-
-    // Fallback theo loaiDiaDiem
-    const type = (location.loaiDiaDiem || '').toLowerCase();
-    if (LOCATION_IMAGES.types[type]) return LOCATION_IMAGES.types[type];
-
-    return LOCATION_IMAGES.default;
+function normalizeLocation(d) {
+    return {
+        idDiaDiem:       d.IdDiaDiem       ?? d.idDiaDiem,
+        tenDiaDiem:      d.TenDiaDiem      ?? d.tenDiaDiem      ?? "",
+        viTri:           d.ViTri           ?? d.viTri           ?? "",
+        sucChua:         d.SucChua         ?? d.sucChua         ?? 0,
+        trangThaiSuDung: d.TrangThaiSuDung ?? d.trangThaiSuDung ?? "Hoạt động",
+    };
 }
 
-// ==========================
-// RENDER CARDS (grid view)
-// ==========================
+// ─── ẢNH FALLBACK theo tên ────────────────────────────────────────────────────
+function getLocationImage(loc) {
+    const name = (loc.tenDiaDiem || "").toLowerCase();
+    if (name.includes("hội trường") || name.includes("hall") || name.includes("auditorium"))
+        return "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80";
+    if (name.includes("sân") || name.includes("ngoài trời") || name.includes("outdoor"))
+        return "https://images.unsplash.com/photo-1567972526827-9e4d6c2f6dfb?w=600&q=80";
+    if (name.includes("phòng họp") || name.includes("meeting"))
+        return "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80";
+    if (name.includes("phòng") || name.includes("room") || name.includes("giảng đường"))
+        return "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80";
+    if (name.includes("thư viện") || name.includes("library"))
+        return "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80";
+    return "https://images.unsplash.com/photo-1562774053-701939374585?w=600&q=80";
+}
+
+// ─── RENDER TẤT CẢ ────────────────────────────────────────────────────────────
+function renderAll(locations) {
+    updateStats(locations);
+    updateTabCounts(locations);
+    renderLocationCards(locations);
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+function updateStats(locations) {
+    const total     = locations.length;
+    const active    = locations.filter(l => l.trangThaiSuDung === "Hoạt động").length;
+    const inactive  = locations.filter(l => l.trangThaiSuDung !== "Hoạt động").length;
+    const totalCap  = locations.reduce((s, l) => s + (l.sucChua || 0), 0);
+
+    setText("statTotal",    total);
+    setText("statActive",   active);
+    setText("statInactive", inactive);
+    setText("statCapacity", totalCap.toLocaleString("vi-VN"));
+}
+
+function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
+
+// ─── TAB COUNTS ───────────────────────────────────────────────────────────────
+function updateTabCounts(locations) {
+    setText("tabAll",   locations.length);
+    setText("tabActive",   locations.filter(l => l.trangThaiSuDung === "Hoạt động").length);
+    setText("tabInactive", locations.filter(l => l.trangThaiSuDung !== "Hoạt động").length);
+}
+
+// ─── RENDER CARDS ─────────────────────────────────────────────────────────────
 function renderLocationCards(locations) {
     const container = document.querySelector('.locations-grid');
     if (!container) return;
 
-    container.innerHTML = '';
+    if (!locations.length) {
+        container.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">
+                <i class="fas fa-map-marker-alt" style="font-size:48px;color:#d1d5db;display:block;margin-bottom:16px;"></i>
+                <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;">Chưa có địa điểm nào</h3>
+                <p>Bấm "+ Thêm địa điểm" để bắt đầu.</p>
+            </div>`;
+        return;
+    }
 
-    locations.slice(0, 12).forEach(location => {
-        const id = location.idDiaDiem || location.id;
-        const isActive = location.trangThai === true || location.trangThai === 'true' || location.trangThai === 'HoatDong';
-        const statusClass = isActive ? 'available' : 'maintenance';
-        const statusText  = isActive ? 'Hoạt động' : 'Bảo trì';
-        const imgUrl = getLocationImage(location);
+    container.innerHTML = "";
+    locations.forEach(loc => {
+        const id = loc.idDiaDiem;
+        const isActive = loc.trangThaiSuDung === "Hoạt động";
+        const statusClass = isActive ? "available" : "maintenance";
+        const statusText  = loc.trangThaiSuDung || "Hoạt động";
+        const imgUrl = getLocationImage(loc);
 
-        const card = document.createElement('div');
-        card.className = 'location-card';
+        const card = document.createElement("div");
+        card.className = "location-card";
         card.innerHTML = `
             <div class="location-image">
-                <img src="${imgUrl}"
-                     alt="${location.tenDiaDiem}"
-                     loading="lazy"
+                <img src="${imgUrl}" alt="${escapeHtml(loc.tenDiaDiem)}" loading="lazy"
                      onerror="this.src='https://images.unsplash.com/photo-1562774053-701939374585?w=600&q=80'">
-                <span class="location-status ${statusClass}">${statusText}</span>
+                <span class="location-status ${statusClass}">${escapeHtml(statusText)}</span>
             </div>
             <div class="location-info">
-                <h3>${location.tenDiaDiem}</h3>
+                <h3>${escapeHtml(loc.tenDiaDiem)}</h3>
                 <div class="location-details">
-                    <span><i class="fas fa-users"></i> ${location.sucChua || 0} người</span>
-                    ${location.viTri ? `<span><i class="fas fa-map-marker-alt"></i> ${location.viTri}</span>` : ''}
+                    <span><i class="fas fa-users"></i> ${loc.sucChua || 0} người</span>
+                    ${loc.viTri ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(loc.viTri)}</span>` : ""}
                 </div>
-                ${location.loaiDiaDiem ? `<div class="location-facilities"><span class="facility-badge"><i class="fas fa-tag"></i> ${location.loaiDiaDiem}</span></div>` : ''}
             </div>
             <div class="location-actions">
                 <button class="btn-action view"   onclick="viewLocation(${id})"   title="Xem chi tiết"><i class="fas fa-eye"></i></button>
                 <button class="btn-action edit"   onclick="editLocation(${id})"   title="Chỉnh sửa"><i class="fas fa-edit"></i></button>
                 <button class="btn-action delete" onclick="deleteLocation(${id})" title="Xóa"><i class="fas fa-trash"></i></button>
-            </div>
-        `;
+            </div>`;
         container.appendChild(card);
     });
 }
 
-// ==========================
-// RENDER TABLE
-// ==========================
-function renderLocationTable(locations) {
-    const tbody = document.querySelector('.admin-table tbody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-
-    locations.forEach((location, index) => {
-        const statusClass = location.trangThai ? 'active' : 'inactive';
-        const statusText = location.trangThai ? 'Hoạt động' : 'Bảo trì';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td><strong>${location.tenDiaDiem}</strong></td>
-            <td>${location.loaiDiaDiem || ''}</td>
-            <td>${location.viTri || 'Chưa xác định'}</td>
-            <td>${location.sucChua || 0}</td>
-            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn-action view" onclick="viewLocation(${location.id})">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn-action edit" onclick="editLocation(${location.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-action delete" onclick="deleteLocation(${location.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
+// ─── SEARCH ───────────────────────────────────────────────────────────────────
+function initSearch() {
+    const input = document.querySelector('.search-bar input');
+    if (!input) return;
+    let timer;
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const kw = this.value.trim().toLowerCase();
+            const filtered = kw
+                ? allLocations.filter(l =>
+                    (l.tenDiaDiem || "").toLowerCase().includes(kw) ||
+                    (l.viTri     || "").toLowerCase().includes(kw))
+                : allLocations;
+            renderAll(filtered);
+        }, 250);
     });
 }
 
-// ==========================
-// RENDER (alias cho filter/tab)
-// ==========================
-function renderLocations(locations) {
-    renderLocationCards(locations);
-    renderLocationTable(locations);
-}
-
-// ==========================
-// STATS
-// ==========================
-function updateStats(locations) {
-    const totalElement = document.querySelector('.stat-card:nth-child(1) .stat-number');
-    if (totalElement) totalElement.textContent = locations.length;
-
-    const availableCount = locations.filter(l => l.trangThai).length;
-    const availableElement = document.querySelector('.stat-card:nth-child(2) .stat-number');
-    if (availableElement) availableElement.textContent = availableCount;
-
-    const totalCapacity = locations.reduce((sum, l) => sum + (l.sucChua || 0), 0);
-    const capacityElement = document.querySelector('.stat-card:nth-child(3) .stat-number');
-    if (capacityElement) capacityElement.textContent = totalCapacity.toLocaleString();
-}
-
-// ==========================
-// FILTER
-// ==========================
-function applyFilters() {
-    const capacityFilter = document.getElementById('capacityFilter')?.value;
-    const statusFilter = document.getElementById('statusFilter')?.value;
-
-    let filtered = [...allLocations];
-
-    if (capacityFilter) {
-        filtered = filtered.filter(loc => loc.sucChua >= parseInt(capacityFilter));
-    }
-
-    if (statusFilter !== "" && statusFilter != null) {
-        filtered = filtered.filter(loc => String(loc.trangThai) === statusFilter);
-    }
-
-    renderLocations(filtered);
-}
-
-// ==========================
-// TABS
-// ==========================
-function initTabs() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-
-    tabBtns.forEach(btn => {
+// ─── TAB FILTER ───────────────────────────────────────────────────────────────
+function initTabFilter() {
+    document.querySelectorAll('.tab-btn[data-filter]').forEach(btn => {
         btn.addEventListener('click', function () {
-            tabBtns.forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-
-            const filter = this.getAttribute('data-filter');
-
-            if (filter === 'all') {
-                renderLocations(allLocations);
-            } else {
-                renderLocations(allLocations.filter(loc => loc.loaiDiaDiem === filter));
-            }
+            const f = this.dataset.filter;
+            const filtered = f === 'all'      ? allLocations
+                : f === 'active'   ? allLocations.filter(l => l.trangThaiSuDung === "Hoạt động")
+                : f === 'inactive' ? allLocations.filter(l => l.trangThaiSuDung !== "Hoạt động")
+                : allLocations;
+            renderLocationCards(filtered);
         });
     });
 }
 
-// ==========================
-// EXPORT
-// ==========================
-function exportLocations() {
-    alert('Xuất danh sách địa điểm...');
+// ─── VIEW ─────────────────────────────────────────────────────────────────────
+function viewLocation(id) {
+    const loc = allLocations.find(l => l.idDiaDiem === id);
+    if (!loc) return;
+    alert(`📍 ${loc.tenDiaDiem}\n👥 Sức chứa: ${loc.sucChua || 0} người\n📌 Vị trí: ${loc.viTri || "Chưa xác định"}\n✅ Trạng thái: ${loc.trangThaiSuDung}`);
 }
+window.viewLocation = viewLocation;
 
-// ==========================
-// MODAL
-// ==========================
+// ─── MODAL THÊM / SỬA ────────────────────────────────────────────────────────
 function openAddLocationModal() {
     editingId = null;
-
-    const modal = document.getElementById('locationModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const form = document.getElementById('locationForm');
-
-    if (modalTitle) modalTitle.textContent = 'Thêm địa điểm mới';
-    if (form) form.reset();
-    if (modal) modal.style.display = 'flex';
+    document.getElementById('modalTitle').textContent = 'Thêm địa điểm mới';
+    document.getElementById('locationForm').reset();
+    document.getElementById('locationModal').style.display = 'flex';
 }
 window.openAddLocationModal = openAddLocationModal;
 
-function closeLocationModal() {
-    const modal = document.getElementById('locationModal');
-    if (modal) modal.style.display = 'none';
-    editingId = null;
-}
-
-// ==========================
-// VIEW
-// ==========================
-async function viewLocation(id) {
-    const location = allLocations.find(l => l.id === id);
-    if (!location) return;
-
-    alert(`Tên: ${location.tenDiaDiem}\nLoại: ${location.loaiDiaDiem || ''}\nSức chứa: ${location.sucChua || 0}\nVị trí: ${location.viTri || ''}\nTrạng thái: ${location.trangThai ? 'Hoạt động' : 'Bảo trì'}`);
-}
-
-// ==========================
-// EDIT
-// ==========================
 async function editLocation(id) {
     try {
-        const response = await fetch(`${API_URL}/${id}`);
-        const location = await response.json();
+        const res = await fetch(`${API_URL}/${id}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const raw = await res.json();
+        const loc = normalizeLocation(raw);
 
         editingId = id;
-
         document.getElementById('modalTitle').textContent = 'Chỉnh sửa địa điểm';
-        document.getElementById('locationName').value = location.tenDiaDiem || '';
-        if (document.getElementById('locationType'))
-            document.getElementById('locationType').value = location.loaiDiaDiem || '';
-        document.getElementById('locationCapacity').value = location.sucChua || '';
-        const posEl = document.getElementById('locationPosition') || document.getElementById('locationAddress');
-        if (posEl) posEl.value = location.viTri || '';
-        if (document.getElementById('locationDescription'))
-            document.getElementById('locationDescription').value = location.moTa || '';
-        document.getElementById('locationStatus').value = location.trangThai;
-
+        document.getElementById('locationName').value     = loc.tenDiaDiem;
+        document.getElementById('locationCapacity').value = loc.sucChua || '';
+        document.getElementById('locationPosition').value = loc.viTri   || '';
+        document.getElementById('locationStatus').value   = loc.trangThaiSuDung;
         document.getElementById('locationModal').style.display = 'flex';
-
-    } catch (error) {
-        console.error(error);
-        alert("Không tải được thông tin địa điểm");
+    } catch (e) {
+        console.error(e);
+        alert("Không tải được thông tin địa điểm.");
     }
 }
-window.openEditModal = openEditModal;
+window.editLocation = editLocation;
 
-// ==========================
-// DELETE
-// ==========================
-async function deleteLocation(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa địa điểm này?')) return;
-
-    try {
-        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        alert("Xóa địa điểm thành công!");
-        loadLocations();
-
-    } catch (error) {
-        console.error(error);
-        alert("Xóa thất bại. Có thể địa điểm đang được sử dụng.");
-    }
+function closeLocationModal() {
+    document.getElementById('locationModal').style.display = 'none';
+    editingId = null;
 }
 window.closeLocationModal = closeLocationModal;
 
-// ==========================
-// SAVE
-// ==========================
+// ─── SAVE ─────────────────────────────────────────────────────────────────────
 async function saveLocation() {
-    const form = document.getElementById('locationForm');
-    if (form && !form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
+    const name   = document.getElementById('locationName').value.trim();
+    const cap    = parseInt(document.getElementById('locationCapacity').value) || 0;
+    const pos    = document.getElementById('locationPosition').value.trim();
+    const status = document.getElementById('locationStatus').value;
 
-    const posEl = document.getElementById('locationPosition') || document.getElementById('locationAddress');
+    if (!name) { alert('Vui lòng nhập tên địa điểm.'); return; }
 
-    const data = {
-        tenDiaDiem: document.getElementById('locationName').value.trim(),
-        loaiDiaDiem: document.getElementById('locationType')?.value || '',
-        sucChua: parseInt(document.getElementById('locationCapacity').value) || 0,
-        viTri: posEl?.value.trim() || '',
-        moTa: document.getElementById('locationDescription')?.value.trim() || '',
-        trangThai: document.getElementById('locationStatus').value === "true"
+    const payload = {
+        TenDiaDiem:      name,
+        SucChua:         cap,
+        ViTri:           pos,
+        TrangThaiSuDung: status
     };
 
-    if (!data.tenDiaDiem) {
-        alert('Vui lòng nhập tên địa điểm');
-        return;
-    }
-
-    const submitBtn = document.querySelector('.btn-submit');
+    const submitBtn = document.querySelector('#locationModal .btn-submit');
     try {
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
-        }
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...'; }
 
-        if (editingId) {
-            await fetch(`${API_URL}/${editingId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            alert('Cập nhật địa điểm thành công!');
-        } else {
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            alert('Thêm địa điểm mới thành công!');
+        const url    = editingId ? `${API_URL}/${editingId}` : API_URL;
+        const method = editingId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || `HTTP ${res.status}`);
         }
 
         closeLocationModal();
-        loadLocations();
-
-    } catch (error) {
-        console.error(error);
-        alert('Không thể lưu địa điểm. Vui lòng thử lại.');
+        showToast(editingId ? '✅ Cập nhật địa điểm thành công!' : '✅ Thêm địa điểm mới thành công!');
+        await loadLocations();
+    } catch (e) {
+        console.error(e);
+        alert('Lưu thất bại: ' + e.message);
     } finally {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu';
-        }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu'; }
     }
 }
 window.saveLocation = saveLocation;
 
-// ==========================
-// SEARCH
-// ==========================
-function initSearch() {
-    const searchInput = document.querySelector('.search-bar input');
-    if (!searchInput) return;
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+async function deleteLocation(id) {
+    const loc = allLocations.find(l => l.idDiaDiem === id);
+    if (!confirm(`Xóa địa điểm "${loc?.tenDiaDiem || id}"?\nHành động này không thể hoàn tác.`)) return;
 
-    searchInput.addEventListener('input', function (e) {
-        const searchTerm = e.target.value.toLowerCase();
-        renderLocations(allLocations.filter(location =>
-            JSON.stringify(location).toLowerCase().includes(searchTerm)
-        ));
-    });
+    try {
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || `HTTP ${res.status}`);
+        }
+        showToast('🗑️ Đã xóa địa điểm.');
+        await loadLocations();
+    } catch (e) {
+        console.error(e);
+        alert('Xóa thất bại: ' + e.message);
+    }
 }
 window.deleteLocation = deleteLocation;
 
-// ==========================
-// EVENT HANDLERS
-// ==========================
-function initializeEventHandlers() {
-    const closeBtn = document.querySelector('.btn-close');
-    if (closeBtn) closeBtn.addEventListener('click', closeLocationModal);
-
-    const cancelBtn = document.querySelector('.btn-cancel-modal');
-    if (cancelBtn) cancelBtn.addEventListener('click', closeLocationModal);
-
-    const saveBtn = document.querySelector('.btn-submit');
-    if (saveBtn) saveBtn.addEventListener('click', saveLocation);
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+function exportLocations() {
+    if (!allLocations.length) { alert('Không có dữ liệu để xuất.'); return; }
+    const rows = [['ID', 'Tên địa điểm', 'Vị trí', 'Sức chứa', 'Trạng thái']];
+    allLocations.forEach(l => rows.push([l.idDiaDiem, l.tenDiaDiem, l.viTri, l.sucChua, l.trangThaiSuDung]));
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const a = Object.assign(document.createElement('a'), {
+        href: 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv),
+        download: 'dia-diem.csv'
+    });
+    a.click();
 }
 window.exportLocations = exportLocations;
 
-// ==========================
-// SHOW ERROR
-// ==========================
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function showGridLoading(show) {
+    const grid = document.querySelector('.locations-grid');
+    if (!grid) return;
+    if (show) grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#666;">
+            <i class="fas fa-spinner fa-spin" style="font-size:36px;color:#0D5A9C;display:block;margin-bottom:16px;"></i>
+            Đang tải dữ liệu...
+        </div>`;
+}
+
+function showGridError(msg) {
+    const grid = document.querySelector('.locations-grid');
+    if (!grid) return;
+    grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#dc2626;">
+            <i class="fas fa-exclamation-circle" style="font-size:48px;display:block;margin-bottom:16px;"></i>
+            <strong>${msg}</strong><br>
+            <button onclick="loadLocations()" style="margin-top:12px;padding:8px 20px;background:#0D5A9C;color:white;border:none;border-radius:8px;cursor:pointer;">
+                <i class="fas fa-redo"></i> Thử lại
+            </button>
+        </div>`;
+}
+
+function showToast(msg) {
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:14px 20px;
+        background:#059669;color:white;border-radius:10px;font-size:14px;font-weight:600;
+        box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:360px;`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function initLogout() {
+    const btn = document.querySelector('.nav-item.danger');
+    if (btn) btn.addEventListener('click', e => {
+        e.preventDefault();
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+        window.location.href = 'login.html';
+    });
+}

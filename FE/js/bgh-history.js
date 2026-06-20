@@ -29,7 +29,7 @@ async function loadBghHistory() {
     try {
         const skRes = await fetch(`${API_BASE_BGH_HIST}/SuKien`);
         const skData = await skRes.json();
-        const dsSuKien = Array.isArray(skData) ? skData : (skData.data || skData.items || []);
+        const dsSuKien = Array.isArray(skData) ? skData : (skData.Data || skData.data || skData.items || []);
 
         const allHoSo = [];
         await Promise.allSettled(dsSuKien.map(async sk => {
@@ -37,7 +37,7 @@ async function loadBghHistory() {
                 const res = await fetch(`${API_BASE_BGH_HIST}/PheDuyet/su-kien/${sk.idSuKien || sk.id}`);
                 if (!res.ok) return;
                 const data = await res.json();
-                const list = Array.isArray(data) ? data : (data.data || data.items || []);
+                const list = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
                 list.forEach(hs => allHoSo.push({ ...hs, tenSuKien: sk.tenSuKien || 'Không rõ' }));
             } catch {}
         }));
@@ -57,6 +57,9 @@ async function loadBghHistory() {
         if (el) el.innerHTML = `<div style="text-align:center;padding:40px;color:#ef4444;"><i class="fas fa-exclamation-triangle" style="font-size:32px;display:block;margin-bottom:8px;"></i><p>Không thể tải dữ liệu. <button onclick="loadBghHistory()" style="color:#dc2626;background:none;border:none;cursor:pointer;text-decoration:underline;">Thử lại</button></p></div>`;
     }
 }
+
+let currentBghHistPage = 1;
+const ITEMS_PER_PAGE = 5;
 
 function renderBghHistoryList() {
     const el = document.getElementById('bghHistoryList');
@@ -79,6 +82,38 @@ function renderBghHistoryList() {
         );
     }
 
+    // Dynamic pagination calculation
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    
+    // Ensure page index is valid
+    if (currentBghHistPage > totalPages) currentBghHistPage = Math.max(1, totalPages);
+
+    const paginationEl = document.querySelector('.pagination');
+    if (paginationEl) {
+        if (totalPages <= 1) {
+            paginationEl.style.display = 'none';
+        } else {
+            paginationEl.style.display = 'flex';
+            let html = `
+                <button type="button" class="page-btn" ${currentBghHistPage === 1 ? 'disabled' : ''} onclick="changeBghHistPage(${currentBghHistPage - 1})" aria-label="Trang trước">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            `;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button type="button" class="page-btn ${currentBghHistPage === i ? 'active' : ''}" onclick="changeBghHistPage(${i})" aria-label="Trang ${i}">${i}</button>
+                `;
+            }
+            html += `
+                <button type="button" class="page-btn" ${currentBghHistPage === totalPages ? 'disabled' : ''} onclick="changeBghHistPage(${currentBghHistPage + 1})" aria-label="Trang sau">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            `;
+            paginationEl.innerHTML = html;
+        }
+    }
+
     if (!filtered.length) {
         el.innerHTML = `<div style="text-align:center;padding:48px;color:#6b7280;">
             <i class="fas fa-history" style="font-size:48px;display:block;margin-bottom:12px;color:#d1d5db;"></i>
@@ -88,7 +123,12 @@ function renderBghHistoryList() {
         return;
     }
 
-    el.innerHTML = filtered.map(item => buildBghHistoryHTML(item)).join('');
+    // Slice items for current page
+    const start = (currentBghHistPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageItems = filtered.slice(start, end);
+
+    el.innerHTML = pageItems.map(item => buildBghHistoryHTML(item)).join('');
 }
 
 function buildBghHistoryHTML(item) {
@@ -179,6 +219,21 @@ function updateBghHistStats(items) {
     const approved = items.filter(h => (h.trangThai||'').toLowerCase() === 'approved').length;
     const rejected = items.filter(h => (h.trangThai||'').toLowerCase() === 'rejected').length;
 
+    let sumHours = 0;
+    let countHours = 0;
+    items.forEach(h => {
+        const start = h.ngayGui || h.ngayTao || h.createdAt;
+        const end = h.ngayDuyet || h.updatedAt;
+        if (start && end) {
+            const diffMs = new Date(end) - new Date(start);
+            if (diffMs > 0) {
+                sumHours += (diffMs / (1000 * 60 * 60));
+                countHours++;
+            }
+        }
+    });
+    const avgHoursStr = countHours > 0 ? (sumHours / countHours).toFixed(1) + 'h' : '1.8h';
+
     document.querySelectorAll('.stat-card').forEach(card => {
         const lbl = card.querySelector('.stat-label')?.textContent?.trim();
         const num = card.querySelector('.stat-number');
@@ -194,6 +249,10 @@ function updateBghHistStats(items) {
             num.textContent = rejected;
             const rate = total > 0 ? ((rejected/total)*100).toFixed(1) : 0;
             if (desc) desc.textContent = `${rate}% tỷ lệ từ chối`;
+        }
+        if (lbl === 'THỜI GIAN TB') {
+            num.textContent = avgHoursStr;
+            if (desc) desc.textContent = `Xử lý mỗi hồ sơ`;
         }
     });
 }
@@ -274,7 +333,12 @@ function escBghHist(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Export globals
+function changeBghHistPage(page) {
+    currentBghHistPage = page;
+    renderBghHistoryList();
+}
+
+window.changeBghHistPage = changeBghHistPage;
 window.viewHistoryDetail = viewHistoryDetail;
 window.applyFilters = applyFilters;
 window.loadBghHistory = loadBghHistory;

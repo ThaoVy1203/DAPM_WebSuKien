@@ -15,4 +15,12 @@ namespace aspiCore.Dtos.DiaDiem
         public string? ViTri { get; set; }
         public int? SucChua { get; set; }
     }
+
+    public class UpdateDiaDiemDto
+    {
+        public string? TenDiaDiem { get; set; }
+        public string? ViTri { get; set; }
+        public int? SucChua { get; set; }
+        public string? TrangThaiSuDung { get; set; }
+    }
 }

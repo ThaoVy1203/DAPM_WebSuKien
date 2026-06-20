@@ -202,7 +202,10 @@
                             <button type="button" id="btnConfirmWaitlist" class="mt-btn-confirm" style="display:none;" aria-label="Xác nhận chỗ trong 24h">
                                 <i class="fas fa-check-circle" aria-hidden="true"></i> Xác nhận chỗ (24h)
                             </button>
-                            <a href="#" id="linkTicketDetail" class="mt-link-detail">Xem trang vé đầy đủ <i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+                            <button type="button" id="btnReRegister" class="mt-btn-reregister" style="display:none;" aria-label="Đăng ký lại sự kiện">
+                                <i class="fas fa-redo" aria-hidden="true"></i> Đăng ký lại
+                            </button>
+                            <a href="#" id="linkTicketDetail" class="mt-link-detail">Xem chi tiết vé <i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
                         </div>
                     </article>
 
@@ -213,14 +216,6 @@
                         <div id="qrActivePanel">
                             <div class="mt-qr-frame">
                                 <img id="qrImage" src="" alt="Mã QR check-in cho sự kiện">
-                            </div>
-                            <div class="mt-wallet-row">
-                                <button type="button" class="mt-wallet-btn" id="btnAppleWallet" aria-label="Thêm vào Apple Wallet">
-                                    <i class="fab fa-apple" aria-hidden="true"></i> Add to Apple Wallet
-                                </button>
-                                <button type="button" class="mt-wallet-btn" id="btnGoogleWallet" aria-label="Thêm vào Google Pay">
-                                    <i class="fab fa-google" aria-hidden="true"></i> Add to Google Pay
-                                </button>
                             </div>
                             <div class="mt-qr-refresh">
                                 <i class="fas fa-info-circle" aria-hidden="true"></i>
@@ -270,19 +265,13 @@
                         <a href="history.html" class="mt-history-all" id="historyViewAll">Xem tất cả lịch sử</a>
                     </div>
 
-                    <div class="mt-support-card">
-                        <div class="mt-support-icon"><i class="fas fa-question" aria-hidden="true"></i></div>
-                        <h4>Cần hỗ trợ?</h4>
-                        <p>Nếu bạn gặp vấn đề khi soát vé, vui lòng liên hệ bộ phận hỗ trợ sinh viên tại bàn trực sự kiện.</p>
-                        <a href="notifications.html" class="mt-support-btn">Trung tâm hỗ trợ</a>
-                    </div>
                 </aside>
             </div>
         </div>
     </main>
 
     <!-- Cancel Modal -->
-    <div class="modal-overlay" id="cancelModal" role="dialog" aria-modal="true" aria-labelledby="cancelModalTitle" style="display:none;">
+    <div class="modal-overlay" id="cancelModal" role="dialog" aria-modal="true" aria-labelledby="cancelModalTitle">
         <div class="modal-box">
             <div class="modal-emoji" aria-hidden="true">⚠️</div>
             <h3 id="cancelModalTitle">Xác nhận hủy đăng ký</h3>

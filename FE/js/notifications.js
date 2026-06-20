@@ -47,7 +47,7 @@ async function loadNotifications() {
 
         const data = await res.json();
         // API có thể trả về mảng hoặc { items: [...] }
-        notifications = Array.isArray(data) ? data : (data.items || data.data || []);
+        notifications = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         renderNotifications();
         updateBadgeCounts();

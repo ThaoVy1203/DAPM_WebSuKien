@@ -46,5 +46,35 @@ namespace aspiCore.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<DiaDiemDto>> Update(int id, [FromBody] UpdateDiaDiemDto dto)
+        {
+            try
+            {
+                var result = await _diaDiemService.UpdateAsync(id, dto);
+                if (result == null) return NotFound(new { message = "Không tìm thấy địa điểm" });
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            try
+            {
+                var result = await _diaDiemService.DeleteAsync(id);
+                if (!result) return NotFound(new { message = "Không tìm thấy địa điểm" });
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

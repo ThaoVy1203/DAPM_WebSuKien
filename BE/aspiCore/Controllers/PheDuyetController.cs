@@ -99,13 +99,19 @@ namespace aspiCore.Controllers
             var result = new List<PheDuyetDto>();
             foreach (var h in dossiers)
             {
+                var lastHistory = await _context.LichSuPheDuyets
+                    .Where(l => l.IdHoSo == h.IdHoSo)
+                    .OrderByDescending(l => l.ThoiGianPheDuyet)
+                    .FirstOrDefaultAsync();
+
                 var dto = new PheDuyetDto
                 {
                     Id = h.IdHoSo,
                     EventId = h.IdSuKien,
                     TenSuKien = h.SuKien?.TenSuKien,
                     NgayGui = h.ThoiGianGui.ToString("dd/MM/yyyy"),
-                    TrangThai = MapDbStatusToFrontend(h.TrangThaiDuyet)
+                    TrangThai = MapDbStatusToFrontend(h.TrangThaiDuyet),
+                    GhiChu = lastHistory?.GhiChu
                 };
 
                 if (!string.IsNullOrEmpty(h.NoiDungKeHoach))

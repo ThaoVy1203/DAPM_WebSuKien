@@ -84,6 +84,8 @@ function renderAll() {
   renderCiButtons(t);
 
   document.getElementById("btnCancel").style.display = TicketBiz.canCancel(t) ? "flex" : "none";
+  document.getElementById("btnReRegister").style.display =
+    (t.trangThai === "Đã hủy" && !isEventEnded(t)) ? "flex" : "none";
 }
 
 const PILLS = {
@@ -132,7 +134,6 @@ function renderQR(t) {
     qrMode = "dynamic";
     showDynamicQrUI();
     buildQR(t);
-    buildStaticQR(t);
     startQrTimer(t);
   } else if (t.trangThai === "Chờ xác nhận") {
     active.style.display = "none"; msg.style.display = "block";
@@ -173,47 +174,13 @@ function buildQR(t) {
   img.onerror = () => { img.src="https://via.placeholder.com/180x180/e2e8f0/555?text=QR"; img.style.opacity="1"; };
 }
 
-function buildStaticQR(t) {
-  const data = TicketBiz.buildStaticQrPayload(t.idDangKy);
-  const url  = TicketBiz.qrImageUrl(data);
-  const img  = document.getElementById("qrImgStatic");
-  if (!img) return;
-  img.style.opacity = "0.4"; img.src = url;
-  img.onload  = () => { img.style.opacity = "1"; };
-  img.onerror = () => { img.src="https://via.placeholder.com/180x180/e2e8f0/555?text=QR"; img.style.opacity="1"; };
-}
-
 function showDynamicQrUI() {
   const countdownRow = document.getElementById("qrCountdownRow");
   const btnRefresh   = document.getElementById("btnRefreshQR");
   const imgDyn       = document.getElementById("qrImg");
-  const imgStatic    = document.getElementById("qrImgStatic");
   if (countdownRow) countdownRow.style.display = "flex";
   if (btnRefresh) btnRefresh.style.display = "inline-flex";
   if (imgDyn) imgDyn.style.display = "block";
-  if (imgStatic) imgStatic.style.display = "none";
-}
-
-function showStaticQrUI() {
-  const countdownRow = document.getElementById("qrCountdownRow");
-  const btnRefresh   = document.getElementById("btnRefreshQR");
-  const imgDyn       = document.getElementById("qrImg");
-  const imgStatic    = document.getElementById("qrImgStatic");
-  if (countdownRow) countdownRow.style.display = "none";
-  if (btnRefresh) btnRefresh.style.display = "none";
-  if (imgDyn) imgDyn.style.display = "none";
-  if (imgStatic) imgStatic.style.display = "block";
-}
-
-function showStaticQR() {
-  if (!ticket || ticket.trangThai !== "Đã xác nhận") return;
-  if (qrMode === "static") return;
-  qrMode = "static";
-  stopQrTimer();
-  showStaticQrUI();
-  const subEl = document.getElementById("qrSub");
-  if (subEl) subEl.textContent = "QR tĩnh dùng offline (không hết hạn 45s).";
-  toast("Đã chuyển sang QR tĩnh (offline).", "info");
 }
 function startQrTimer(t) {
   stopQrTimer(); qrSecs = TicketBiz.QR_REFRESH_SEC; setText("qrCountdown", qrSecs);
@@ -228,12 +195,8 @@ function startQrTimer(t) {
 function stopQrTimer() { if (qrTimer) { clearInterval(qrTimer); qrTimer = null; } }
 function refreshQR() {
   if (!ticket || !TicketBiz.canShowQr(ticket.trangThai)) return;
-  if (qrMode !== "dynamic") {
-    toast("Đang dùng QR tĩnh. QR động không làm mới.", "info");
-    return;
-  }
   buildQR(ticket); qrSecs = TicketBiz.QR_REFRESH_SEC; setText("qrCountdown", qrSecs);
-  toast("Đã làm mới mã QR động.", "info");
+  toast("Đã làm mới mã QR.", "info");
 }
 
 function renderCiButtons(t) {
@@ -413,8 +376,7 @@ function shareTicket() {
   const url = window.location.href;
   if (navigator.share) navigator.share({title: ticket?.tenSuKien || "Vé UTE Events", url});
   else navigator.clipboard.writeText(url).then(() => toast("Đã sao chép link vé.", "info"));
-}
-function copyCode() {
+}function copyCode() {
   const code = document.getElementById("tdTicketCode")?.textContent || "";
   navigator.clipboard.writeText(code).then(() => toast("Đã sao chép mã vé.", "info"));
 }
@@ -443,4 +405,46 @@ function toast(msg, type="success") {
   document.body.appendChild(el);
   setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .3s";
     setTimeout(()=>el.remove(),300); }, 4000);
+}
+
+// ─── ĐĂNG KÝ LẠI ──────────────────────────────────────────────────────────────
+function isEventEnded(t) {
+  if (!t.thoiGianKetThuc) return false;
+  return new Date() > new Date(t.thoiGianKetThuc);
+}
+
+async function reRegister() {
+  if (!ticket) return;
+  const token = localStorage.getItem("token");
+  if (!token) { toast("Vui lòng đăng nhập để đăng ký.", "error"); return; }
+
+  const btn = document.getElementById("btnReRegister");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang đăng ký...`;
+
+  try {
+    const u = JSON.parse(localStorage.getItem("userData") || "{}");
+    const idNguoiDung = u.IdNguoiDung || u.idNguoiDung || u.id;
+
+    const r = await fetch(`${API_BASE}/DangKy/dang-ky`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ IdSuKien: ticket.idSuKien, IdNguoiDung: idNguoiDung })
+    });
+    const d = await r.json().catch(() => ({}));
+
+    if (r.ok && (d.Success ?? d.success) !== false) {
+      toast("✅ Đăng ký lại thành công!", "success");
+      // Reload lại thông tin vé từ API
+      await loadTicket(ticket.idDangKy, token);
+    } else {
+      toast(d.Message || d.message || "Đăng ký thất bại.", "error");
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fas fa-redo"></i> Đăng ký lại`;
+    }
+  } catch (e) {
+    toast("Không thể kết nối máy chủ.", "error");
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fas fa-redo"></i> Đăng ký lại`;
+  }
 }

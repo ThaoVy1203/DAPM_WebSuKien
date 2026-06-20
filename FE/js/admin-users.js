@@ -40,7 +40,7 @@ async function loadUsers() {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        allUsers = Array.isArray(data) ? data : (data.data || data.items || []);
+        allUsers = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         updateStats(allUsers);
         renderUsers();
@@ -153,8 +153,12 @@ function renderRoleBadges(vaiTros) {
 
 function getLoaiNguoiDung(vaiTros) {
     if (!vaiTros || !vaiTros.length) return 'student';
-    if (vaiTros.includes('TruongBanToChuc') || vaiTros.includes('ThanhVienBanToChuc')) return 'staff';
-    if (vaiTros.includes('CanBoCtSv') || vaiTros.includes('BanGiamHieu') || vaiTros.includes('Admin')) return 'staff';
+    const rolesLower = vaiTros.map(r => r.toLowerCase());
+    if (rolesLower.includes('giangvien') || rolesLower.includes('teacher')) return 'teacher';
+    if (rolesLower.includes('truongbantochuc') || rolesLower.includes('thanhvienbantochuc') ||
+        rolesLower.includes('canboctsv') || rolesLower.includes('bangiamhieu') || rolesLower.includes('admin')) {
+        return 'staff';
+    }
     return 'student';
 }
 
@@ -165,23 +169,36 @@ function updateStats(users) {
     const total = users.length;
     const active = users.filter(u => {
         const t = u.trangThai || u.TrangThai || 'HoatDong';
-        return t === 'HoatDong' || t === 'active' || t === true;
+        return t === 'HoatDong' || t === 'active' || t === true || t === 1;
     }).length;
     const locked = total - active;
+
+    // Calculate users registered in the current calendar month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const newThisMonth = users.filter(u => {
+        const dateStr = u.ngayTao || u.createdAt;
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        return d >= startOfMonth;
+    }).length;
 
     const cards = document.querySelectorAll('.stats-grid .stat-card');
     if (cards[0]) cards[0].querySelector('.stat-number').textContent = total.toLocaleString('vi-VN');
     if (cards[1]) cards[1].querySelector('.stat-number').textContent = active.toLocaleString('vi-VN');
-    if (cards[2]) cards[2].querySelector('.stat-number').textContent = locked;
+    if (cards[2]) cards[2].querySelector('.stat-number').textContent = locked.toLocaleString('vi-VN');
+    if (cards[3]) cards[3].querySelector('.stat-number').textContent = newThisMonth.toLocaleString('vi-VN');
 }
 
 function updateTabCounts(users) {
     const students = users.filter(u => getLoaiNguoiDung(u.vaiTros || u.VaiTros || []) === 'student').length;
+    const teachers = users.filter(u => getLoaiNguoiDung(u.vaiTros || u.VaiTros || []) === 'teacher').length;
     const staff = users.filter(u => getLoaiNguoiDung(u.vaiTros || u.VaiTros || []) === 'staff').length;
     document.querySelectorAll('.tab-btn').forEach(btn => {
         const f = btn.getAttribute('data-filter');
         if (f === 'all') btn.textContent = `Tất cả (${users.length})`;
         if (f === 'student') btn.textContent = `Sinh viên (${students})`;
+        if (f === 'teacher') btn.textContent = `Giảng viên (${teachers})`;
         if (f === 'staff') btn.textContent = `Cán bộ (${staff})`;
     });
 }

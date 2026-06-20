@@ -55,7 +55,7 @@ async function loadAllMyRegistrations() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
-        const raw2 = Array.isArray(data) ? data : (data.items || data.data || []);
+        const raw2 = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         allMyRegistrations = raw2.map(item => ({
             idDangKy:         item.IdDangKy         ?? item.idDangKy,
@@ -240,7 +240,7 @@ async function loadNotifications() {
         if (!res.ok) return;
 
         const data = await res.json();
-        const items = Array.isArray(data) ? data : (data.items || data.data || []);
+        const items = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
         if (!items || items.length === 0) {
             container.innerHTML = `<div style="text-align:center;padding:20px;color:#999;font-size:12px;">Không có thông báo mới</div>`;
             return;

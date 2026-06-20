@@ -5,6 +5,9 @@ const API_BASE = 'http://localhost:5103/api';
 
 let allPendingItems = [];
 let currentFilter = 'all';
+let currentPendingPage = 1;
+const ITEMS_PER_PAGE = 5;
+
 let currentApprovalId = null;
 
 // ==================== KHỞI TẠO ====================
@@ -48,7 +51,7 @@ async function loadPendingApprovals() {
         const suKienRes = await fetch(`${API_BASE}/SuKien`);
         if (!suKienRes.ok) throw new Error('Không thể tải danh sách sự kiện');
         const suKienData = await suKienRes.json();
-        const dsSuKien = Array.isArray(suKienData) ? suKienData : (suKienData.data || suKienData.items || []);
+        const dsSuKien = Array.isArray(suKienData) ? suKienData : (suKienData.Data || suKienData.data || suKienData.items || []);
 
         // Bước 2: Với mỗi sự kiện, lấy danh sách hồ sơ phê duyệt
         const allHoSo = [];
@@ -57,7 +60,7 @@ async function loadPendingApprovals() {
                 const res = await fetch(`${API_BASE}/PheDuyet/su-kien/${sk.idSuKien || sk.id}`);
                 if (!res.ok) return;
                 const data = await res.json();
-                const hoSoList = Array.isArray(data) ? data : (data.data || data.items || []);
+                const hoSoList = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
                 hoSoList.forEach(hs => {
                     allHoSo.push({ ...hs, tenSuKien: sk.tenSuKien || sk.ten || 'Không rõ' });
                 });
@@ -91,7 +94,39 @@ function renderPendingList(items) {
     // Áp dụng bộ lọc hiện tại
     const filtered = filterItems(items, currentFilter);
 
-    if (filtered.length === 0) {
+    // Dynamic pagination calculation
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    
+    // Ensure page index is valid
+    if (currentPendingPage > totalPages) currentPendingPage = Math.max(1, totalPages);
+
+    const paginationEl = document.querySelector('.pagination');
+    if (paginationEl) {
+        if (totalPages <= 1) {
+            paginationEl.style.display = 'none';
+        } else {
+            paginationEl.style.display = 'flex';
+            let html = `
+                <button type="button" class="page-btn" ${currentPendingPage === 1 ? 'disabled' : ''} onclick="changePendingPage(${currentPendingPage - 1})" aria-label="Trang trước">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            `;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button type="button" class="page-btn ${currentPendingPage === i ? 'active' : ''}" onclick="changePendingPage(${i})" aria-label="Trang ${i}">${i}</button>
+                `;
+            }
+            html += `
+                <button type="button" class="page-btn" ${currentPendingPage === totalPages ? 'disabled' : ''} onclick="changePendingPage(${currentPendingPage + 1})" aria-label="Trang sau">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            `;
+            paginationEl.innerHTML = html;
+        }
+    }
+
+    if (totalItems === 0) {
         container.innerHTML = `
             <div class="empty-state" style="text-align:center; padding:48px 24px; color:#6b7280;">
                 <i class="fas fa-inbox" style="font-size:48px; margin-bottom:16px; display:block; color:#d1d5db;"></i>
@@ -101,8 +136,18 @@ function renderPendingList(items) {
         return;
     }
 
-    container.innerHTML = filtered.map(item => buildApprovalItemHTML(item)).join('');
+    // Slice items for current page
+    const start = (currentPendingPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageItems = filtered.slice(start, end);
+
+    container.innerHTML = pageItems.map(item => buildApprovalItemHTML(item)).join('');
 }
+
+window.changePendingPage = function(page) {
+    currentPendingPage = page;
+    renderPendingList(allPendingItems);
+};
 
 function buildApprovalItemHTML(item) {
     const id = item.idHoSo || item.id || item.idPheDuyet || 0;

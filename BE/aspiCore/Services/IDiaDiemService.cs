@@ -7,5 +7,7 @@ namespace aspiCore.Services
         Task<IEnumerable<DiaDiemDto>> GetAllAsync();
         Task<DiaDiemDto?> GetByIdAsync(int id);
         Task<DiaDiemDto> CreateAsync(CreateDiaDiemDto dto);
+        Task<DiaDiemDto?> UpdateAsync(int id, UpdateDiaDiemDto dto);
+        Task<bool> DeleteAsync(int id);
     }
 }

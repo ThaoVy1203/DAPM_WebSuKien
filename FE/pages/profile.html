@@ -142,7 +142,7 @@
                                 </div>
                             </div>
                             <div class="settings-list">
-                                <div class="setting-item">
+                                <div class="setting-item" id="changePasswordBtn">
                                     <div class="setting-info">
                                         <i class="fas fa-lock"></i>
                                         <div>
@@ -151,29 +151,6 @@
                                         </div>
                                     </div>
                                     <i class="fas fa-chevron-right"></i>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <i class="fas fa-shield-alt"></i>
-                                        <div>
-                                            <h4>Quyền riêng tư</h4>
-                                            <p>Quản lý ai thấy thông tin của bạn</p>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right"></i>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <i class="fas fa-envelope"></i>
-                                        <div>
-                                            <h4>Thông báo Email</h4>
-                                            <p>Quản lý các loại tin nhận được</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle">
-                                        <input type="checkbox" checked>
-                                        <span class="slider"></span>
-                                    </label>
                                 </div>
                                 <div class="setting-item danger">
                                     <div class="setting-info">
@@ -187,58 +164,7 @@
                             </div>
                         </section>
 
-                        <!-- Interests -->
-                        <section class="profile-section">
-                            <div class="section-header">
-                                <div class="section-title">
-                                    <i class="fas fa-heart"></i>
-                                    <h2>Sở thích cá nhân</h2>
-                                </div>
-                                <button class="btn-edit" id="editInterests">Lưu sở thích</button>
-                            </div>
-                            <p class="section-description">
-                                <i class="fas fa-info-circle" style="color: #0D5A9C; margin-right: 8px;"></i>
-                                Chọn các lĩnh vực bạn quan tâm để nhận gợi ý sự kiện phù hợp nhất. Hệ thống sẽ ưu tiên hiển thị các sự kiện liên quan đến sở thích của bạn trên trang chủ và gửi thông báo khi có sự kiện mới.
-                            </p>
-                            <div class="interests-grid">
-                                <button class="interest-tag active">
-                                    <i class="fas fa-laptop-code"></i>
-                                    <span>Công nghệ</span>
-                                </button>
-                                <button class="interest-tag">
-                                    <i class="fas fa-briefcase"></i>
-                                    <span>Nghề nghiệp</span>
-                                </button>
-                                <button class="interest-tag active">
-                                    <i class="fas fa-hands-helping"></i>
-                                    <span>Tình nguyện</span>
-                                </button>
-                                <button class="interest-tag">
-                                    <i class="fas fa-comments"></i>
-                                    <span>Thảo luận</span>
-                                </button>
-                                <button class="interest-tag active">
-                                    <i class="fas fa-globe"></i>
-                                    <span>Ngoại ngữ</span>
-                                </button>
-                                <button class="interest-tag">
-                                    <i class="fas fa-music"></i>
-                                    <span>Âm nhạc</span>
-                                </button>
-                                <button class="interest-tag">
-                                    <i class="fas fa-dumbbell"></i>
-                                    <span>Kỹ năng mềm</span>
-                                </button>
-                                <button class="interest-tag">
-                                    <i class="fas fa-graduation-cap"></i>
-                                    <span>Nghiên cứu khoa học</span>
-                                </button>
-                                <button class="interest-tag">
-                                    <i class="fas fa-bullhorn"></i>
-                                    <span>Marketing</span>
-                                </button>
-                            </div>
-                        </section>
+
                     </div>
                 </div>
 
@@ -361,6 +287,62 @@
             </div>
         </div>
     </footer>
+
+    <!-- Personal Info Modal -->
+    <div id="editProfileModal" class="profile-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chỉnh sửa thông tin cá nhân</h3>
+                <span class="close-modal" id="closeEditModal">&times;</span>
+            </div>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label for="editFullName">Họ và tên</label>
+                    <input type="text" id="editFullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Số điện thoại</label>
+                    <input type="text" id="editPhone">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelEditBtn">Hủy</button>
+                    <button type="submit" class="btn-save">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="profile-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Thay đổi mật khẩu</h3>
+                <span class="close-modal" id="closePasswordModal">&times;</span>
+            </div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Mật khẩu hiện tại</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Mật khẩu mới</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelPasswordBtn">Hủy</button>
+                    <button type="submit" class="btn-save">Đổi mật khẩu</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="../js/config.js"></script>
     <script src="../js/profile.js"></script>

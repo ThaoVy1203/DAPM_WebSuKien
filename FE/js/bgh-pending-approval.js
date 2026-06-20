@@ -28,7 +28,7 @@ async function loadBghPendingApprovals() {
     try {
         const skRes = await fetch(`${API_BASE}/SuKien`);
         const skData = await skRes.json();
-        const dsSuKien = Array.isArray(skData) ? skData : (skData.data || skData.items || []);
+        const dsSuKien = Array.isArray(skData) ? skData : (skData.Data || skData.data || skData.items || []);
 
         const allHoSo = [];
         await Promise.allSettled(dsSuKien.map(async sk => {
@@ -36,7 +36,7 @@ async function loadBghPendingApprovals() {
                 const res = await fetch(`${API_BASE}/PheDuyet/su-kien/${sk.idSuKien || sk.id}`);
                 if (!res.ok) return;
                 const data = await res.json();
-                const list = Array.isArray(data) ? data : (data.data || data.items || []);
+                const list = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
                 list.forEach(hs => allHoSo.push({ ...hs, tenSuKien: sk.tenSuKien || 'Không rõ' }));
             } catch {}
         }));
@@ -56,16 +56,63 @@ async function loadBghPendingApprovals() {
     }
 }
 
+let currentBghPendingPage = 1;
+const ITEMS_PER_PAGE = 5;
+
 function renderBghPendingList(items) {
     const el = document.getElementById('bghPendingList');
     if (!el) return;
     const filtered = currentBghFilter === 'all' ? items : items.filter(i => (i.priority || 'normal') === currentBghFilter);
+
+    // Dynamic pagination calculation
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    
+    // Ensure page index is valid
+    if (currentBghPendingPage > totalPages) currentBghPendingPage = Math.max(1, totalPages);
+
+    const paginationEl = document.querySelector('.pagination');
+    if (paginationEl) {
+        if (totalPages <= 1) {
+            paginationEl.style.display = 'none';
+        } else {
+            paginationEl.style.display = 'flex';
+            let html = `
+                <button type="button" class="page-btn" ${currentBghPendingPage === 1 ? 'disabled' : ''} onclick="changeBghPendingPage(${currentBghPendingPage - 1})" aria-label="Trang trước">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            `;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button type="button" class="page-btn ${currentBghPendingPage === i ? 'active' : ''}" onclick="changeBghPendingPage(${i})" aria-label="Trang ${i}">${i}</button>
+                `;
+            }
+            html += `
+                <button type="button" class="page-btn" ${currentBghPendingPage === totalPages ? 'disabled' : ''} onclick="changeBghPendingPage(${currentBghPendingPage + 1})" aria-label="Trang sau">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            `;
+            paginationEl.innerHTML = html;
+        }
+    }
+
     if (!filtered.length) {
         el.innerHTML = `<div style="text-align:center;padding:48px;color:#6b7280;"><i class="fas fa-inbox" style="font-size:48px;display:block;margin-bottom:12px;color:#d1d5db;"></i><h3>Không có hồ sơ chờ duyệt cấp cao</h3><p>Tất cả hồ sơ đã được xử lý.</p></div>`;
         return;
     }
-    el.innerHTML = filtered.map(item => buildBghPendingHTML(item)).join('');
+
+    // Slice items for current page
+    const start = (currentBghPendingPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageItems = filtered.slice(start, end);
+
+    el.innerHTML = pageItems.map(item => buildBghPendingHTML(item)).join('');
 }
+
+window.changeBghPendingPage = function(page) {
+    currentBghPendingPage = page;
+    renderBghPendingList(allBghPendingItems);
+};
 
 function buildBghPendingHTML(item) {
     const id = item.idHoSo || item.id || 0;
@@ -325,10 +372,17 @@ async function confirmBghBulkApproval() {
     await Promise.allSettled(ids.map(async id => {
         try {
             const item = allBghPendingItems.find(i => (i.idHoSo||i.id) == id);
-            const res = await fetch(`${API_BASE}/PheDuyet/${id}`, {
+            const idSuKien = item?.eventId || item?.EventId || item?.idSuKien || item?.IdSuKien;
+            if (!idSuKien) { fail++; return; }
+            const res = await fetch(`${API_BASE}/SuKien/${idSuKien}/duyet`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...(item||{}), trangThai: 'approved', ghiChu: comment || 'Phê duyệt hàng loạt cấp BGH' })
+                body: JSON.stringify({
+                    CapDuyet: 'Cấp 2 - BGH',
+                    KetQua: 'Đồng ý',
+                    GhiChu: comment || 'Phê duyệt hàng loạt cấp BGH',
+                    GuiThongBao: true
+                })
             });
             if (res.ok) ok++; else fail++;
         } catch { fail++; }

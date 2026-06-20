@@ -7,5 +7,6 @@ namespace aspiCore.Dtos.DangKy
         // Offline fallback: kiosk lưu lại thời gian quét (epoch ms).
         // Nếu null thì backend dùng DateTime.Now.
         public long? ScanTimeMs { get; set; }
+        public int? IdSuKien { get; set; }
     }
 }

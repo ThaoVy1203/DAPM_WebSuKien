@@ -90,10 +90,27 @@ namespace aspiCore.Controllers
 
             return Ok(new { message = "Gán vai trò thành công" });
         }
+
+        [HttpPost("{id}/change-password")]
+        public async Task<ActionResult> ChangePassword(string id, [FromBody] ChangePasswordDto dto)
+        {
+            var result = await _nguoiDungService.ChangePasswordAsync(id, dto.CurrentPassword, dto.NewPassword);
+            if (!result)
+            {
+                return BadRequest(new { message = "Mật khẩu cũ không đúng hoặc không tìm thấy người dùng" });
+            }
+            return Ok(new { message = "Thay đổi mật khẩu thành công" });
+        }
     }
 }
 
 public class GanVaiTroDto
 {
     public int IdVaiTro { get; set; }
+}
+
+public class ChangePasswordDto
+{
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
 }

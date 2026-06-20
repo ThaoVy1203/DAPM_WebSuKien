@@ -63,6 +63,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 function setupPageListeners() {
     document.getElementById("btnCancelTicket")?.addEventListener("click", openCancelModal);
     document.getElementById("btnConfirmWaitlist")?.addEventListener("click", doConfirmWaitlist);
+    document.getElementById("btnReRegister")?.addEventListener("click", doReRegister);
     document.getElementById("btnShareTicket")?.addEventListener("click", shareTicket);
     document.getElementById("btnAppleWallet")?.addEventListener("click", () => {
         showToast("Tính năng Apple Wallet đang phát triển.", "info");
@@ -179,7 +180,12 @@ function renderTicketFilterList() {
                 <div class="mt-filter-title">${escapeHtml(ticket.tenSuKien || "Sự kiện")}</div>
                 <div class="mt-filter-meta">${escapeHtml(meta)} · ${escapeHtml(ticket.tenDiaDiem || "")}</div>
             </div>
-            <span class="mt-filter-badge ${badge.cls}">${escapeHtml(badge.text)}</span>`;
+            <span class="mt-filter-badge ${badge.cls}">${escapeHtml(badge.text)}</span>
+            <a href="ticket-detail.html?id=${ticket.idDangKy}" class="mt-filter-detail-link"
+               onclick="event.stopPropagation()"
+               title="Xem chi tiết vé">
+               <i class="fas fa-external-link-alt"></i>
+            </a>`;
         item.addEventListener("click", () => selectTicket(ticket));
         el.appendChild(item);
     });
@@ -448,13 +454,14 @@ function selectTicket(ticket) {
     }
 
     const linkDetail = document.getElementById("linkTicketDetail");
-    if (linkDetail) linkDetail.href = typeof TicketBiz !== 'undefined' ? TicketBiz.ticketDetailUrl(ticket.idDangKy) : `event-detail.html?id=${ticket.idSuKien}`;
+    if (linkDetail) linkDetail.href = typeof TicketBiz !== 'undefined' ? TicketBiz.ticketDetailUrl(ticket.idDangKy) : `ticket-detail.html?id=${ticket.idDangKy}`;
 
     renderQRSection(ticket);
     renderCheckinTimeline(ticket);
     renderCheckinButtons(ticket);
     renderCancelButton(ticket);
     renderWaitlistConfirmButton(ticket);
+    renderReRegisterButton(ticket);
     renderSidebars();
     updateFilterCounts();
     renderTicketFilterList();
@@ -700,11 +707,17 @@ function renderCancelButton(ticket) {
     if (!btn) return;
     btn.style.display = (typeof TicketBiz !== 'undefined' ? TicketBiz.canCancel(ticket) : ["Chờ xác nhận", "Đã xác nhận"].includes(ticket.trangThai)) ? "flex" : "none";
 }
-
 function renderWaitlistConfirmButton(ticket) {
     const btn = document.getElementById("btnConfirmWaitlist");
     if (!btn) return;
     btn.style.display = (ticket && ticket.trangThai === "Chờ người dùng xác nhận") ? "flex" : "none";
+}
+
+function renderReRegisterButton(ticket) {
+    const btn = document.getElementById("btnReRegister");
+    if (!btn) return;
+    const isEnded = ticket.thoiGianKetThuc && new Date() > new Date(ticket.thoiGianKetThuc);
+    btn.style.display = (ticket.trangThai === "Đã hủy" && !isEnded) ? "flex" : "none";
 }
 
 async function doConfirmWaitlist() {
@@ -999,6 +1012,7 @@ function refreshTicketUI() {
     renderCheckinButtons(t);
     renderCancelButton(t);
     renderWaitlistConfirmButton(t);
+    renderReRegisterButton(t);
     renderSidebars();
     document.querySelectorAll(".mt-filter-item").forEach(el => {
         el.classList.toggle("active", String(el.dataset.id) === String(t.idDangKy));
@@ -1054,4 +1068,42 @@ function showToast(msg, type = "success") {
         toast.style.transition = "opacity .3s ease";
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+}
+
+// ─── ĐĂNG KÝ LẠI ──────────────────────────────────────────────────────────────
+async function doReRegister() {
+    if (!selectedTicket) return;
+    const token = localStorage.getItem("token");
+    if (!token) { window.location.href = "login.html"; return; }
+
+    const btn = document.getElementById("btnReRegister");
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng ký...'; }
+
+    try {
+        const u = JSON.parse(localStorage.getItem("userData") || "{}");
+        const idNguoiDung = u.IdNguoiDung || u.idNguoiDung || u.id;
+
+        const res = await fetch(`${API_BASE}/DangKy/dang-ky`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ IdSuKien: selectedTicket.idSuKien, IdNguoiDung: idNguoiDung })
+        });
+        const d = await res.json().catch(() => ({}));
+
+        if (res.ok && (d.Success ?? d.success) !== false) {
+            showToast("✅ Đăng ký lại thành công!", "success");
+            // Reload toàn bộ vé và cập nhật lại UI
+            await loadMyTickets();
+            initTicketListUI();
+            // Chọn lại vé vừa đăng ký
+            const updated = allTickets.find(t => t.idSuKien === selectedTicket.idSuKien);
+            if (updated) selectTicket(updated);
+        } else {
+            showToast(d.Message || d.message || "Đăng ký thất bại.", "error");
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-redo"></i> Đăng ký lại'; }
+        }
+    } catch (e) {
+        showToast("Không thể kết nối máy chủ.", "error");
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-redo"></i> Đăng ký lại'; }
+    }
 }

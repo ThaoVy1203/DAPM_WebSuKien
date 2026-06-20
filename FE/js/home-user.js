@@ -221,7 +221,7 @@ async function loadHuEvents() {
         });
         if (!res.ok) throw new Error("Không lấy được sự kiện");
         const data = await res.json();
-        huAllEvents = Array.isArray(data) ? data : (data.data || data.items || []);
+        huAllEvents = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
         renderHuEvents(huAllEvents);
     } catch (e) {
         console.error('Lỗi tải sự kiện:', e);

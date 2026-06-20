@@ -1,7 +1,10 @@
 "use strict";
 // js/events.js — Load sự kiện từ API, bộ lọc động, tìm kiếm realtime
 
-const API_BASE = "http://localhost:5103/api";
+// Dùng API_BASE từ config.js nếu có, fallback về localhost
+const API_BASE = (typeof API_CONFIG !== 'undefined' && API_CONFIG.BASE_URL)
+    ? API_CONFIG.BASE_URL
+    : "http://localhost:5103/api";
 
 const EVENT_IMAGES = [
     "../images/event1.png",
@@ -81,12 +84,21 @@ async function loadAllEvents() {
         const res = await fetch(`${API_BASE}/SuKien`, {
             headers: token ? { "Authorization": `Bearer ${token}` } : {}
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         const data = await res.json();
-        allEvents = Array.isArray(data) ? data : (data.data || data.items || []);
+        allEvents = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
+        console.log(`[events.js] Đã load ${allEvents.length} sự kiện từ API.`);
+        if (allEvents.length === 0) {
+            console.warn("[events.js] API trả về mảng rỗng — không có sự kiện nào trong DB.");
+        }
     } catch (e) {
         console.error("Lỗi load sự kiện:", e);
-        showError("Không thể tải danh sách sự kiện. Vui lòng kiểm tra Backend đã chạy chưa.");
+        const isNetworkError = e instanceof TypeError && e.message.includes("fetch");
+        if (isNetworkError) {
+            showError(`Không thể kết nối đến máy chủ (${API_BASE}). Vui lòng kiểm tra Backend đã chạy chưa.`);
+        } else {
+            showError(`Lỗi tải sự kiện: ${e.message}. Vui lòng thử lại.`);
+        }
     }
 }
 
@@ -106,7 +118,7 @@ async function loadMyRegistrations() {
         });
         if (!res.ok) return;
         const data = await res.json();
-        const items = Array.isArray(data) ? data : (data.data || data.items || []);
+        const items = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         myRegMap = {};
         let attendedCount = 0;
@@ -141,14 +153,14 @@ async function loadCategories() {
         const res = await fetch(`${API_BASE}/DanhMuc`, {
             headers: token ? { "Authorization": `Bearer ${token}` } : {}
         });
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const categories = await res.json();
-        if (categories && categories.length > 0) {
-            allCategories = categories;
-            renderCategoryFilters(categories);
-        }
+        allCategories = Array.isArray(categories) ? categories : [];
+        renderCategoryFilters(allCategories);
     } catch (error) {
         console.warn('Không thể tải danh mục:', error);
+        // Khi lỗi: render container rỗng để không có checkbox nào → filter danh mục bị vô hiệu hóa
+        renderCategoryFilters([]);
     }
 }
 
@@ -186,12 +198,18 @@ function renderCategoryFilters(categories) {
     const container = document.querySelector('.filter-section .category-checkboxes');
     if (!container) return;
 
+    if (!categories || categories.length === 0) {
+        container.innerHTML = '<span style="font-size:11px;color:#999;grid-column:1/-1;">Không có danh mục</span>';
+        return;
+    }
+
     container.innerHTML = '';
     categories.forEach(cat => {
         const label = document.createElement('label');
         label.className = 'checkbox-label';
+        label.style.cssText = 'font-size: 12px; margin-bottom: 0;';
         label.innerHTML = `
-            <input type="checkbox" class="category-filter" value="${cat.idDanhMuc || cat.IdDanhMuc}" checked>
+            <input type="checkbox" class="category-filter" value="${cat.idDanhMuc || cat.IdDanhMuc}" checked style="width:14px;height:14px;">
             <span>${cat.tenDanhMuc || cat.TenDanhMuc}</span>
         `;
         container.appendChild(label);
@@ -285,6 +303,7 @@ function resetFilters() {
     const facultySelect = document.getElementById('facultyFilter');
     if (facultySelect) facultySelect.value = 'all';
 
+    // Tick lại tất cả checkbox danh mục
     document.querySelectorAll('.category-filter').forEach(cb => cb.checked = true);
 
     currentPage = 1;
@@ -313,6 +332,7 @@ function applyFiltersAndRender() {
         } else if (statusFilter === "ended") {
             if (!["Kết thúc", "Hủy", "Đã kết thúc"].includes(ts)) return false;
         }
+        // statusFilter === "all" → hiển thị tất cả trạng thái, kể cả Nháp/Chờ duyệt
 
         // 2. Lọc theo keyword
         if (keyword) {
@@ -328,23 +348,18 @@ function applyFiltersAndRender() {
             if (ddId != idDiaDiem) return false;
         }
 
-        // 4. Lọc theo danh mục
+        // 4. Lọc theo danh mục — chỉ lọc nếu có checkbox được tick VÀ sự kiện có danh mục
         if (checkedCategories.length > 0) {
-            // Sự kiện có thể có nhiều danh mục (danhMucs[]) hoặc một danh mục đơn (IdDanhMuc)
             const danhMucs = ev.danhMucs || ev.DanhMucs || [];
             if (danhMucs.length > 0) {
-                // Kiểm tra có ít nhất 1 danh mục được tick
+                // Sự kiện có danh mục → kiểm tra có ít nhất 1 danh mục khớp checkbox không
                 const matched = danhMucs.some(dm => {
                     const dmId = String(dm.idDanhMuc ?? dm.IdDanhMuc ?? dm.id ?? "");
                     return checkedCategories.includes(dmId);
                 });
                 if (!matched) return false;
-            } else {
-                // Fallback: trường đơn IdDanhMuc
-                const catId = ev.IdDanhMuc ?? ev.idDanhMuc;
-                if (catId != null && !checkedCategories.includes(String(catId))) return false;
-                // Nếu không có danh mục nào thì vẫn hiển thị (không lọc ra)
             }
+            // Nếu sự kiện không có danh mục → vẫn hiển thị (không lọc ra)
         }
 
         // 5. Lọc theo khoảng thời gian
@@ -376,12 +391,18 @@ function renderEvents(events) {
     if (countEl) countEl.textContent = `Kết quả: ${events.length} sự kiện`;
 
     if (!events || events.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center;padding:60px 20px;color:#666;">
+        const noDataMsg = allEvents.length === 0
+            ? `<div style="text-align:center;padding:60px 20px;color:#666;">
+                <i class="fas fa-database" style="font-size:48px;display:block;margin-bottom:16px;color:#d1d5db;"></i>
+                <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Chưa có dữ liệu sự kiện</h3>
+                <p>Hệ thống chưa có sự kiện nào. Vui lòng thêm sự kiện từ trang quản trị.</p>
+               </div>`
+            : `<div style="text-align:center;padding:60px 20px;color:#666;">
                 <i class="fas fa-calendar-times" style="font-size:48px;display:block;margin-bottom:16px;color:#d1d5db;"></i>
-                <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Không có sự kiện nào</h3>
+                <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Không có sự kiện nào phù hợp</h3>
                 <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
-            </div>`;
+               </div>`;
+        container.innerHTML = noDataMsg;
         if (pagination) pagination.style.display = "none";
         return;
     }
@@ -717,7 +738,7 @@ async function loadRecentNotifications() {
         if (!res.ok) throw new Error();
 
         const data = await res.json();
-        const notificationsList = Array.isArray(data) ? data : (data.items || data.data || []);
+        const notificationsList = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         if (notificationsList.length === 0) {
             container.innerHTML = '<div style="font-size:13px;color:#999;text-align:center;padding:12px;">Không có thông báo mới.</div>';

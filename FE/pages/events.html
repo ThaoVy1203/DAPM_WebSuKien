@@ -124,50 +124,35 @@
                             </div>
                         </div>
 
-                        <div class="filter-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                            <div class="filter-col">
-                                <label for="facultyFilter" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Khoa / Đơn vị</label>
-                                <select class="filter-select" id="facultyFilter" aria-label="Lọc theo khoa đơn vị" style="padding: 6px 8px; font-size: 12px;">
-                                    <option value="all">Tất cả khoa</option>
-                                    <option value="cntt">Khoa CNTT</option>
-                                    <option value="dien">Khoa Điện</option>
-                                    <option value="cokhi">Khoa Cơ khí</option>
-                                </select>
-                            </div>
-                            <div class="filter-col">
-                                <label for="filterDiaDiem" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Địa điểm</label>
-                                <select id="filterDiaDiem" class="filter-select" aria-label="Lọc theo địa điểm" style="padding: 6px 8px; font-size: 12px;">
-                                    <option value="">Tất cả</option>
-                                    <!-- Được render động từ API -->
-                                </select>
-                            </div>
+                        <div class="filter-section" style="margin-bottom: 12px;">
+                            <label for="facultyFilter" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Khoa / Đơn vị</label>
+                            <select class="filter-select" id="facultyFilter" aria-label="Lọc theo khoa đơn vị" style="padding: 8px 10px; font-size: 13px; width: 100%;">
+                                <option value="all">Tất cả khoa</option>
+                                <option value="cntt">Khoa CNTT</option>
+                                <option value="dien">Khoa Điện</option>
+                                <option value="cokhi">Khoa Cơ khí</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-section" style="margin-bottom: 12px;">
+                            <label for="filterDiaDiem" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Địa điểm</label>
+                            <select id="filterDiaDiem" class="filter-select" aria-label="Lọc theo địa điểm" style="padding: 8px 10px; font-size: 13px; width: 100%;">
+                                <option value="">Tất cả địa điểm</option>
+                                <!-- Được render động từ API -->
+                            </select>
                         </div>
 
                         <div class="filter-section" style="margin-bottom: 12px;">
                             <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Loại sự kiện</h4>
-                            <div class="category-checkboxes" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 8px;">
-                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
-                                    <input type="checkbox" class="category-filter" value="1" checked style="width: 14px; height: 14px;">
-                                    <span>Hội thảo</span>
-                                </label>
-                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
-                                    <input type="checkbox" class="category-filter" value="2" checked style="width: 14px; height: 14px;">
-                                    <span>Cuộc thi</span>
-                                </label>
-                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
-                                    <input type="checkbox" class="category-filter" value="3" checked style="width: 14px; height: 14px;">
-                                    <span>Tình nguyện</span>
-                                </label>
-                                <label class="checkbox-label" style="font-size: 12px; margin-bottom: 0;">
-                                    <input type="checkbox" class="category-filter" value="4" checked style="width: 14px; height: 14px;">
-                                    <span>Workshop</span>
-                                </label>
+                            <!-- Checkbox danh mục được render động từ API bởi events.js -->
+                            <div class="category-checkboxes" style="display: flex; flex-direction: column; gap: 8px;">
+                                <span style="font-size:11px;color:#999;">Đang tải danh mục...</span>
                             </div>
                         </div>
 
                         <div class="filter-section" style="margin-bottom: 12px;">
                             <label for="statusFilterSelect" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Trạng thái</label>
-                            <select id="statusFilterSelect" class="filter-select" aria-label="Lọc theo trạng thái sự kiện" style="padding: 6px 8px; font-size: 12px; width: 100%;">
+                            <select id="statusFilterSelect" class="filter-select" aria-label="Lọc theo trạng thái sự kiện" style="padding: 8px 10px; font-size: 13px; width: 100%;">
                                 <option value="all">Tất cả trạng thái</option>
                                 <option value="open">Đang mở đăng ký</option>
                                 <option value="ongoing">Đang diễn ra</option>
@@ -177,18 +162,18 @@
 
                         <div class="filter-section" style="margin-bottom: 12px;">
                             <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Khoảng thời gian</h4>
-                            <div class="date-range" style="display: flex; align-items: center; gap: 4px;">
-                                <input type="date" id="dateFrom" class="filter-date" aria-label="Từ ngày" title="Từ ngày" style="padding: 4px 6px; font-size: 11px;">
-                                <span style="color: var(--text-gray); font-size: 11px;">đến</span>
-                                <input type="date" id="dateTo" class="filter-date" aria-label="Đến ngày" title="Đến ngày" style="padding: 4px 6px; font-size: 11px;">
+                            <div class="date-range" style="display: flex; flex-direction: column; gap: 8px;">
+                                <input type="date" id="dateFrom" class="filter-date" aria-label="Từ ngày" title="Từ ngày" style="padding: 8px 10px; font-size: 13px; width: 100%;">
+                                <span style="color: var(--text-gray); font-size: 11px; text-align: center;">đến</span>
+                                <input type="date" id="dateTo" class="filter-date" aria-label="Đến ngày" title="Đến ngày" style="padding: 8px 10px; font-size: 13px; width: 100%;">
                             </div>
                         </div>
 
-                        <div class="filter-actions" style="display: flex; gap: 8px; margin-top: 16px;">
-                            <button type="button" class="btn-apply-filter" aria-label="Áp dụng bộ lọc" style="padding: 8px; font-size: 12px; flex: 1.5; border-radius: 6px;">
-                                <i class="fas fa-check" aria-hidden="true"></i> Áp dụng
+                        <div class="filter-actions" style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+                            <button type="button" class="btn-apply-filter" aria-label="Áp dụng bộ lọc" style="padding: 10px; font-size: 13px; border-radius: 6px; width: 100%;">
+                                <i class="fas fa-check" aria-hidden="true"></i> Áp dụng bộ lọc
                             </button>
-                            <button type="button" class="btn-reset-filter" aria-label="Đặt lại bộ lọc" style="padding: 8px; font-size: 12px; flex: 1; border-radius: 6px; background: #e5e7eb; color: #4b5563; border: none; cursor: pointer;">
+                            <button type="button" class="btn-reset-filter" aria-label="Đặt lại bộ lọc" style="padding: 10px; font-size: 13px; border-radius: 6px; background: #e5e7eb; color: #4b5563; border: none; cursor: pointer; width: 100%;">
                                 <i class="fas fa-undo" aria-hidden="true"></i> Đặt lại
                             </button>
                         </div>

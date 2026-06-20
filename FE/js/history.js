@@ -30,31 +30,37 @@ async function loadHistory(page = 1) {
 
     if (tbody) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#666;">
-            <i class="fas fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:16px;"></i> 
+            <i class="fas fa-spinner fa-spin" style="font-size:32px;display:block;margin-bottom:16px;"></i>
             Đang tải dữ liệu...
         </td></tr>`;
     }
 
     try {
-        // Lấy idNguoiDung từ userData (Hỗ trợ cả chuẩn camelCase và PascalCase)
         const raw = localStorage.getItem("userData") || localStorage.getItem("user");
         if (!raw) { window.location.href = "login.html"; return; }
+
         const user = JSON.parse(raw);
         const idNguoiDung = user.IdNguoiDung || user.idNguoiDung || user.id;
-        
-        if (!idNguoiDung) throw new Error("Không xác định được tài khoản");
 
-        // Gọi API backend (Single query, không bị N+1 như bản cũ)
+        if (!idNguoiDung) {
+            console.error("Không tìm thấy idNguoiDung trong userData:", user);
+            throw new Error("Không xác định được tài khoản");
+        }
+
+        console.log("[history] Đang tải lịch sử cho:", idNguoiDung);
+
         const res = await fetch(`${API_BASE}/DangKy/nguoi-dung/${idNguoiDung}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (res.status === 401) { window.location.href = "login.html"; return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
 
         const data = await res.json();
-        const rawItems = Array.isArray(data) ? data : (data.items || data.data || []);
+        const rawItems = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
-        // Chuẩn hóa dữ liệu về camelCase
+        console.log(`[history] API trả về ${rawItems.length} bản ghi`);
+
         historyData = rawItems.map(item => ({
             idDangKy:         item.IdDangKy         ?? item.idDangKy,
             idSuKien:         item.IdSuKien         ?? item.idSuKien,
@@ -77,7 +83,11 @@ async function loadHistory(page = 1) {
         if (tbody) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#dc2626;">
                 <i class="fas fa-exclamation-circle" style="font-size:48px;display:block;margin-bottom:16px;"></i>
-                Không thể tải dữ liệu. Vui lòng thử lại sau.
+                <strong>Không thể tải dữ liệu</strong><br>
+                <span style="font-size:13px;color:#666;">${e.message}</span><br>
+                <button onclick="loadHistory()" style="margin-top:12px;padding:8px 20px;background:#0D5A9C;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;">
+                    <i class="fas fa-redo"></i> Thử lại
+                </button>
             </td></tr>`;
         }
     }
@@ -95,11 +105,48 @@ function renderHistoryTable(data) {
             <i class="fas fa-inbox" style="font-size:48px;display:block;margin-bottom:16px;color:#ddd;"></i>
             Bạn chưa tham gia sự kiện nào.
         </td></tr>`;
+        const paginationEl = document.querySelector('.pagination');
+        if (paginationEl) paginationEl.style.display = 'none';
         return;
     }
 
+    const ITEMS_PER_PAGE = 5;
+    const totalItems = data.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+    if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+    const paginationEl = document.querySelector('.pagination');
+    if (paginationEl) {
+        if (totalPages <= 1) {
+            paginationEl.style.display = 'none';
+        } else {
+            paginationEl.style.display = 'flex';
+            // Cập nhật info text
+            const pInfo = document.getElementById("paginationInfo");
+            if (pInfo) {
+                const s2 = (currentPage - 1) * ITEMS_PER_PAGE;
+                pInfo.textContent = `Hiển thị ${s2 + 1}–${Math.min(totalItems, s2 + ITEMS_PER_PAGE)} trong số ${totalItems} sự kiện`;
+            }
+            // Render nút vào #paginationControls
+            const controls = document.getElementById("paginationControls");
+            if (controls) {
+                let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changeHistoryPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    html += `<button class="page-btn ${currentPage === i ? 'active' : ''}" onclick="changeHistoryPage(${i})">${i}</button>`;
+                }
+                html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changeHistoryPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+                controls.innerHTML = html;
+            }
+        }
+    }
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageItems = data.slice(start, end);
+
     tbody.innerHTML = "";
-    data.forEach(item => {
+    pageItems.forEach(item => {
         const tenSuKien  = item.tenSuKien || "Chưa có tên";
         const diaDiem    = item.tenDiaDiem || "Chưa xác định";
         const trangThai  = item.trangThai || "-";
@@ -169,6 +216,8 @@ function getHistoryEventImg(item) {
     // Dùng idSuKien làm seed — mỗi sự kiện ảnh khác nhau, nhất quán
     return `https://picsum.photos/seed/${item.idSuKien || "event"}/50/50`;
 }
+
+function getStatusClass(status) {
     const statusMap = {
         'Chờ xác nhận': 'pending',
         'Đã xác nhận': 'confirmed',
@@ -202,12 +251,6 @@ function updateStats(items) {
     if (!el0 && statNumbers[0]) statNumbers[0].textContent = totalEvents;
     if (!el1 && statNumbers[1]) statNumbers[1].textContent = Math.min(100, attendedEvents * 5);
     if (!el2 && statNumbers[2]) statNumbers[2].textContent = (attendedEvents * 5).toFixed(1);
-
-    // Cập nhật pagination info
-    const pInfo = document.getElementById("paginationInfo");
-    if (pInfo) pInfo.textContent = items.length > 0
-        ? `Hiển thị 1-${items.length} trong số ${items.length} sự kiện`
-        : "";
 }
 
 // ==========================
@@ -218,6 +261,7 @@ function setupSearch() {
     if (!searchInput) return;
 
     searchInput.addEventListener("input", function () {
+        currentPage = 1;
         const keyword = this.value.trim().toLowerCase();
         if (!keyword) {
             renderHistoryTable(historyData);
@@ -231,17 +275,22 @@ function setupSearch() {
     });
 }
 
-function setupPagination() {
-    document.querySelectorAll(".page-btn:not([disabled])").forEach(btn => {
-        btn.addEventListener("click", async function () {
-            if (this.classList.contains("active")) return;
-            const page = parseInt(this.dataset.page || this.textContent) || 1;
-            document.querySelectorAll(".page-btn").forEach(b => b.classList.remove("active"));
-            this.classList.add("active");
-            await loadHistory(page);
+function setupPagination() {}
+
+window.changeHistoryPage = function(page) {
+    currentPage = page;
+    const searchInput = document.querySelector(".search-box input");
+    const keyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    if (keyword) {
+        const filtered = historyData.filter(item => {
+            const name = (item.tenSuKien || "").toLowerCase();
+            return name.includes(keyword);
         });
-    });
-}
+        renderHistoryTable(filtered);
+    } else {
+        renderHistoryTable(historyData);
+    }
+};
 
 function initializeExtraHandlers() {
     const analyzeBtn = document.querySelector('.btn-analyze');

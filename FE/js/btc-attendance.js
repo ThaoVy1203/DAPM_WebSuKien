@@ -16,6 +16,7 @@ let attendancePageData = {
 // ─── OFFLINE FALLBACK (QR check-in sync) ──────────────────────────────────
 let offlineQueue = []; // [{ qrToken, scanTimeMs }]
 let confirmedCache = null; // { ids: number[], fetchedAt: number, eventWindow: {start,end} }
+let localFailedActivities = []; // Store temporary failed check-ins during the current session
 
 function getOfflineQueueKey() {
     return `btcOfflineQueue_${attendancePageData.selectedEventId || "unknown"}`;
@@ -109,18 +110,8 @@ async function loadEventsSelector() {
     if (!selector) return;
 
     try {
-        // Load sự kiện của BTC hiện tại (không phải tất cả sự kiện)
-        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-        const userId = userData.idNguoiDung;
-        const vaiTros = userData.vaiTros || [];
-        const isTruong = vaiTros.includes("TruongBanToChuc");
-
+        // Load đầy đủ tất cả sự kiện từ SQL để đồng nhất dữ liệu
         let url = `${window.API_BASE}/SuKien`;
-        if (userId) {
-            url = isTruong 
-                ? `${window.API_BASE}/SuKien/nguoi-tao/${userId}`
-                : `${window.API_BASE}/SuKien/assigned/${userId}`;
-        }
 
         const res = await fetch(url, { headers: authHeaders() });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -151,6 +142,7 @@ async function loadEventsSelector() {
             attendancePageData.selectedEventId = this.value;
             localStorage.setItem("btc_attendance_selected_event_id", this.value);
             localStorage.setItem("btcCurrentSuKien", this.value);
+            localFailedActivities = []; // Reset local activity logs for new event
             loadEventDetailsAndAttendance();
         });
 
@@ -225,7 +217,7 @@ async function loadEventDetailsAndAttendance() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
-        const raw = Array.isArray(data) ? data : (data.data || data.items || []);
+        const raw = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
         attendancePageData.participants = raw.map(normalizeParticipant);
 
         // Cache danh sách "Đã xác nhận" để fallback offline
@@ -252,6 +244,7 @@ async function loadEventDetailsAndAttendance() {
         renderParticipantsTable(attendancePageData.participants);
         updateStats();
         updateOfflineQueueCountUI();
+        renderActivityList();
     } catch (error) {
         console.error("Lỗi load đăng ký:", error);
         const tbody = document.getElementById("participantsTableBody");
@@ -292,10 +285,39 @@ function renderParticipantsTable(list) {
     const tbody = document.getElementById("participantsTableBody");
     if (!tbody) return;
 
+    // Check if the user is TruongBanToChuc
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const vaiTros = userData.vaiTros || [];
+    const isTruongBan = vaiTros.includes("TruongBanToChuc");
+
+    // Dynamically adjust table headers
+    const thead = document.querySelector(".participants-table thead tr");
+    if (thead) {
+        if (isTruongBan) {
+            thead.innerHTML = `
+                <th style="width: 40px; text-align: center; vertical-align: middle;">
+                    <input type="checkbox" id="selectAllParticipants" onchange="toggleSelectAllParticipants(this)" style="width:16px;height:16px;cursor:pointer;">
+                </th>
+                <th>NGƯỜI THAM GIA</th>
+                <th>MÃ SỐ ID</th>
+                <th>THỜI GIAN CÓ MẶT</th>
+                <th>TRẠNG THÁI</th>
+                <th style="text-align: center;">THAO TÁC</th>
+            `;
+        } else {
+            thead.innerHTML = `
+                <th>NGƯỜI THAM GIA</th>
+                <th>MÃ SỐ ID</th>
+                <th>THỜI GIAN CÓ MẶT</th>
+                <th>TRẠNG THÁI</th>
+            `;
+        }
+    }
+
     tbody.innerHTML = "";
 
     if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:#888;">
+        tbody.innerHTML = `<tr><td colspan="${isTruongBan ? 6 : 4}" style="text-align:center;padding:32px;color:#888;">
             <i class="fas fa-inbox" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3;"></i>
             Chưa có người đăng ký
         </td></tr>`;
@@ -329,24 +351,38 @@ function renderParticipantsTable(list) {
 
         // Nút thao tác
         let actions = "";
-        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-        const vaiTros = userData.vaiTros || [];
-        const isTruongBan = vaiTros.includes("TruongBanToChuc");
+        const lower = (p.trangThai || "").toLowerCase();
+        const canApprove = lower.includes("chờ xác nhận") || lower === "chờ chỗ" || lower === "pending";
 
         if (isTruongBan) {
-            const lower = (p.trangThai || "").toLowerCase();
-            if (lower.includes("chờ xác nhận") || lower === "chờ chỗ" || lower === "pending") {
+            if (canApprove) {
                 actions = `
-                    <button class="btn-btc-approve" title="Xác nhận" onclick="approveRegistration('${escapeHtml(p.idNguoiDung)}')">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    <button class="btn-btc-reject" title="Từ chối" onclick="rejectRegistration('${escapeHtml(p.idNguoiDung)}')">
-                        <i class="fas fa-times"></i>
-                    </button>`;
+                    <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
+                        <button class="btn-btc-approve" title="Xác nhận" onclick="approveRegistration('${escapeHtml(p.idNguoiDung)}')" style="padding:6px 10px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center;">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn-btc-reject" title="Từ chối" onclick="rejectRegistration('${escapeHtml(p.idNguoiDung)}')" style="padding:6px 10px; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>`;
+            } else {
+                actions = `<span style="color:#9ca3af; font-size:12px;">N/A</span>`;
             }
         }
 
+        // Checkbox column
+        const checkboxCol = isTruongBan
+            ? `<td style="text-align: center; vertical-align: middle;">
+                <input type="checkbox" class="participant-select" value="${escapeHtml(p.idNguoiDung)}" onchange="updateParticipantBulkUI()" style="width:16px;height:16px;cursor:pointer;" ${canApprove ? '' : 'disabled'}>
+               </td>`
+            : "";
+
+        const actionsCol = isTruongBan
+            ? `<td style="text-align: center; vertical-align: middle;">${actions}</td>`
+            : "";
+
         row.innerHTML = `
+            ${checkboxCol}
             <td>
                 <div class="participant-info">
                     <div class="participant-avatar" style="background:${bgColor};color:white;font-size:13px;font-weight:700;">${initials}</div>
@@ -358,7 +394,9 @@ function renderParticipantsTable(list) {
             </td>
             <td style="color:#374151;font-weight:500;">${escapeHtml(p.idNguoiDung || "—")}</td>
             <td style="color:#374151;">${timeStr}</td>
-            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`;
+            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+            ${actionsCol}
+        `;
         tbody.appendChild(row);
     });
 
@@ -407,12 +445,22 @@ async function checkInByQrToken(qrToken) {
         token = TicketBiz.buildStaticQrPayload(parseInt(token, 10));
     }
 
+    // Nếu người vận hành nhập dạng mã vé UTE-000006 thì tự chuyển sang QR tĩnh
+    const ticketMatch = token.match(/^UTE-(\d+)$/i);
+    if (ticketMatch && typeof TicketBiz !== "undefined") {
+        token = TicketBiz.buildStaticQrPayload(parseInt(ticketMatch[1], 10));
+    }
+
     try {
         const scanTimeMs = Date.now();
+        const checkinPayload = { QrToken: token, ScanTimeMs: scanTimeMs };
+        if (attendancePageData.selectedEventId) {
+            checkinPayload.IdSuKien = parseInt(attendancePageData.selectedEventId, 10);
+        }
         const res = await fetch(`${window.API_BASE}/DangKy/check-in-qr`, {
             method: "POST",
             headers: authHeaders(),
-            body: JSON.stringify({ QrToken: token, ScanTimeMs: scanTimeMs })
+            body: JSON.stringify(checkinPayload)
         });
         const data = await res.json().catch(() => ({}));
         const ok = data.success ?? data.Success;
@@ -553,24 +601,92 @@ function updateStats() {
     if (pendingEl) pendingEl.textContent = pending > 0 ? `${pending} đăng ký chờ duyệt` : "";
 }
 
+function renderActivityList() {
+    const listContainer = document.querySelector(".activity-list");
+    if (!listContainer) return;
+
+    // 1. Thu thập tất cả check-in / check-out từ dữ liệu thực tế trong SQL
+    let sqlActivities = [];
+    attendancePageData.participants.forEach(p => {
+        if (p.thoiGianCheckin) {
+            sqlActivities.push({
+                hoTen: p.hoTen,
+                idNguoiDung: p.idNguoiDung,
+                time: new Date(p.thoiGianCheckin),
+                type: "Check-in",
+                status: "THÀNH CÔNG",
+                isError: false
+            });
+        }
+        if (p.thoiGianCheckout) {
+            sqlActivities.push({
+                hoTen: p.hoTen,
+                idNguoiDung: p.idNguoiDung,
+                time: new Date(p.thoiGianCheckout),
+                type: "Check-out",
+                status: "THÀNH CÔNG",
+                isError: false
+            });
+        }
+    });
+
+    // 2. Gom chung với các lỗi quét thất bại gần đây trong session
+    let allActivities = [...localFailedActivities, ...sqlActivities];
+
+    // 3. Sắp xếp theo thời gian giảm dần
+    allActivities.sort((a, b) => b.time - a.time);
+
+    // 4. Lấy tối đa 8 hoạt động mới nhất
+    const displayed = allActivities.slice(0, 8);
+
+    // 5. Render ra HTML
+    listContainer.innerHTML = "";
+    if (displayed.length === 0) {
+        listContainer.innerHTML = `<div style="text-align:center;padding:24px;color:#9CA3AF;font-size:13px;">Chưa có hoạt động check-in nào</div>`;
+        return;
+    }
+
+    displayed.forEach(act => {
+        // Chữ cái viết tắt
+        const nameParts = (act.hoTen || "QR").trim().split(/\s+/);
+        const initials = nameParts.length >= 2
+            ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+            : (act.hoTen || "QR").substring(0, 2).toUpperCase();
+
+        const timeStr = act.time.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = `${act.time.getDate().toString().padStart(2,"0")}/${(act.time.getMonth()+1).toString().padStart(2,"0")}`;
+
+        const item = document.createElement("div");
+        item.className = "activity-item";
+        
+        item.innerHTML = `
+            <div class="activity-avatar" style="${act.isError ? 'background:#EF4444;color:white;' : 'background:#0D5A9C;color:white;font-weight:700;'}">${initials}</div>
+            <div class="activity-info">
+                <div class="activity-name" style="font-weight:600;color:#1e293b;">${escapeHtml(act.hoTen)}</div>
+                <div class="activity-id" style="font-size:12px;color:#64748b;">
+                    ${act.isError ? 'Quét thất bại' : `${act.type} • ID: ${escapeHtml(act.idNguoiDung)}`}
+                </div>
+            </div>
+            <div class="activity-status-badge ${act.isError ? 'error' : 'success'}">
+                <span>${timeStr} ${dateStr}</span>
+                <span class="status-text">${act.status}</span>
+            </div>`;
+        listContainer.appendChild(item);
+    });
+}
+
 function pushActivity(text, statusText) {
-    const list = document.querySelector(".activity-list");
-    if (!list) return;
-    const item = document.createElement("div");
-    item.className = "activity-item";
-    const now = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-    item.innerHTML = `
-        <div class="activity-avatar">QR</div>
-        <div class="activity-info">
-            <div class="activity-name">${escapeHtml(text)}</div>
-            <div class="activity-id">${now}</div>
-        </div>
-        <div class="activity-status-badge ${statusText === "THÀNH CÔNG" ? "success" : "error"}">
-            <span>VỪA XONG</span>
-            <span class="status-text">${statusText}</span>
-        </div>`;
-    list.insertBefore(item, list.firstChild);
-    while (list.children.length > 8) list.removeChild(list.lastChild);
+    if (statusText === "LỖI") {
+        localFailedActivities.push({
+            hoTen: text,
+            idNguoiDung: "",
+            time: new Date(),
+            type: "Quét lỗi",
+            status: "LỖI",
+            isError: true
+        });
+    }
+    renderActivityList();
 }
 
 // ================= SEARCH & EXPORT =================
@@ -641,7 +757,7 @@ function escapeHtml(str) {
 document.addEventListener("DOMContentLoaded", async function () {
     setupSearch();
     
-    // Hide UI components for Member BTC
+    // Hide UI components for non-Leader BTC users (only Trưởng Ban Tổ chức has these permissions)
     const userData = JSON.parse(localStorage.getItem("userData") || "{}");
     const vaiTros = userData.vaiTros || [];
     const isTruongBan = vaiTros.includes("TruongBanToChuc");
@@ -663,7 +779,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         checkInByQrToken(document.getElementById("qrTokenInput")?.value);
     });
     document.getElementById("qrTokenInput")?.addEventListener("keydown", e => {
-        if (e.key === "Enter") checkInByQrToken(e.target.value);
+        if (e.key === "Enter") {
+            checkInByQrToken(e.target.value);
+        }
     });
 
     // 1. Tải danh sách selector để chọn sự kiện
@@ -689,3 +807,150 @@ window.approveRegistration = approveRegistration;
 window.rejectRegistration = rejectRegistration;
 window.exportParticipants = exportParticipants;
 window.manualCheckIn = manualCheckIn;
+
+// ================= DUYỆT HÀNG LOẠT NGƯỜI THAM GIA =================
+
+function toggleSelectAllParticipants(master) {
+    document.querySelectorAll(".participant-select:not(:disabled)").forEach(cb => {
+        cb.checked = master.checked;
+    });
+    updateParticipantBulkUI();
+}
+
+function updateParticipantBulkUI() {
+    const checkedBoxes = document.querySelectorAll(".participant-select:checked");
+    const container = document.querySelector(".event-actions");
+    if (!container) return;
+
+    // Check if bulk buttons already exist
+    let bulkApproveBtn = document.getElementById("btnBulkApproveParticipants");
+    let bulkRejectBtn = document.getElementById("btnBulkRejectParticipants");
+
+    if (checkedBoxes.length > 0) {
+        if (!bulkApproveBtn) {
+            bulkApproveBtn = document.createElement("button");
+            bulkApproveBtn.type = "button";
+            bulkApproveBtn.id = "btnBulkApproveParticipants";
+            bulkApproveBtn.className = "btn-btc-bulk-approve";
+            bulkApproveBtn.style.cssText = "padding:8px 16px; background:#10b981; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; display:inline-flex; align-items:center; gap:6px; margin-right:8px;";
+            bulkApproveBtn.innerHTML = `<i class="fas fa-check-double"></i> Duyệt chọn (${checkedBoxes.length})`;
+            bulkApproveBtn.onclick = confirmBulkApproveParticipants;
+            container.insertBefore(bulkApproveBtn, container.firstChild);
+        } else {
+            bulkApproveBtn.innerHTML = `<i class="fas fa-check-double"></i> Duyệt chọn (${checkedBoxes.length})`;
+        }
+
+        if (!bulkRejectBtn) {
+            bulkRejectBtn = document.createElement("button");
+            bulkRejectBtn.type = "button";
+            bulkRejectBtn.id = "btnBulkRejectParticipants";
+            bulkRejectBtn.className = "btn-btc-bulk-reject";
+            bulkRejectBtn.style.cssText = "padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; display:inline-flex; align-items:center; gap:6px; margin-right:8px;";
+            bulkRejectBtn.innerHTML = `<i class="fas fa-times-circle"></i> Từ chối chọn (${checkedBoxes.length})`;
+            bulkRejectBtn.onclick = confirmBulkRejectParticipants;
+            container.insertBefore(bulkRejectBtn, bulkApproveBtn.nextSibling);
+        } else {
+            bulkRejectBtn.innerHTML = `<i class="fas fa-times-circle"></i> Từ chối chọn (${checkedBoxes.length})`;
+        }
+    } else {
+        if (bulkApproveBtn) bulkApproveBtn.remove();
+        if (bulkRejectBtn) bulkRejectBtn.remove();
+    }
+}
+
+async function confirmBulkApproveParticipants() {
+    const checkedBoxes = document.querySelectorAll(".participant-select:checked");
+    const ids = Array.from(checkedBoxes).map(cb => cb.value);
+    if (ids.length === 0) return;
+
+    if (!confirm(`Bạn có chắc muốn duyệt/xác nhận điểm danh cho ${ids.length} người tham gia đã chọn?`)) return;
+
+    const eventId = attendancePageData.selectedEventId;
+    if (!eventId) return;
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const idNguoiDung of ids) {
+        try {
+            const res = await fetch(`${window.API_BASE}/DangKy/check-in`, {
+                method: "POST",
+                headers: authHeaders(),
+                body: JSON.stringify({ IdSuKien: parseInt(eventId, 10), IdNguoiDung: idNguoiDung })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && (data.success ?? data.Success) !== false) {
+                successCount++;
+            } else {
+                failCount++;
+            }
+        } catch (e) {
+            failCount++;
+        }
+    }
+
+    if (successCount > 0 && failCount === 0) {
+        showBtcMessage(`✅ Đã phê duyệt điểm danh cho ${successCount} người tham gia!`, "success");
+    } else if (successCount > 0) {
+        showBtcMessage(`Đã duyệt ${successCount} người thành công, ${failCount} thất bại.`, "warning");
+    } else {
+        showBtcMessage("Duyệt hàng loạt thất bại.", "error");
+    }
+
+    // Reset select all checkbox
+    const sa = document.getElementById("selectAllParticipants");
+    if (sa) sa.checked = false;
+
+    await loadEventDetailsAndAttendance();
+}
+
+async function confirmBulkRejectParticipants() {
+    const checkedBoxes = document.querySelectorAll(".participant-select:checked");
+    const ids = Array.from(checkedBoxes).map(cb => cb.value);
+    if (ids.length === 0) return;
+
+    if (!confirm(`Bạn có chắc muốn từ chối/hủy đăng ký cho ${ids.length} người tham gia đã chọn?`)) return;
+
+    const eventId = attendancePageData.selectedEventId;
+    if (!eventId) return;
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const idNguoiDung of ids) {
+        try {
+            const res = await fetch(`${window.API_BASE}/DangKy/huy-dang-ky`, {
+                method: "POST",
+                headers: authHeaders(),
+                body: JSON.stringify({ IdSuKien: parseInt(eventId, 10), IdNguoiDung: idNguoiDung })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && (data.success ?? data.Success) !== false) {
+                successCount++;
+            } else {
+                failCount++;
+            }
+        } catch (e) {
+            failCount++;
+        }
+    }
+
+    if (successCount > 0 && failCount === 0) {
+        showBtcMessage(`✅ Đã hủy đăng ký cho ${successCount} người tham gia!`, "success");
+    } else if (successCount > 0) {
+        showBtcMessage(`Đã hủy ${successCount} người thành công, ${failCount} thất bại.`, "warning");
+    } else {
+        showBtcMessage("Hủy hàng loạt thất bại.", "error");
+    }
+
+    // Reset select all checkbox
+    const sa = document.getElementById("selectAllParticipants");
+    if (sa) sa.checked = false;
+
+    await loadEventDetailsAndAttendance();
+}
+
+window.toggleSelectAllParticipants = toggleSelectAllParticipants;
+window.updateParticipantBulkUI = updateParticipantBulkUI;
+window.confirmBulkApproveParticipants = confirmBulkApproveParticipants;
+window.confirmBulkRejectParticipants = confirmBulkRejectParticipants;

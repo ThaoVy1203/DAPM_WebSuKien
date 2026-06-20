@@ -44,7 +44,8 @@ namespace aspiCore.Services
                     TrangThai = dk.TrangThai,
                     ThoiGianDangKy = dk.ThoiGianDangKy,
                     ThoiGianCheckin = dk.ThoiGianCheckin,
-                    ThoiGianCheckout = dk.ThoiGianCheckout
+                    ThoiGianCheckout = dk.ThoiGianCheckout,
+                    AnhBia = dk.SuKien != null ? dk.SuKien.HinhAnh : ""
                 })
                 .ToListAsync();
         }
@@ -341,6 +342,17 @@ namespace aspiCore.Services
 
             dangKy.TrangThai = STATUS_DELETED;
             dangKy.ThoiGianHuy = DateTime.Now;
+
+            _context.ThongBaos.Add(new ThongBao
+            {
+                IdNguoiDung = dangKy.IdNguoiDung,
+                IdSuKien = dangKy.IdSuKien,
+                TieuDe = "Hủy đăng ký sự kiện",
+                NoiDung = $"Bạn đã hủy đăng ký tham gia sự kiện \"{dangKy.SuKien?.TenSuKien}\" thành công.",
+                DaDoc = false,
+                ThoiGianGui = DateTime.Now
+            });
+
             await _context.SaveChangesAsync();
 
             // Mở thêm chỗ cho Waitlist — lỗi ở bước này không ảnh hưởng kết quả hủy
@@ -401,6 +413,17 @@ namespace aspiCore.Services
 
             dangKy.TrangThai = STATUS_CHECKED_IN;
             dangKy.ThoiGianCheckin = DateTime.Now;
+
+            _context.ThongBaos.Add(new ThongBao
+            {
+                IdNguoiDung = dangKy.IdNguoiDung,
+                IdSuKien = dangKy.IdSuKien,
+                TieuDe = "Check-in sự kiện thành công",
+                NoiDung = $"Bạn đã check-in tham gia sự kiện \"{dangKy.SuKien?.TenSuKien}\" thành công.",
+                DaDoc = false,
+                ThoiGianGui = DateTime.Now
+            });
+
             await _context.SaveChangesAsync();
 
             return new ApiResponse
@@ -433,6 +456,9 @@ namespace aspiCore.Services
             if (dangKy == null)
                 return new ApiResponse { Success = false, Message = "Vé không hợp lệ hoặc chưa được xác nhận." };
 
+            if (dto.IdSuKien.HasValue && dangKy.IdSuKien != dto.IdSuKien.Value)
+                return new ApiResponse { Success = false, Message = "Mã vé này thuộc sự kiện khác, không thể check-in tại đây." };
+
             if (dangKy.SuKien != null)
             {
                 var checkInOpen = dangKy.SuKien.ThoiGianBatDau.AddMinutes(-30);
@@ -451,6 +477,17 @@ namespace aspiCore.Services
 
             dangKy.TrangThai = STATUS_CHECKED_IN;
             dangKy.ThoiGianCheckin = scanLocal;
+
+            _context.ThongBaos.Add(new ThongBao
+            {
+                IdNguoiDung = dangKy.IdNguoiDung,
+                IdSuKien = dangKy.IdSuKien,
+                TieuDe = "Check-in sự kiện thành công",
+                NoiDung = $"Bạn đã check-in tham gia sự kiện \"{dangKy.SuKien?.TenSuKien}\" thành công qua QR.",
+                DaDoc = false,
+                ThoiGianGui = DateTime.Now
+            });
+
             await _context.SaveChangesAsync();
 
             return new ApiResponse
@@ -529,6 +566,17 @@ namespace aspiCore.Services
             dangKy.ThoiGianCheckout = DateTime.Now;
             dangKy.CheckoutTuDong = false;
             dangKy.TrangThai = STATUS_COMPLETED;
+
+            _context.ThongBaos.Add(new ThongBao
+            {
+                IdNguoiDung = dangKy.IdNguoiDung,
+                IdSuKien = dangKy.IdSuKien,
+                TieuDe = "Check-out sự kiện thành công",
+                NoiDung = $"Bạn đã check-out sự kiện \"{dangKy.SuKien?.TenSuKien}\" thành công. Cảm ơn bạn đã tham gia!",
+                DaDoc = false,
+                ThoiGianGui = DateTime.Now
+            });
+
             await RecalculateTrustForUserAsync(dangKy.IdNguoiDung, DateTime.Now);
             await _context.SaveChangesAsync();
 
@@ -561,6 +609,16 @@ namespace aspiCore.Services
                     {
                         dk.TrangThai = STATUS_ABSENT;
                         touchedUsers.Add(dk.IdNguoiDung);
+
+                        _context.ThongBaos.Add(new ThongBao
+                        {
+                            IdNguoiDung = dk.IdNguoiDung,
+                            IdSuKien = dk.IdSuKien,
+                            TieuDe = "Ghi nhận vắng mặt sự kiện",
+                            NoiDung = $"Hệ thống ghi nhận bạn vắng mặt tại sự kiện \"{sk.TenSuKien}\".",
+                            DaDoc = false,
+                            ThoiGianGui = now
+                        });
                     }
 
                     if (dk.TrangThai == STATUS_CHECKED_IN && dk.ThoiGianCheckin.HasValue && !dk.ThoiGianCheckout.HasValue)
@@ -573,6 +631,16 @@ namespace aspiCore.Services
                         dk.CheckoutTuDong = true;
                         dk.TrangThai = STATUS_COMPLETED;
                         touchedUsers.Add(dk.IdNguoiDung);
+
+                        _context.ThongBaos.Add(new ThongBao
+                        {
+                            IdNguoiDung = dk.IdNguoiDung,
+                            IdSuKien = dk.IdSuKien,
+                            TieuDe = "Tự động check-out thành công",
+                            NoiDung = $"Hệ thống tự động check-out cho bạn tại sự kiện \"{sk.TenSuKien}\" sau khi kết thúc.",
+                            DaDoc = false,
+                            ThoiGianGui = now
+                        });
                     }
                 }
 
@@ -613,7 +681,8 @@ namespace aspiCore.Services
                     GioHuyTruocBatDauPhut = dk.SuKien != null ? dk.SuKien.GioHuyTruocBatDauPhut : 120,
                     YeuCauKhaoSatCheckout = dk.SuKien == null || dk.SuKien.YeuCauKhaoSatCheckout,
                     TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null
-                                        ? dk.SuKien.DiaDiem.TenDiaDiem : ""
+                                        ? dk.SuKien.DiaDiem.TenDiaDiem : "",
+                    AnhBia            = dk.SuKien != null ? dk.SuKien.HinhAnh : ""
                 })
                 .FirstOrDefaultAsync();
         }
@@ -748,7 +817,8 @@ namespace aspiCore.Services
                     ThoiGianKetThuc   = dk.SuKien != null ? dk.SuKien.ThoiGianKetThuc : (DateTime?)null,
                     GioHuyTruocBatDauPhut = dk.SuKien != null ? dk.SuKien.GioHuyTruocBatDauPhut : 120,
                     YeuCauKhaoSatCheckout = dk.SuKien == null || dk.SuKien.YeuCauKhaoSatCheckout,
-                    TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null ? dk.SuKien.DiaDiem.TenDiaDiem : ""
+                    TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null ? dk.SuKien.DiaDiem.TenDiaDiem : "",
+                    AnhBia            = dk.SuKien != null ? dk.SuKien.HinhAnh : ""
                 })
                 .ToListAsync();
         }
@@ -777,7 +847,8 @@ namespace aspiCore.Services
                     ThoiGianKetThuc   = dk.SuKien != null ? dk.SuKien.ThoiGianKetThuc : (DateTime?)null,
                     GioHuyTruocBatDauPhut = dk.SuKien != null ? dk.SuKien.GioHuyTruocBatDauPhut : 120,
                     YeuCauKhaoSatCheckout = dk.SuKien == null || dk.SuKien.YeuCauKhaoSatCheckout,
-                    TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null ? dk.SuKien.DiaDiem.TenDiaDiem : ""
+                    TenDiaDiem        = dk.SuKien != null && dk.SuKien.DiaDiem != null ? dk.SuKien.DiaDiem.TenDiaDiem : "",
+                    AnhBia            = dk.SuKien != null ? dk.SuKien.HinhAnh : ""
                 })
                 .ToListAsync();
         }

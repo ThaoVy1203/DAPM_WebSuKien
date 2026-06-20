@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -86,71 +86,59 @@
             </div>
 
             <!-- Overview Stats -->
-            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+            <div class="stats-grid" style="grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 24px;">
                 <div class="stat-card total-stat">
                     <div class="stat-header">
                         <i class="fas fa-clipboard-list"></i>
                     </div>
-                    <div class="stat-number">38</div>
+                    <div class="stat-number">0</div>
                     <div class="stat-label">TỔNG HỒ SƠ</div>
-                    <div class="stat-description">Đã xử lý trong tháng</div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> +12% so với tháng trước
-                    </div>
+                    <div class="stat-description">Đang tải...</div>
                 </div>
 
                 <div class="stat-card approved-stat">
                     <div class="stat-header">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="stat-number">35</div>
+                    <div class="stat-number">0</div>
                     <div class="stat-label">ĐÃ DUYỆT</div>
-                    <div class="stat-description">92.1% tỷ lệ duyệt</div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> +5% so với tháng trước
-                    </div>
+                    <div class="stat-description">Đang tải...</div>
                 </div>
 
                 <div class="stat-card rejected-stat">
                     <div class="stat-header">
                         <i class="fas fa-times-circle"></i>
                     </div>
-                    <div class="stat-number">3</div>
+                    <div class="stat-number">0</div>
                     <div class="stat-label">TỪ CHỐI</div>
-                    <div class="stat-description">7.9% tỷ lệ từ chối</div>
-                    <div class="stat-trend negative">
-                        <i class="fas fa-arrow-down"></i> -3% so với tháng trước
-                    </div>
+                    <div class="stat-description">Đang tải...</div>
                 </div>
 
                 <div class="stat-card time-stat">
                     <div class="stat-header">
                         <i class="fas fa-clock"></i>
                     </div>
-                    <div class="stat-number">1.8h</div>
+                    <div class="stat-number">...</div>
                     <div class="stat-label">THỜI GIAN TB</div>
-                    <div class="stat-description">Xử lý mỗi hồ sơ</div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-down"></i> -0.7h so với tháng trước
-                    </div>
+                    <div class="stat-description">Đang tải...</div>
                 </div>
 
                 <div class="stat-card pending-stat">
                     <div class="stat-header">
                         <i class="fas fa-hourglass-half"></i>
                     </div>
-                    <div class="stat-number">8</div>
+                    <div class="stat-number">0</div>
                     <div class="stat-label">ĐANG CHỜ</div>
-                    <div class="stat-description">Hồ sơ chờ xử lý</div>
+                    <div class="stat-description">Đang tải...</div>
                 </div>
 
                 <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="stat-header">
                         <i class="fas fa-money-bill-wave"></i>
                     </div>
-                    <div class="stat-number">2.8 tỷ</div>
+                    <div class="stat-number">0đ</div>
                     <div class="stat-label">NGÂN SÁCH</div>
-                    <div class="stat-description">Tổng đã phê duyệt</div>
+                    <div class="stat-description">Đang tải...</div>
                 </div>
             </div>
 
@@ -215,80 +203,10 @@
                                 <th>Đánh giá</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="topEventsTableBody">
                             <tr>
-                                <td>1</td>
-                                <td>Ngày hội Việc làm và Cơ hội Nghề nghiệp</td>
-                                <td><span class="badge badge-info">Hội thảo</span></td>
-                                <td>800 người</td>
-                                <td>200,000,000 đ</td>
-                                <td><span class="badge badge-success">Đã duyệt</span></td>
-                                <td>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>Chương trình Giao lưu Văn hóa Quốc tế</td>
-                                <td><span class="badge badge-purple">Văn hóa</span></td>
-                                <td>400 người</td>
-                                <td>95,000,000 đ</td>
-                                <td><span class="badge badge-success">Đã duyệt</span></td>
-                                <td>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="far fa-star" style="color: #d1d5db;"></i>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>3</td>
-                                <td>Hội thảo Khởi nghiệp và Đổi mới Sáng tạo</td>
-                                <td><span class="badge badge-info">Hội thảo</span></td>
-                                <td>300 người</td>
-                                <td>80,000,000 đ</td>
-                                <td><span class="badge badge-success">Đã duyệt</span></td>
-                                <td>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="far fa-star" style="color: #d1d5db;"></i>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>4</td>
-                                <td>Cuộc thi Lập trình Sáng tạo 2025</td>
-                                <td><span class="badge badge-warning">Thi đấu</span></td>
-                                <td>200 người</td>
-                                <td>60,000,000 đ</td>
-                                <td><span class="badge badge-success">Đã duyệt</span></td>
-                                <td>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>5</td>
-                                <td>Festival Âm nhạc Mùa Xuân</td>
-                                <td><span class="badge badge-danger">Văn nghệ</span></td>
-                                <td>600 người</td>
-                                <td>150,000,000 đ</td>
-                                <td><span class="badge badge-danger">Từ chối</span></td>
-                                <td>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    <i class="far fa-star" style="color: #d1d5db;"></i>
-                                    <i class="far fa-star" style="color: #d1d5db;"></i>
+                                <td colspan="7" style="text-align:center;padding:24px;color:#666;">
+                                    Đang tải dữ liệu sự kiện...
                                 </td>
                             </tr>
                         </tbody>
@@ -306,15 +224,15 @@
                     <div class="metric-body">
                         <div class="metric-item">
                             <span class="metric-label">Tốc độ xử lý trung bình</span>
-                            <span class="metric-value">1.8 giờ/hồ sơ</span>
+                            <span class="metric-value" id="bghAvgTime">...</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">Hồ sơ xử lý nhanh nhất</span>
-                            <span class="metric-value">0.5 giờ</span>
+                            <span class="metric-value" id="bghMinTime">...</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">Hồ sơ xử lý chậm nhất</span>
-                            <span class="metric-value">4.2 giờ</span>
+                            <span class="metric-value" id="bghMaxTime">...</span>
                         </div>
                     </div>
                 </div>
@@ -327,15 +245,15 @@
                     <div class="metric-body">
                         <div class="metric-item">
                             <span class="metric-label">Tỷ lệ duyệt lần đầu</span>
-                            <span class="metric-value success">92.1%</span>
+                            <span class="metric-value success" id="bghApproveRate">...</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">Tỷ lệ từ chối</span>
-                            <span class="metric-value danger">7.9%</span>
+                            <span class="metric-value danger" id="bghRejectRate">...</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">Tỷ lệ gửi lại sau từ chối</span>
-                            <span class="metric-value">66.7%</span>
+                            <span class="metric-value" id="bghResubmitRate">...</span>
                         </div>
                     </div>
                 </div>
@@ -348,15 +266,15 @@
                     <div class="metric-body">
                         <div class="metric-item">
                             <span class="metric-label">Trong hạn</span>
-                            <span class="metric-value success">95%</span>
+                            <span class="metric-value success" id="bghInTime">...</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">Trễ hạn</span>
-                            <span class="metric-value danger">5%</span>
+                            <span class="metric-value danger" id="bghLateTime">...</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">Thời gian cam kết</span>
-                            <span class="metric-value">48 giờ</span>
+                            <span class="metric-value" id="bghCommitTime">...</span>
                         </div>
                     </div>
                 </div>

@@ -76,7 +76,7 @@ async function loadAllEvents() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
-        allEvents = Array.isArray(data) ? data : (data.data || data.items || []);
+        allEvents = Array.isArray(data) ? data : (data.Data || data.data || data.items || []);
 
         updateStats();
         renderEvents(allEvents);
@@ -386,7 +386,7 @@ function exportList() {
 }
 
 // ── DUYỆT HÀNG LOẠT ─────────────────────────────────────────────
-function bulkApprove() {
+async function bulkApprove() {
     const cap2Ready = allEvents.filter(e => getApprovalLevel(e) === "cap2-ready");
     if (cap2Ready.length === 0) {
         showToast("Không có hồ sơ nào đủ điều kiện duyệt hàng loạt (cần đã qua Cấp 1).", "error");
@@ -394,7 +394,40 @@ function bulkApprove() {
     }
     if (confirm(`Bạn có chắc muốn phê duyệt ${cap2Ready.length} hồ sơ đã qua Cấp 1?`)) {
         showToast(`Đang phê duyệt ${cap2Ready.length} hồ sơ...`, "info");
-        // TODO: gọi API bulk approve
+        const token = localStorage.getItem("token");
+        let successCount = 0;
+        let failCount = 0;
+
+        await Promise.allSettled(cap2Ready.map(async event => {
+            try {
+                const res = await fetch(`${API_BASE}/SuKien/${event.idSuKien}/duyet`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        capDuyet: "Cấp 2 - BGH",
+                        ketQua: "Đồng ý",
+                        ghiChu: "Phê duyệt hàng loạt bởi Ban Giám Hiệu",
+                        guiThongBao: true
+                    })
+                });
+                if (res.ok) successCount++;
+                else failCount++;
+            } catch (err) {
+                failCount++;
+            }
+        }));
+
+        if (successCount > 0 && failCount === 0) {
+            showToast(`✅ Đã phê duyệt hàng loạt thành công ${successCount} hồ sơ!`, "success");
+        } else if (successCount > 0) {
+            showToast(`Đã duyệt ${successCount} hồ sơ thành công, ${failCount} thất bại.`, "warning");
+        } else {
+            showToast("Phê duyệt hàng loạt thất bại.", "error");
+        }
+        await loadAllEvents();
     }
 }
 

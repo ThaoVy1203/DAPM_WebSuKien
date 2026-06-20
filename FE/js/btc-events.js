@@ -119,10 +119,8 @@ async function loadEvents() {
         const vaiTros = userData.vaiTros || [];
         const isTruongBan = vaiTros.includes("TruongBanToChuc");
 
-        // Trưởng ban thì tải sự kiện họ tạo, Thành viên thì tải sự kiện được phân công
-        const endpoint = isTruongBan 
-            ? `${window.API_BASE}/SuKien/nguoi-tao/${userData.idNguoiDung}`
-            : `${window.API_BASE}/SuKien/assigned/${userData.idNguoiDung}`;
+        // Load all events from SQL
+        const endpoint = `${window.API_BASE}/SuKien`;
         
         const res = await authFetch(endpoint);
         if (res.ok) {

@@ -92,12 +92,32 @@ body {
 }
 
 .btn-notification {
+    position: relative;
     background: none;
     border: none;
     font-size: 20px;
     color: var(--text-gray);
     cursor: pointer;
     padding: 8px;
+    transition: color 0.3s ease;
+}
+
+.btn-notification:hover {
+    color: var(--primary-color);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: var(--error-color);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
 }
 
 .user-menu {
@@ -1034,6 +1054,26 @@ body {
 .mt-filter-badge.cancelled { background: #fee2e2; color: #991b1b; }
 .mt-filter-badge.ongoing { background: #ccfbf1; color: #0f766e; }
 
+/* Nút link sang ticket-detail từ card danh sách */
+.mt-filter-detail-link {
+    flex-shrink: 0;
+    margin-left: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    font-size: 12px;
+}
+.mt-filter-detail-link:hover {
+    background: #dbeafe;
+    color: #0D5A9C;
+}
+
 .mt-list-empty {
     text-align: center;
     padding: 24px 12px;
@@ -1293,6 +1333,36 @@ body {
 .mt-btn-confirm:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.mt-btn-reregister {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0D5A9C, #1565C0);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    margin-top: 10px;
+    box-shadow: 0 4px 14px rgba(13, 90, 156, 0.3);
+}
+
+.mt-btn-reregister:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(13, 90, 156, 0.4);
+}
+
+.mt-btn-reregister:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .mt-link-detail {

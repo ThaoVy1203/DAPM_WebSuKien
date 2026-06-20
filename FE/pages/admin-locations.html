@@ -48,10 +48,6 @@
                     <i class="fas fa-users"></i>
                     <span>Tài khoản</span>
                 </a>
-                <a href="admin-roles.html" class="nav-item">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Phân quyền</span>
-                </a>
                 <a href="admin-event-categories.html" class="nav-item">
                     <i class="fas fa-tags"></i>
                     <span>Danh mục SK</span>
@@ -93,265 +89,43 @@
             <!-- Stats Grid -->
             <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
                 <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <div class="stat-header">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <div class="stat-number">28</div>
+                    <div class="stat-header"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="stat-number" id="statTotal">0</div>
                     <div class="stat-label">TỔNG ĐỊA ĐIỂM</div>
                     <div class="stat-description">Cơ sở vật chất</div>
                 </div>
-
                 <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <div class="stat-header">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-number">25</div>
-                    <div class="stat-label">SẴN SÀNG</div>
+                    <div class="stat-header"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-number" id="statActive">0</div>
+                    <div class="stat-label">HOẠT ĐỘNG</div>
                     <div class="stat-description">Có thể sử dụng</div>
                 </div>
-
                 <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <div class="stat-header">
-                        <i class="fas fa-tools"></i>
-                    </div>
-                    <div class="stat-number">3</div>
+                    <div class="stat-header"><i class="fas fa-tools"></i></div>
+                    <div class="stat-number" id="statInactive">0</div>
                     <div class="stat-label">BẢO TRÌ</div>
                     <div class="stat-description">Đang sửa chữa</div>
                 </div>
-
                 <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="stat-header">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="stat-number">156</div>
-                    <div class="stat-label">SỰ KIỆN</div>
-                    <div class="stat-description">Đã tổ chức</div>
+                    <div class="stat-header"><i class="fas fa-users"></i></div>
+                    <div class="stat-number" id="statCapacity">0</div>
+                    <div class="stat-label">TỔNG SỨC CHỨA</div>
+                    <div class="stat-description">Người tham dự</div>
                 </div>
             </div>
 
             <!-- Filter Section -->
             <div class="filter-section">
                 <div class="filter-tabs">
-                    <button class="tab-btn active" data-filter="all">Tất cả (28)</button>
-                    <button class="tab-btn" data-filter="hall">Hội trường (8)</button>
-                    <button class="tab-btn" data-filter="room">Phòng học (12)</button>
-                    <button class="tab-btn" data-filter="outdoor">Ngoài trời (8)</button>
-                </div>
-                <div class="filter-controls">
-                    <select class="filter-select" id="capacityFilter">
-                        <option value="all">Tất cả sức chứa</option>
-                        <option value="small">< 100 người</option>
-                        <option value="medium">100-300 người</option>
-                        <option value="large">> 300 người</option>
-                    </select>
-                    <select class="filter-select" id="statusFilter">
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="available">Sẵn sàng</option>
-                        <option value="maintenance">Bảo trì</option>
-                        <option value="occupied">Đang sử dụng</option>
-                    </select>
-                    <button class="btn-filter" onclick="applyFilters()">
-                        <i class="fas fa-filter"></i>
-                        Lọc
-                    </button>
+                    <button class="tab-btn active" data-filter="all">Tất cả (<span id="tabAll">0</span>)</button>
+                    <button class="tab-btn" data-filter="active">Hoạt động (<span id="tabActive">0</span>)</button>
+                    <button class="tab-btn" data-filter="inactive">Bảo trì (<span id="tabInactive">0</span>)</button>
                 </div>
             </div>
 
-            <!-- Locations Grid -->
+            <!-- Locations Grid — render bởi admin-locations.js -->
             <div class="locations-grid" style="margin-bottom: 32px;">
-                <div class="location-card">
-                    <div class="location-image">
-                        <img src="../images/hall-a.jpg" alt="Hội trường A" onerror="this.src='https://via.placeholder.com/400x250/667eea/ffffff?text=Hoi+Truong+A'">
-                        <span class="location-status available">Sẵn sàng</span>
-                    </div>
-                    <div class="location-info">
-                        <h3>Hội trường A</h3>
-                        <div class="location-details">
-                            <span><i class="fas fa-users"></i> 500 người</span>
-                            <span><i class="fas fa-building"></i> Tòa A</span>
-                        </div>
-                        <div class="location-facilities">
-                            <span class="facility-badge"><i class="fas fa-wifi"></i> WiFi</span>
-                            <span class="facility-badge"><i class="fas fa-video"></i> Projector</span>
-                            <span class="facility-badge"><i class="fas fa-microphone"></i> Âm thanh</span>
-                        </div>
-                        <div class="location-stats">
-                            <span>25 sự kiện đã tổ chức</span>
-                        </div>
-                    </div>
-                    <div class="location-actions">
-                        <button class="btn-action view" onclick="viewLocation(1)" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-action edit" onclick="editLocation(1)" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-action delete" onclick="deleteLocation(1)" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="location-card">
-                    <div class="location-image">
-                        <img src="../images/hall-b.jpg" alt="Hội trường B" onerror="this.src='https://via.placeholder.com/400x250/f093fb/ffffff?text=Hoi+Truong+B'">
-                        <span class="location-status available">Sẵn sàng</span>
-                    </div>
-                    <div class="location-info">
-                        <h3>Hội trường B</h3>
-                        <div class="location-details">
-                            <span><i class="fas fa-users"></i> 300 người</span>
-                            <span><i class="fas fa-building"></i> Tòa B</span>
-                        </div>
-                        <div class="location-facilities">
-                            <span class="facility-badge"><i class="fas fa-wifi"></i> WiFi</span>
-                            <span class="facility-badge"><i class="fas fa-video"></i> Projector</span>
-                            <span class="facility-badge"><i class="fas fa-snowflake"></i> Điều hòa</span>
-                        </div>
-                        <div class="location-stats">
-                            <span>18 sự kiện đã tổ chức</span>
-                        </div>
-                    </div>
-                    <div class="location-actions">
-                        <button class="btn-action view" onclick="viewLocation(2)" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-action edit" onclick="editLocation(2)" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-action delete" onclick="deleteLocation(2)" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="location-card">
-                    <div class="location-image">
-                        <img src="../images/room-201.jpg" alt="Phòng 201" onerror="this.src='https://via.placeholder.com/400x250/4facfe/ffffff?text=Phong+201'">
-                        <span class="location-status available">Sẵn sàng</span>
-                    </div>
-                    <div class="location-info">
-                        <h3>Phòng 201</h3>
-                        <div class="location-details">
-                            <span><i class="fas fa-users"></i> 80 người</span>
-                            <span><i class="fas fa-building"></i> Tòa A - Tầng 2</span>
-                        </div>
-                        <div class="location-facilities">
-                            <span class="facility-badge"><i class="fas fa-wifi"></i> WiFi</span>
-                            <span class="facility-badge"><i class="fas fa-video"></i> Projector</span>
-                        </div>
-                        <div class="location-stats">
-                            <span>32 sự kiện đã tổ chức</span>
-                        </div>
-                    </div>
-                    <div class="location-actions">
-                        <button class="btn-action view" onclick="viewLocation(3)" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-action edit" onclick="editLocation(3)" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-action delete" onclick="deleteLocation(3)" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="location-card">
-                    <div class="location-image">
-                        <img src="../images/outdoor.jpg" alt="Sân vận động" onerror="this.src='https://via.placeholder.com/400x250/43e97b/ffffff?text=San+Van+Dong'">
-                        <span class="location-status maintenance">Bảo trì</span>
-                    </div>
-                    <div class="location-info">
-                        <h3>Sân vận động</h3>
-                        <div class="location-details">
-                            <span><i class="fas fa-users"></i> 2000 người</span>
-                            <span><i class="fas fa-tree"></i> Ngoài trời</span>
-                        </div>
-                        <div class="location-facilities">
-                            <span class="facility-badge"><i class="fas fa-microphone"></i> Âm thanh</span>
-                            <span class="facility-badge"><i class="fas fa-lightbulb"></i> Ánh sáng</span>
-                        </div>
-                        <div class="location-stats">
-                            <span>12 sự kiện đã tổ chức</span>
-                        </div>
-                    </div>
-                    <div class="location-actions">
-                        <button class="btn-action view" onclick="viewLocation(4)" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-action edit" onclick="editLocation(4)" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-action delete" onclick="deleteLocation(4)" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="location-card">
-                    <div class="location-image">
-                        <img src="../images/room-301.jpg" alt="Phòng 301" onerror="this.src='https://via.placeholder.com/400x250/fa709a/ffffff?text=Phong+301'">
-                        <span class="location-status available">Sẵn sàng</span>
-                    </div>
-                    <div class="location-info">
-                        <h3>Phòng 301</h3>
-                        <div class="location-details">
-                            <span><i class="fas fa-users"></i> 60 người</span>
-                            <span><i class="fas fa-building"></i> Tòa A - Tầng 3</span>
-                        </div>
-                        <div class="location-facilities">
-                            <span class="facility-badge"><i class="fas fa-wifi"></i> WiFi</span>
-                            <span class="facility-badge"><i class="fas fa-chalkboard"></i> Bảng</span>
-                        </div>
-                        <div class="location-stats">
-                            <span>28 sự kiện đã tổ chức</span>
-                        </div>
-                    </div>
-                    <div class="location-actions">
-                        <button class="btn-action view" onclick="viewLocation(5)" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-action edit" onclick="editLocation(5)" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-action delete" onclick="deleteLocation(5)" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="location-card">
-                    <div class="location-image">
-                        <img src="../images/garden.jpg" alt="Vườn hoa" onerror="this.src='https://via.placeholder.com/400x250/30cfd0/ffffff?text=Vuon+Hoa'">
-                        <span class="location-status available">Sẵn sàng</span>
-                    </div>
-                    <div class="location-info">
-                        <h3>Vườn hoa</h3>
-                        <div class="location-details">
-                            <span><i class="fas fa-users"></i> 200 người</span>
-                            <span><i class="fas fa-tree"></i> Ngoài trời</span>
-                        </div>
-                        <div class="location-facilities">
-                            <span class="facility-badge"><i class="fas fa-chair"></i> Ghế ngồi</span>
-                            <span class="facility-badge"><i class="fas fa-umbrella"></i> Mái che</span>
-                        </div>
-                        <div class="location-stats">
-                            <span>15 sự kiện đã tổ chức</span>
-                        </div>
-                    </div>
-                    <div class="location-actions">
-                        <button class="btn-action view" onclick="viewLocation(6)" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-action edit" onclick="editLocation(6)" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-action delete" onclick="deleteLocation(6)" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
+                <!-- Cards được render động từ SQL -->
             </div>
 
             <!-- Pagination -->
@@ -427,66 +201,26 @@
             </div>
             <div class="modal-body">
                 <form id="locationForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Tên địa điểm <span class="required">*</span></label>
-                            <input type="text" class="form-control" id="locationName" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Loại địa điểm <span class="required">*</span></label>
-                            <select class="form-control" id="locationType" required>
-                                <option value="">Chọn loại</option>
-                                <option value="hall">Hội trường</option>
-                                <option value="room">Phòng học</option>
-                                <option value="outdoor">Ngoài trời</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label>Tên địa điểm <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="locationName" placeholder="VD: Hội trường A" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Sức chứa <span class="required">*</span></label>
-                            <input type="number" class="form-control" id="locationCapacity" required>
+                            <label>Sức chứa (người)</label>
+                            <input type="number" class="form-control" id="locationCapacity" min="1" placeholder="VD: 500">
                         </div>
                         <div class="form-group">
                             <label>Vị trí</label>
-                            <input type="text" class="form-control" id="locationPosition" placeholder="VD: Tòa A - Tầng 2">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Mô tả</label>
-                        <textarea class="form-control" id="locationDescription" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Tiện nghi</label>
-                        <div class="role-checkboxes">
-                            <label class="checkbox-label">
-                                <input type="checkbox" value="wifi">
-                                <span>WiFi</span>
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" value="projector">
-                                <span>Projector</span>
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" value="sound">
-                                <span>Âm thanh</span>
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" value="ac">
-                                <span>Điều hòa</span>
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" value="board">
-                                <span>Bảng</span>
-                            </label>
+                            <input type="text" class="form-control" id="locationPosition" placeholder="VD: Tòa A, Tầng 1">
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Trạng thái</label>
                         <select class="form-control" id="locationStatus">
-                            <option value="available">Sẵn sàng</option>
-                            <option value="maintenance">Bảo trì</option>
-                            <option value="occupied">Đang sử dụng</option>
+                            <option value="Hoạt động">Hoạt động</option>
+                            <option value="Bảo trì">Bảo trì</option>
+                            <option value="Đang sử dụng">Đang sử dụng</option>
                         </select>
                     </div>
                 </form>

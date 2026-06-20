@@ -58,5 +58,38 @@ namespace aspiCore.Services
 
             return (await GetByIdAsync(diaDiem.IdDiaDiem))!;
         }
+
+        public async Task<DiaDiemDto?> UpdateAsync(int id, UpdateDiaDiemDto dto)
+        {
+            var diaDiem = await _context.DiaDiems.FindAsync(id);
+            if (diaDiem == null) return null;
+
+            if (!string.IsNullOrWhiteSpace(dto.TenDiaDiem))
+                diaDiem.TenDiaDiem = dto.TenDiaDiem;
+            if (dto.ViTri != null)
+                diaDiem.ViTri = dto.ViTri;
+            if (dto.SucChua.HasValue)
+                diaDiem.SucChua = dto.SucChua;
+            if (!string.IsNullOrWhiteSpace(dto.TrangThaiSuDung))
+                diaDiem.TrangThaiSuDung = dto.TrangThaiSuDung;
+
+            await _context.SaveChangesAsync();
+            return await GetByIdAsync(id);
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var diaDiem = await _context.DiaDiems.FindAsync(id);
+            if (diaDiem == null) return false;
+
+            // Kiểm tra xem địa điểm có đang được dùng bởi sự kiện nào không
+            bool inUse = await _context.SuKiens.AnyAsync(s => s.IdDiaDiem == id);
+            if (inUse)
+                throw new InvalidOperationException("Địa điểm đang được sử dụng bởi một hoặc nhiều sự kiện. Không thể xóa.");
+
+            _context.DiaDiems.Remove(diaDiem);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

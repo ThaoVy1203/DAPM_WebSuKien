@@ -75,7 +75,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     initRegisterBtn(currentEventId);
     initCancelBtn(currentEventId);
-    initSubmitQuestion(currentEventId);
     initSmoothScroll();
     initializeEventHandlers();
 

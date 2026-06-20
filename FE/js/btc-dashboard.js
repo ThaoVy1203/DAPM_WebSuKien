@@ -105,9 +105,7 @@ async function loadStats() {
         // Load sự kiện của user hiện tại
         const userData = JSON.parse(localStorage.getItem("userData") || "{}");
         const userId = userData.idNguoiDung;
-        const eventsUrl = userId
-            ? `${window.API_BASE}/SuKien/nguoi-tao/${userId}`
-            : `${window.API_BASE}/SuKien`;
+        const eventsUrl = `${window.API_BASE}/SuKien`;
 
         const eventsRes = await fetch(eventsUrl, { headers });
         const events = eventsRes.ok ? await eventsRes.json() : [];
@@ -177,9 +175,7 @@ async function loadDashTaskEventSelector() {
         const headers = { "Authorization": `Bearer ${token}` };
         const userData = JSON.parse(localStorage.getItem("userData") || "{}");
         const userId = userData.idNguoiDung;
-        const url = userId
-            ? `${window.API_BASE}/SuKien/nguoi-tao/${userId}`
-            : `${window.API_BASE}/SuKien`;
+        const url = `${window.API_BASE}/SuKien`;
 
         const res = await fetch(url, { headers });
         if (!res.ok) throw new Error("Lỗi tải sự kiện");

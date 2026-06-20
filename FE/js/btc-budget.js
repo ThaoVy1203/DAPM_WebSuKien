@@ -63,9 +63,7 @@ async function loadEventsSelector() {
         const vaiTros = userData.vaiTros || [];
         const isTruong = vaiTros.includes("TruongBanToChuc");
 
-        const url = isTruong 
-            ? `${window.API_BASE}/SuKien`
-            : `${window.API_BASE}/SuKien/assigned/${userData.idNguoiDung}`;
+        const url = `${window.API_BASE}/SuKien`;
 
         const res = await fetch(url, {
             headers: { "Authorization": `Bearer ${token}` }
